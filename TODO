@@ -1,0 +1,13 @@
+* Implement the diffMF, etc. functionality from Numeric.FAD
+
+* Allow the type to vary within our AD data type container, in the same fashion as Numeric.FAD.
+
+    Although, while Pearlmutter and Siskind provided the functionality to permit it in derivative combinator, they provided
+    no combinators to convert, for instance, a Dual tag Float to a Dual tag Double, so that extra functionality cannot
+    currently be leveraged.
+
+* Provide the ability to use reverse mode locally on FAD inputs, i.e.
+
+    reverseCheckpoint :: (forall s. AD s a -> AD s a) -> AD t a -> AD t a 
+
+* Provide forward-on-reverse computation of Hessians

@@ -15,7 +15,6 @@
 module Numeric.AD.Directed
     ( Mode(..)
     , AD(..)
-    -- * Explicit modes
     , Direction(..)
     -- * Derivatives
     , diffUU
@@ -23,14 +22,19 @@ module Numeric.AD.Directed
     -- * Common access patterns
     , diff
     , diff2
+    -- * Jacobians
+    , jacobian
+    , jacobian2
     ) where
 
 import Prelude hiding (reverse)
 import Numeric.AD.Classes
 import Numeric.AD.Internal
+import Data.Traversable (Traversable)
 import qualified Numeric.AD.Reverse as R
 import qualified Numeric.AD.Forward as F
 import qualified Numeric.AD.Tower as T
+import qualified Numeric.AD as M
 import Data.Ix
 
 -- TODO: use a data types a la carte approach, so we can expose more methods here
@@ -63,3 +67,17 @@ diff = diffUU
 diff2 :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a) 
 diff2 = diff2UU
 {-# INLINE diff2 #-}
+
+jacobian :: (Traversable f, Traversable g, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f a)
+jacobian Forward = F.jacobian
+jacobian Reverse = R.jacobian
+jacobian Tower = error "jacobian Tower: unimplemented"
+jacobian Mixed = M.jacobian
+{-# INLINE jacobian #-}
+
+jacobian2 :: (Traversable f, Traversable g, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
+jacobian2 Forward = F.jacobian2
+jacobian2 Reverse = R.jacobian2
+jacobian2 Tower = error "jacobian2 Tower: unimplemented"
+jacobian2 Mixed = M.jacobian2
+{-# INLINE jacobian2 #-}

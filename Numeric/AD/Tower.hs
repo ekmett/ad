@@ -22,17 +22,17 @@ module Numeric.AD.Tower
     -- * multiple derivatives
       diffsUU, diffs0UU
     , diffsUF, diffs0UF 
+    -- * single derivatives
+    , diffUU, diff2UU
     -- * common access patterns
     , diffs, diffs0
+    , diff, diff2
     -- * taylor series
     , taylor, taylor0
     -- * internals
-    , Lifted(..)
     , Mode(..)
     , AD(..)
     , Tower(..)
-    , tangents
-    , bundle
     ) where
 
 import Control.Applicative
@@ -44,13 +44,28 @@ import Data.List (mapAccumL)
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'
 newtype Tower a = Tower { getTower :: [a] } deriving (Show)
 
--- | extract the tangent tower from a tangent bundle
+-- Local combinators
+
+zeroPad :: Num a => [a] -> [a]
+zeroPad xs = xs ++ repeat 0 
+{-# INLINE zeroPad #-}
+
+d :: Num a => [a] -> a
+d (_:da:_) = da
+d _ = 0
+{-# INLINE d #-}
+
+d2 :: Num a => [a] -> (a, a) 
+d2 (a:da:_) = (a, da)
+d2 (a:_)    = (a, 0)
+d2 _        = (0, 0)
+{-# INLINE d2 #-}
+
 tangents :: Tower a -> Tower a
 tangents (Tower []) = Tower []
 tangents (Tower (_:xs)) = Tower xs
 {-# INLINE tangents #-}
 
--- | bundle a point with tangent vector tower at that point
 bundle :: a -> Tower a -> Tower a
 bundle a (Tower as) = Tower (a:as)
 {-# INLINE bundle #-}
@@ -93,7 +108,9 @@ instance Lifted Tower => Jacobian Tower where
     lift2 f df b c = bundle (f (primal b) (primal c)) (tangents b *! dadb +! tangents c *! dadc) where
         (dadb, dadc) = df b c 
     lift2_ f df b c = a where 
-        a = bundle (f (primal b) (primal c)) (tangents b *! dadb +! tangents c *! dadc)
+        a0 = f (primal b) (primal c)
+        da = tangents b *! dadb +! tangents c *! dadc
+        a = bundle a0 da 
         (dadb, dadc) = df a b c
 
 deriveLifted (conT ''Tower)
@@ -101,7 +118,6 @@ deriveLifted (conT ''Tower)
 diffsUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 diffsUU f a = getADTower $ apply f a 
 {-# INLINE diffsUU #-}
-
 
 diffs0UU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 diffs0UU f a = zeroPad (diffsUU f a)
@@ -114,14 +130,6 @@ diffs0UF f a = (zeroPad . getADTower) <$> apply f a
 diffsUF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f [a]
 diffsUF f a = getADTower <$> apply f a
 {-# INLINE diffsUF #-}
-
-zeroPad :: Num a => [a] -> [a]
-zeroPad xs = xs ++ repeat 0 
-{-# INLINE zeroPad #-}
-
--- zeroPadF :: (Num a, Functor f) => [f a] -> [f a]
--- zeroPadF fxs@(fx:_) = fxs ++ repeat (fmap (const 0) fx)
--- {-# INLINE zeroPadF #-}
 
 diffs :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 diffs = diffsUU
@@ -146,3 +154,21 @@ taylor f x dx = snd $
 taylor0 :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
 taylor0 f x dx = zeroPad (taylor f x dx)
 {-# INLINE taylor0 #-}
+
+-- | This is an inefficient 'Mode'. Use 'Numeric.AD.Forward.diffUU' instead.
+diffUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
+diffUU f a = d $ diffs f a 
+{-# INLINE diffUU #-}
+
+-- | This is an inefficient 'Mode'. Use 'Numeric.AD.Forward.diff2UU' instead.
+diff2UU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
+diff2UU f a = d2 $ diffs f a 
+{-# INLINE diff2UU #-}
+
+diff :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
+diff = diffUU
+{-# INLINE diff #-}
+
+diff2 :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
+diff2 = diff2UU
+{-# INLINE diff2 #-}

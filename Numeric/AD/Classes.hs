@@ -25,6 +25,11 @@ import Data.Char
 import Language.Haskell.TH
 import Text.Show
 
+infixl 8 **!
+infixl 7 *!, /!, ^*, *^, ^/
+infixl 6 +!, -!, <+> 
+infix 4 ==!
+
 class Lifted t where
 -- class Show1 t where
     showsPrec1 :: Show a => Int -> t a -> ShowS
@@ -176,7 +181,7 @@ deriveLifted t = [d|
         showsPrec1    = showsPrec
         fromInteger1  = lift . fromInteger
         (+!)          = (<+>) -- binary (+) one one
-        (-!)          = binary (-) one negOne
+        (-!)          = binary (-) one negOne -- TODO: <-> ? as it is, this might be pretty bad for Tower
         (*!)          = lift2 (*) (\x y -> (y, x))
         negate1       = lift1 negate (const negOne)
         abs1          = lift1 abs signum1

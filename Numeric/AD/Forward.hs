@@ -113,18 +113,19 @@ bind f as = snd $ mapAccumL (outer f as) 0 as
     outer g bs !i a = (i + 1, g $ snd $ mapAccumL (inner i) 0 bs)
     inner !i !j b = (j + 1, if i == j then bundle b 1 else lift b)
 
+{-
+-- costrong bind
+bind0 :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> (b, f b)
+bind0 f as = snd $ mapAccumL (outer f as) (0, Nothing) as
+    where
+    outer g bs (!i,m) a = ((i + 1, Nothing), g $ snd $ mapAccumL (inner i) 0 bs)
+    inner !i !j b = (j + 1, if i == j then bundle b 1 else lift b)
+-}
+
 -- a fast transposed forward jacobian
 jacobianT :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> f (g a)
 jacobianT f as = fmap tangent <$> bind f as
 {-# INLINE jacobianT #-}
-
-probe :: a -> AD Id a
-probe = AD . Id
-{-# INLINE probe #-}
-
-unprobe :: AD Id a -> a
-unprobe (AD (Id a)) = a
-{-# INLINE unprobe #-}
 
 -- we can't transpose arbitrary traversables, since we can't construct one out of whole cloth, and the outer
 -- traversable could be empty. So instead we use one as a 'skeleton'
@@ -141,6 +142,15 @@ jacobian2 f as = transposeWith (\x fa -> (unprobe x, tangent <$> fa)) t p
         t = bind f as 
         p = f (probe <$> as)
 {-# INLINE jacobian2 #-}
+
+-- bind :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> f b
+
+grad :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a
+grad f as 
+    bind f as
+
+grad2 :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
+
 
 -- * Local combinators
 

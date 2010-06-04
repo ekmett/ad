@@ -16,7 +16,7 @@ Build-Depends:
     base >= 4 && < 5,
     data-reify >= 0.5 && < 0.6, 
     containers >= 0.2 && < 0.4,
-    template-haskell,
+    template-haskell >= 2.4 && < 2.5,
     array >= 0.2 && < 0.4
 
 Exposed-Modules:

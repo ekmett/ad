@@ -2,6 +2,8 @@
 module Numeric.AD.Internal
     ( AD(..)
     , Id(..)
+    , probe
+    , unprobe
     ) where
 
 import Control.Applicative
@@ -9,15 +11,22 @@ import Language.Haskell.TH
 import Numeric.AD.Classes
 import Data.Monoid
 
--- | Lift all the higher-kinded numeric classes to their traditional first-order equivalents
--- This lets us use (forall s. Mode s => AD s a) as any appropriate numerical type
--- concealing the automatic differentiation mode being used and limiting ourselves to safe operations.
+-- | 'AD' serves as a common wrapper for different 'Mode' instances, exposing a traditional 
+-- numerical tower. Universal quantification is used to limit the actions in user code to 
+-- machinery that will return the same answers under all AD modes, allowing us to use modes
+-- interchangeably as both the type level \"brand\" and dictionary, providing a common API.
 newtype AD f a = AD { runAD :: f a } deriving (Lifted, Mode, Primal)
 
 let f = varT (mkName "f") in deriveNumeric (conT ''AD `appT` f) f
 
 newtype Id a = Id a deriving
     (Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid)
+
+probe :: a -> AD Id a
+probe a = AD (Id a)
+
+unprobe :: AD Id a -> a
+unprobe (AD (Id a)) = a
 
 instance Functor Id where
     fmap f (Id a) = Id (f a)
@@ -101,5 +110,3 @@ instance Mode Id where
 
 instance Primal Id where
     primal (Id a) = a
-
--- not Jacobian -- its kind of pointless

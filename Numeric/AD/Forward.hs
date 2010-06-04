@@ -32,6 +32,8 @@ module Numeric.AD.Forward
     , jacobian
     , jacobian2
     , jacobianT
+    , grad
+    , grad2
     ) where
 
 import Language.Haskell.TH
@@ -44,6 +46,24 @@ import Numeric.AD.Classes
 import Numeric.AD.Internal
 
 data Forward a = Forward a a deriving (Show, Data, Typeable)
+
+-- * Local combinators
+
+tangent :: AD Forward a -> a
+tangent (AD (Forward _ da)) = da
+{-# INLINE tangent #-}
+
+unbundle :: AD Forward a -> (a, a)
+unbundle (AD (Forward a da)) = (a, da)
+{-# INLINE unbundle #-}
+
+bundle :: a -> a -> AD Forward a
+bundle a da = AD (Forward a da)
+{-# INLINE bundle #-}
+
+apply :: Num a => (AD Forward a -> b) -> a -> b
+apply f a = f (bundle a 1)
+{-# INLINE apply #-}
 
 instance Primal Forward where
     primal (Forward a _) = a
@@ -108,64 +128,58 @@ diff2UF f a = unbundle <$> apply f a
 {-# INLINE diff2UF #-}
 
 bind :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> f b
-bind f as = snd $ mapAccumL (outer f as) 0 as
+bind f as = snd $ mapAccumL outer 0 as
     where
-    outer g bs !i a = (i + 1, g $ snd $ mapAccumL (inner i) 0 bs)
-    inner !i !j b = (j + 1, if i == j then bundle b 1 else lift b)
+        outer !i a = (i + 1, f $ snd $ mapAccumL (inner i) 0 as)
+        inner !i !j a = (j + 1, if i == j then bundle a 1 else lift a)
 
-{-
--- costrong bind
-bind0 :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> (b, f b)
-bind0 f as = snd $ mapAccumL (outer f as) (0, Nothing) as
+bind2 :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> (b, f b)
+bind2 f as = dropIx $ mapAccumL outer (0, b0) as 
     where
-    outer g bs (!i,m) a = ((i + 1, Nothing), g $ snd $ mapAccumL (inner i) 0 bs)
-    inner !i !j b = (j + 1, if i == j then bundle b 1 else lift b)
--}
-
--- a fast transposed forward jacobian
-jacobianT :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> f (g a)
-jacobianT f as = fmap tangent <$> bind f as
-{-# INLINE jacobianT #-}
+        outer (!i, _) a = let b = f $ snd $ mapAccumL (inner i) 0 as in ((i + 1, b), b)
+        inner !i !j a = (j + 1, if i == j then bundle a 1 else lift a)
+        b0 = f (lift <$> as)
+        dropIx ((_,b),bs) = (b,bs)
 
 -- we can't transpose arbitrary traversables, since we can't construct one out of whole cloth, and the outer
 -- traversable could be empty. So instead we use one as a 'skeleton'
 transposeWith :: (Functor f, Foldable f, Traversable g) => (b -> f a -> c) -> f (g a) -> g b -> g c
-transposeWith f as = snd . mapAccumL (\fxs b -> (tail <$> fxs, f b (head <$> fxs))) (toList <$> as)
+transposeWith f as bs = snd $ mapAccumL go xss0 bs 
+    where go xss b = (tail <$> xss, f b (head <$> xss))
+          xss0 = toList <$> as
+
+-- A fast, simple transposed forward jacobian
+jacobianT :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> f (g a)
+jacobianT f = bind (fmap tangent . f)
+-- jacobianT f as = fmap tangent <$> bind f as
+{-# INLINE jacobianT #-}
 
 jacobian :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f a)
-jacobian f as = snd <$> jacobian2 f as
+jacobian f as = transposeWith (const id) t p
+    where (p, t) = bind2 (fmap tangent . f) as 
 {-# INLINE jacobian #-}
 
+jacobian2 :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
+jacobian2 f as = transposeWith row t p
+    where (p, t) = bind2 f as 
+          row x as = (primal x, tangent <$> as) 
+{-# INLINE jacobian2 #-}
+
+grad :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a
+grad f = bind (tangent . f)
+{-# INLINE grad #-}
+
+grad2 :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
+grad2 f as = (primal b, tangent <$> bs)
+    where (b, bs) = bind2 f as
+{-# INLINE grad2 #-}
+
+
+{-
 jacobian2 :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
 jacobian2 f as = transposeWith (\x fa -> (unprobe x, tangent <$> fa)) t p 
     where
         t = bind f as 
         p = f (probe <$> as)
 {-# INLINE jacobian2 #-}
-
--- bind :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> f b
-
-grad :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a
-grad f as 
-    bind f as
-
-grad2 :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
-
-
--- * Local combinators
-
-tangent :: AD Forward a -> a
-tangent (AD (Forward _ da)) = da
-{-# INLINE tangent #-}
-
-unbundle :: AD Forward a -> (a, a)
-unbundle (AD (Forward a da)) = (a, da)
-{-# INLINE unbundle #-}
-
-bundle :: a -> a -> AD Forward a
-bundle a da = AD (Forward a da)
-{-# INLINE bundle #-}
-
-apply :: Num a => (AD Forward a -> b) -> a -> b
-apply f a = f (bundle a 1)
-{-# INLINE apply #-}
+-}

@@ -4,12 +4,17 @@ module Numeric.AD.Internal
     , Id(..)
     , probe
     , unprobe
+--    , transposedWith
+--    , transposed2
+--    , transposed
     ) where
 
 import Control.Applicative
 import Language.Haskell.TH
 import Numeric.AD.Classes
 import Data.Monoid
+import Data.Traversable (Traversable, mapAccumL)
+import Data.Foldable (Foldable, toList)
 
 -- | 'AD' serves as a common wrapper for different 'Mode' instances, exposing a traditional 
 -- numerical tower. Universal quantification is used to limit the actions in user code to 

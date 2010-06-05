@@ -1,5 +1,5 @@
 Name:         ad
-Version:      0.10
+Version:      0.12
 License:      BSD3
 License-File: LICENSE
 Copyright:    Edward Kmett 2010
@@ -9,7 +9,7 @@ Stability:    Experimental
 Category:     Math
 Homepage:     http://comonad.com/reader/
 Synopsis:     Mixed-Mode Automatic Differentiation.
-Description:  Forward, reverse, and higher-order automatic differentiation.
+Description:  Forward, reverse, and higher-order automatic differentiation with a common API
 
 Build-Type:   Simple
 Build-Depends:       
@@ -21,14 +21,15 @@ Build-Depends:
 
 Exposed-Modules:
     Numeric.AD
-    Numeric.AD.Internal
-    Numeric.AD.Classes
     Numeric.AD.Forward
-    Numeric.AD.Forward.Internal
     Numeric.AD.Reverse
-    Numeric.AD.Reverse.Internal
     Numeric.AD.Tower
-    Numeric.AD.Tower.Internal
     Numeric.AD.Directed
+    Numeric.AD.Newton
+    Numeric.AD.Classes
+    Numeric.AD.Internal
+    Numeric.AD.Internal.Forward
+    Numeric.AD.Internal.Reverse
+    Numeric.AD.Internal.Tower
 
 Extra-Source-Files: TODO

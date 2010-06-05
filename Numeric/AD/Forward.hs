@@ -38,7 +38,7 @@ import Data.Traversable (Traversable)
 import Control.Applicative
 import Numeric.AD.Classes
 import Numeric.AD.Internal
-import Numeric.AD.Forward.Internal
+import Numeric.AD.Internal.Forward
 
 -- | The 'diff2' function calculates the first derivative of scalar-to-scalar function by 'Forward' 'AD'
 diff :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a

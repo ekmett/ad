@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types, BangPatterns #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      : Numeric.AD.Tower
@@ -8,38 +8,36 @@
 -- Stability   : experimental
 -- Portability : GHC only 
 --
--- Mixed-Mode Automatic Differentiation.
--- 
--- For reverse mode AD we use 'System.Mem.StableName.StableName' to recover sharing information from 
--- the tape to avoid combinatorial explosion, and thus run asymptotically faster
--- than it could without such sharing information, but the use of side-effects
--- contained herein is benign.
+-- Higher order derivatives via a \"dual number tower\".
 --
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Tower
     ( 
-    -- * multiple derivatives
-      diffsUU, diffs0UU
-    , diffsUF, diffs0UF 
-    -- * single derivatives
-    , diffUU, diff2UU
-    -- * common access patterns
+    -- * Taylor Series
+      taylor, taylor0
+    , maclaurin, maclaurin0
+    -- * Derivatives
+    , diffUU
+    , diff2UU
+    , diffsUU
+    , diffs0UU
+    , diffsUF
+    , diffs0UF 
+    -- * Synonyms
     , diffs, diffs0
     , diff, diff2
-    -- * taylor series
-    , taylor, taylor0
-    -- * internals
+    -- * Exposed Types
     , Mode(..)
     , AD(..)
-    , Tower(..)
     ) where
+
+-- TODO: argminNaiveGradient
 
 import Control.Applicative
 import Numeric.AD.Classes
 import Numeric.AD.Internal
-import Numeric.AD.Tower.Internal
-import Data.List (mapAccumL)
+import Numeric.AD.Internal.Tower
 
 diffsUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 diffsUU f a = getADTower $ apply f a 
@@ -66,27 +64,27 @@ diffs0 = diffs0UU
 {-# INLINE diffs0 #-}
 
 taylor :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
-taylor f x dx = snd $ 
-    mapAccumL (\a x -> diag (a + x)) 0 $
-    zipWith3 (\x y z -> x * y * z)    
-             (diffsUU f x)
-             recipFactorials
-             (powers x)
+taylor f x dx = go 1 1 (diffs f x)
     where
-        powers x = iterate (*x) 1
-        recipFactorials = snd $ mapAccumL (\a i -> (a / fromIntegral i, a)) 1 [1..]
-        diag x = (x, x)
+        go !n !acc (d:ds) = d * acc : go (n + 1) (acc * dx / n) ds
+        go _ _ [] = []
 
 taylor0 :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
 taylor0 f x dx = zeroPad (taylor f x dx)
 {-# INLINE taylor0 #-}
 
--- | This is an inefficient 'Mode'. Use 'Numeric.AD.Forward.diffUU' instead.
+maclaurin :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
+maclaurin f = taylor f 0 
+{-# INLINE maclaurin #-}
+
+maclaurin0 :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
+maclaurin0 f = taylor0 f 0 
+{-# INLINE maclaurin0 #-}
+
 diffUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
 diffUU f a = d $ diffs f a 
 {-# INLINE diffUU #-}
 
--- | This is an inefficient 'Mode'. Use 'Numeric.AD.Forward.diff2UU' instead.
 diff2UU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
 diff2UU f a = d2 $ diffs f a 
 {-# INLINE diff2UU #-}

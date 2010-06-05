@@ -100,3 +100,4 @@ grad2 Reverse = R.grad2
 grad2 Tower   = error "grad2 Tower: unimplemented"
 grad2 Mixed   = M.grad2
 {-# INLINE grad2 #-}
+

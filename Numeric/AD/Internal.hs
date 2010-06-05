@@ -1,12 +1,20 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, TemplateHaskell, FlexibleContexts, FlexibleInstances #-}
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Numeric.AD.Internal
+-- Copyright   :  (c) Edward Kmett 2010
+-- License     :  BSD3
+-- Maintainer  :  ekmett@gmail.com
+-- Stability   :  experimental
+-- Portability :  GHC only 
+--
+-----------------------------------------------------------------------------
 module Numeric.AD.Internal
-    ( AD(..)
+    ( zipWithT
+    , AD(..)
     , Id(..)
     , probe
     , unprobe
---    , transposedWith
---    , transposed2
---    , transposed
     ) where
 
 import Control.Applicative
@@ -15,6 +23,9 @@ import Numeric.AD.Classes
 import Data.Monoid
 import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)
+
+zipWithT :: (Foldable f, Traversable g) => (a -> b -> c) -> f a -> g b -> g c 
+zipWithT f as = snd . mapAccumL (\(a:as') b -> (as', f a b)) (toList as)
 
 -- | 'AD' serves as a common wrapper for different 'Mode' instances, exposing a traditional 
 -- numerical tower. Universal quantification is used to limit the actions in user code to 

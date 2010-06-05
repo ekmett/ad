@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TemplateHaskell #-}
+{-# LANGUAGE Rank2Types, TemplateHaskell, BangPatterns #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Reverse
@@ -57,7 +57,7 @@ import Language.Haskell.TH
 
 import Numeric.AD.Classes
 import Numeric.AD.Internal
-import Numeric.AD.Reverse.Internal
+import Numeric.AD.Internal.Reverse
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with 'Reverse' AD in a single pass.
 grad :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a
@@ -125,76 +125,3 @@ diff2 :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
 diff2 = diff2UU
 {-# INLINE diff2 #-}
 
--- | The 'zeroNewton' function finds a zero of a scalar function using
--- Newton's method; its output is a stream of increasingly accurate
--- results.  (Modulo the usual caveats.)
---
--- TEST CASE:
---  @take 10 $ zeroNewton (\\x->x^2-4) 1  -- converge to 2.0@
---
--- TEST CASE
---  :module Data.Complex Numeric.RAD
---  @take 10 $ zeroNewton ((+1).(^2)) (1 :+ 1)  -- converge to (0 :+ 1)@
---
-zeroNewton :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-zeroNewton f x0 = iterate (\x -> let (y,y') = diff2UU f x in x - y/y') x0
-{-# INLINE zeroNewton #-}
-
--- | The 'inverseNewton' function inverts a scalar function using
--- Newton's method; its output is a stream of increasingly accurate
--- results.  (Modulo the usual caveats.)
---
--- TEST CASE:
---   @take 10 $ inverseNewton sqrt 1 (sqrt 10)  -- converge to 10@
---
-inverseNewton :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
-inverseNewton f x0 y = zeroNewton (\x -> f x - lift y) x0
-{-# INLINE inverseNewton #-}
-
--- | The 'fixedPointNewton' function find a fixedpoint of a scalar
--- function using Newton's method; its output is a stream of
--- increasingly accurate results.  (Modulo the usual caveats.)
-fixedPointNewton :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-fixedPointNewton f = zeroNewton (\x -> f x - x)
-{-# INLINE fixedPointNewton #-}
-
--- | The 'extremumNewton' function finds an extremum of a scalar
--- function using Newton's method; produces a stream of increasingly
--- accurate results.  (Modulo the usual caveats.)
-extremumNewton :: Fractional a => (forall t s. (Mode t, Mode s) => AD t (AD s a) -> AD t (AD s a)) -> a -> [a]
-extremumNewton f x0 = zeroNewton (diffUU f) x0
-{-# INLINE extremumNewton #-}
-
-{-
--- | The 'argminNaiveGradient' function performs a multivariate
--- optimization, based on the naive-gradient-descent in the file
--- @stalingrad\/examples\/flow-tests\/pre-saddle-1a.vlad@ from the
--- VLAD compiler Stalingrad sources.  Its output is a stream of
--- increasingly accurate results.  (Modulo the usual caveats.)  
--- This is /O(n)/ faster than 'Numeric.FAD.argminNaiveGradient'
-argminNaiveGradient :: (Fractional a, Ord a) => (forall s. Mode s => [AD s a] -> AD s a) -> [a] -> [[a]]
-argminNaiveGradient f x0 =
-    let
-        gf = grad f
-        loop x fx gx eta i =
-            -- should check gx = 0 here
-            let
-                x1 = zipWith (+) x (map ((-eta)*) gx)
-                fx1 = lowerFU f x1
-                gx1 = gf x1
-            in
-              if eta == 0 then []
-              else if (fx1 > fx) then loop x fx gx (eta/2) 0
-                   else if all (==0) gx then []
-                        -- else if fx1 == fx then loop x1 fx1 gx1 eta (i+1)
-                        else x1:(if (i==10)
-                                 then loop x1 fx1 gx1 (eta*2) 0
-                                 else loop x1 fx1 gx1 eta (i+1))
-    in
-      loop x0 (lowerFU f x0) (gf x0) 0.1 0
-{-# INLINE argminNaiveGradient #-}
-
-lowerFU :: (Functor f, Primal (AD s), Mode s, Num a) => (f (AD s a) -> AD s a) -> f a -> a
-lowerFU f = primal . f . fmap lift
-{-# INLINE lowerFU #-}
--}

@@ -15,42 +15,41 @@
 
 module Numeric.AD 
     ( 
-    -- * One-pass reverse-mode gradient
+    -- * Gradients
       grad, grad2
 
-    -- * Self-optimizing Jacobians
+    -- * Jacobians
     , jacobian, jacobian2
-    -- * Derivatives
-    -- ** Forward-mode AD
+
+    -- * Synonyms
+    , diff
+    , diff2
+    , diffs
+    , diffs0
+
+    -- * Derivatives (Forward)
     , diffUU
     , diffUF
 
     , diff2UU
     , diff2UF
 
-    -- ** Reverse-mode AD
+    -- * Derivatives (Reverse)
     , diffFU
     , diff2FU
 
-    -- ** Forward mode AD tower
+    -- * Derivatives (Tower)
     , diffsUU
     , diffsUF
 
     , diffs0UU
     , diffs0UF
 
-    -- * Common access patterns
-    , diff
-    , diff2
-    , diffs
-    , diffs0
-
-
-    -- * Taylor series
+    -- * Taylor Series (Tower)
     , taylor
     , taylor0
 
-    -- * Automatic derivatives
+    -- * Exposed Types
     , AD(..)
     , Mode(..)
     ) where
@@ -67,15 +66,12 @@ import Numeric.AD.Reverse  (diffFU, diff2FU, grad, grad2)
 import qualified Numeric.AD.Forward as Forward
 import qualified Numeric.AD.Reverse as Reverse
 
-size :: Foldable f => f a -> Int
-size = foldr' (\_ b -> 1 + b) 0 
-
 -- | Calculate the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs
 jacobian :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f a)
 jacobian f bs = snd <$> jacobian2 f bs
 {-# INLINE jacobian #-}
 
--- | Calculate the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
+-- | Calculate the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward- and reverse- mode AD based on the relative, number of inputs and outputs. If you need to support functions where the output is only a 'Functor', consider using 'jacobianT' from "Numeric.AD.Forward" or 'jacobian2' from "Numeric.AD.Reverse" directly.
 jacobian2 :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
 jacobian2 f bs | n == 0    = fmap (\x -> (unprobe x, bs)) as
                | n > m     = Reverse.jacobian2 f bs
@@ -84,4 +80,6 @@ jacobian2 f bs | n == 0    = fmap (\x -> (unprobe x, bs)) as
         as = f (probe <$> bs)
         n = size bs
         m = size as
+        size :: Foldable f => f a -> Int
+        size = foldr' (\_ b -> 1 + b) 0 
 {-# INLINE jacobian2 #-}

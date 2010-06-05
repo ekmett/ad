@@ -18,28 +18,29 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Reverse
-    ( Mode(..)
-    , AD
+    ( 
+    -- * Gradient
+      grad, grad2
+    -- * Jacobian
+    , jacobian, jacobian2
     -- * Derivatives
     , diffUU
     , diff2UU
     , diffFU
     , diff2FU
-    -- * Inefficient access patterns
     , diffUF
     , diff2UF
     -- * Common access patterns
     , diff, diff2
-    , grad, grad2
-    , jacobian, jacobian2
+    -- * Types
+    , AD
+    , Mode(..)
     -- * Internals
-    -- ** Partial Derivatives
     , partials
     , partialArray
     , partialMap
     , derivative
     , derivative2
-    -- * Data types
     , Tape(..)
     , Reverse(..)
     , Var(..)

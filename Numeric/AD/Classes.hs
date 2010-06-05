@@ -11,13 +11,17 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Classes
-    ( Lifted(..)
-    , Mode(..) 
+    ( 
+    -- * Provides common functionality shared across different AD modes
+      Mode(..) 
+    , one
+    -- * The automatic derivation of automatic derivation
     , Jacobian(..)
     , Primal(..)
+    -- * Automatically derived implementation details
     , deriveLifted
     , deriveNumeric
-    , one
+    , Lifted(..)
     ) where
 
 import Control.Applicative
@@ -30,6 +34,7 @@ infixl 7 *!, /!, ^*, *^, ^/
 infixl 6 +!, -!, <+> 
 infix 4 ==!
 
+-- | Higher-order versions of the stock numerical methods.
 class Lifted t where
 -- class Show1 t where
     showsPrec1 :: Show a => Int -> t a -> ShowS
@@ -101,14 +106,22 @@ class Lifted t where
 
 class Lifted t => Mode t where
 
+    -- | Embed a constant
     lift  :: Num a => a -> t a 
+
+    -- | Vector sum
     (<+>) :: Num a => t a -> t a -> t a
 
+    -- | Scalar-vector multiplication
     (*^) :: Num a => a -> t a -> t a
+
+    -- | Vector-scalar multiplication
     (^*) :: Num a => t a -> a -> t a
 
+    -- | Scalar division
     (^/) :: Fractional a => t a -> a -> t a 
 
+    -- | > 'zero' = 'lift' 0
     zero :: Num a => t a
 
     a *^ b = lift a *! b
@@ -118,6 +131,7 @@ class Lifted t => Mode t where
 
     zero = lift 0
 
+-- | > 'one' = 'lift' 1
 one :: (Mode t, Num a) => t a
 one = lift 1
 {-# INLINE one #-}
@@ -170,7 +184,16 @@ discrete2 f x y = f (primal x) (primal y)
 discrete3 :: (Primal t, Num a) => (a -> a -> a -> d) -> t a -> t a -> t a -> d
 discrete3 f x y z = f (primal x) (primal y) (primal z)
 
--- given (Primal t, Jacobian t), derive all of the higher-order classes above
+-- | @'deriveLifted' t@ provides
+--
+-- > instance Lifted $t 
+--
+-- given supplied instances for
+--
+-- > instance Lifted $t => Primal $t where ... 
+-- > instance Lifted $t => Jacobian $t where ...
+-- 
+-- The seemingly redundant @'Lifted' $t@ constraints are caused by Template Haskell staging restrictions.
 deriveLifted :: Q Type -> Q [Dec]
 deriveLifted t = [d| 
     instance Lifted $t where
@@ -246,11 +269,25 @@ deriveLifted t = [d|
 a :: Q Type
 a = varT (mkName "a") 
 
+-- | Find all the members defined in the 'Lifted' data type
 liftedMembers :: Q [String]
 liftedMembers = do
     ClassI (ClassD _ _ _ _ ds) <- reify ''Lifted
     return [ nameBase n | SigD n _ <- ds]
 
+-- | @'deriveNumeric' f g@ provides the following instances:
+--
+-- > instance ('Lifted' $f, 'Num' a, 'Enum' a) => 'Enum' ($g a)
+-- > instance ('Lifted' $f, 'Num' a, 'Eq' a) => 'Eq' ($g a)
+-- > instance ('Lifted' $f, 'Num' a, 'Ord' a) => 'Ord' ($g a)
+-- > instance ('Lifted' $f, 'Num a, 'Bounded' a) => 'Bounded' ($g a)
+-- > instance ('Lifted' $f, 'Show' a) => 'Show' ($g a)
+-- > instance ('Lifted' $f, 'Num' a) => 'Num' ($g a)
+-- > instance ('Lifted' $f, 'Fractional' a) => 'Fractional' ($g a)
+-- > instance ('Lifted' $f, 'Floating' a) => 'Floating' ($g a)
+-- > instance ('Lifted' $f, 'RealFloat' a) => 'RealFloat' ($g a)
+-- > instance ('Lifted' $f, 'RealFrac' a) => 'RealFrac' ($g a)
+-- > instance ('Lifted' $f, 'Real' a) => 'Real' ($g a)
 deriveNumeric :: Q Type -> Q Type -> Q [Dec]
 deriveNumeric t' t = do
     members <- liftedMembers

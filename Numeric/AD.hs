@@ -14,9 +14,12 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD 
-    ( AD(..)
-    , Mode(..)
+    ( 
+    -- * One-pass reverse-mode gradient
+      grad, grad2
 
+    -- * Self-optimizing Jacobians
+    , jacobian, jacobian2
     -- * Derivatives
     -- ** Forward-mode AD
     , diffUU
@@ -42,15 +45,14 @@ module Numeric.AD
     , diffs
     , diffs0
 
-    -- * One-pass reverse-mode gradient
-    , grad, grad2
-
-    -- * Self-optimizing Jacobians
-    , jacobian, jacobian2
 
     -- * Taylor series
     , taylor
     , taylor0
+
+    -- * Automatic derivatives
+    , AD(..)
+    , Mode(..)
     ) where
 
 import Data.Traversable (Traversable, mapM)
@@ -74,14 +76,12 @@ jacobian f bs = snd <$> jacobian2 f bs
 {-# INLINE jacobian #-}
 
 -- | Calculate the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
-
--- TODO: handle this more gracefully
 jacobian2 :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
 jacobian2 f bs | n == 0    = fmap (\x -> (unprobe x, bs)) as
                | n > m     = Reverse.jacobian2 f bs
                | otherwise = Forward.jacobian2 f bs
     where
-        n = size bs
         as = f (probe <$> bs)
+        n = size bs
         m = size as
 {-# INLINE jacobian2 #-}

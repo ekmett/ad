@@ -8,7 +8,7 @@
 -- Stability   :  experimental
 -- Portability :  GHC only
 --
--- Mixed-Mode Automatic Differentiation.
+-- Reverse-Mode Automatic Differentiation implementation details
 --
 -- For reverse mode AD we use 'System.Mem.StableName.StableName' to recover sharing information from
 -- the tape to avoid combinatorial explosion, and thus run asymptotically faster
@@ -18,15 +18,13 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Reverse.Internal
-    (
-      partials
+    ( Reverse(..)
+    , Tape(..)
+    , partials
     , partialArray
     , partialMap
     , derivative
     , derivative2
-    -- * Types
-    , Tape(..)
-    , Reverse(..)
     , Var(..)
     ) where
 

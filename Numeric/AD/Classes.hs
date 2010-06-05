@@ -12,13 +12,12 @@
 
 module Numeric.AD.Classes
     ( 
-    -- * Provides common functionality shared across different AD modes
+    -- * AD modes
       Mode(..) 
     , one
-    -- * The automatic derivation of automatic derivation
+    -- * Automatically Deriving AD
     , Jacobian(..)
     , Primal(..)
-    -- * Automatically derived implementation details
     , deriveLifted
     , deriveNumeric
     , Lifted(..)
@@ -142,11 +141,19 @@ negOne = lift (-1)
 
 -- | 'Primal' is used by 'deriveMode' but is not exposed 
 -- via the 'Mode' class to prevent its abuse by end users
--- via the AD class
+-- via the AD data type. 
+--
+-- It provides direct access to the result, stripped of its derivative information,
+-- but this is unsafe in general as (lift . primal) would discard derivative
+-- information. The end user is protected from accidentally using this function
+-- by the universal quantification on the various combinators we expose.
 
 class Primal t where
     primal :: Num a => t a -> a
 
+-- | 'Jacobian' is used by 'deriveMode' but is not exposed
+-- via 'Mode' to prevent its abuse by end users
+-- via the 'AD' data type. 
 class (Mode t, Mode (D t)) => Jacobian t where
     type D t :: * -> *
 

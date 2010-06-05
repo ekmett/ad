@@ -24,6 +24,7 @@ Exposed-Modules:
     Numeric.AD.Internal
     Numeric.AD.Classes
     Numeric.AD.Forward
+    Numeric.AD.Forward.Internal
     Numeric.AD.Reverse
     Numeric.AD.Reverse.Internal
     Numeric.AD.Tower

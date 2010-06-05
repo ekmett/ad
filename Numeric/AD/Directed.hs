@@ -13,11 +13,9 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Directed
-    ( Mode(..)
-    , AD(..)
-    , Direction(..)
+    ( 
     -- * Derivatives
-    , diffUU
+      diffUU
     , diff2UU
     -- * Common access patterns
     , diff
@@ -28,6 +26,10 @@ module Numeric.AD.Directed
     -- * Gradients
     , grad
     , grad2
+    -- * Exposed Types
+    , Direction(..)
+    , Mode(..)
+    , AD(..)
     ) where
 
 import Prelude hiding (reverse)

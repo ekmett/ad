@@ -133,7 +133,7 @@ diff2UF f a = unbundle <$> apply f a
 {-# INLINE diff2UF #-}
 
 bind :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> f b
-bind f as = snd $ mapAccumL outer 0
+bind f as = snd $ mapAccumL outer 0 as
     where
         outer !i a = (i + 1, f $ snd $ mapAccumL (inner i) 0 as)
         inner !i !j a = (j + 1, bundle a $ if i == j then 1 else 0)

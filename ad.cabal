@@ -28,6 +28,7 @@ Exposed-Modules:
     Numeric.AD.Reverse
     Numeric.AD.Reverse.Internal
     Numeric.AD.Tower
+    Numeric.AD.Tower.Internal
     Numeric.AD.Directed
 
 Extra-Source-Files: TODO

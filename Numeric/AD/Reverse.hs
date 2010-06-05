@@ -40,20 +40,8 @@ module Numeric.AD.Reverse
     , Mode(..)
     ) where
 
-import Prelude hiding (mapM)
-import Control.Applicative (Applicative(..),(<$>))
-import Control.Monad.ST
-import Control.Monad (forM_)
-import Data.List (foldl')
-import Data.Array.ST
-import Data.Array
-import Data.IntMap (IntMap, fromListWith, findWithDefault)
-import Data.Graph (graphFromEdges', topSort, Vertex)
-import Data.Reify (reifyGraph, MuRef(..))
-import qualified Data.Reify.Graph as Reified
-import Data.Traversable (Traversable, mapM)
-import System.IO.Unsafe (unsafePerformIO)
-import Language.Haskell.TH
+import Control.Applicative ((<$>))
+import Data.Traversable (Traversable)
 
 import Numeric.AD.Classes
 import Numeric.AD.Internal
@@ -61,29 +49,29 @@ import Numeric.AD.Internal.Reverse
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with 'Reverse' AD in a single pass.
 grad :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a
-grad f as = unbind vs (partialArray bounds $ f vs)
-    where (vs,bounds) = bind as
+grad f as = unbind vs (partialArray bds $ f vs)
+    where (vs,bds) = bind as
 {-# INLINE grad #-}
 
 -- | The 'grad2' function calculates the result and gradient of a non-scalar-to-scalar function with 'Reverse' AD in a single pass.
 grad2 :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
-grad2 f as = (primal r, unbind vs $ partialArray bounds r)
-    where (vs, bounds) = bind as
+grad2 f as = (primal r, unbind vs $ partialArray bds r)
+    where (vs, bds) = bind as
           r = f vs 
 {-# INLINE grad2 #-}
 
 -- | The 'jacobian' function calculates the jacobian of a non-scalar-to-non-scalar function with reverse AD lazily in @m@ passes for @m@ outputs.
 jacobian :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f a)
-jacobian f as = unbind vs . partialArray bounds <$> f vs where 
-    (vs, bounds) = bind as
+jacobian f as = unbind vs . partialArray bds <$> f vs where 
+    (vs, bds) = bind as
 {-# INLINE jacobian #-}
 
 -- | The 'jacobian2' function calculates both the result and the Jacobian of a nonscalar-to-nonscalar function, using @m@ invocations of reverse AD,
 -- where @m@ is the output dimensionality. Applying @fmap snd@ to the result will recover the result of 'jacobian'
 jacobian2 :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
 jacobian2 f as = row <$> f vs where 
-    (vs, bounds) = bind as
-    row a = (primal a, unbind vs (partialArray bounds a))
+    (vs, bds) = bind as
+    row a = (primal a, unbind vs (partialArray bds a))
 {-# INLINE jacobian2 #-}
 
 diffUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
@@ -105,13 +93,13 @@ diff2UF f a = derivative2 <$> f (var a 0)
 {-# INLINE diff2UF #-}
 
 diffFU :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a
-diffFU f as = unbind vs $ partialArray bounds (f vs)
-    where (vs, bounds) = bind as
+diffFU f as = unbind vs $ partialArray bds (f vs)
+    where (vs, bds) = bind as
 {-# INLINE diffFU #-}
 
 diff2FU :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
-diff2FU f as = (primal result, unbind vs $ partialArray bounds result)
-    where (vs, bounds) = bind as
+diff2FU f as = (primal result, unbind vs $ partialArray bds result)
+    where (vs, bds) = bind as
           result = f vs
 {-# INLINE diff2FU #-}
 

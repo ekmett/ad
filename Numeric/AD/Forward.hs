@@ -86,7 +86,7 @@ jacobian2 :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD
 jacobian2 f as = transposeWith row t p
     where 
         (p, t) = bind2 f as 
-        row x as = (primal x, tangent <$> as) 
+        row x as' = (primal x, tangent <$> as') 
 {-# INLINE jacobian2 #-}
 
 grad :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a

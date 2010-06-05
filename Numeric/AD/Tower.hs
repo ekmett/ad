@@ -34,7 +34,7 @@ module Numeric.AD.Tower
 
 -- TODO: argminNaiveGradient
 
-import Control.Applicative
+import Control.Applicative ((<$>))
 import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Numeric.AD.Internal.Tower
@@ -66,7 +66,7 @@ diffs0 = diffs0UU
 taylor :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
 taylor f x dx = go 1 1 (diffs f x)
     where
-        go !n !acc (d:ds) = d * acc : go (n + 1) (acc * dx / n) ds
+        go !n !acc (a:as) = a * acc : go (n + 1) (acc * dx / n) as
         go _ _ [] = []
 
 taylor0 :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]

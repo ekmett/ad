@@ -29,8 +29,6 @@ import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Data.Foldable (all)
 import Data.Traversable (Traversable)
-import qualified Numeric.AD as M
-import Data.Ix
 import Numeric.AD.Forward (diff, diff2) 
 import Numeric.AD.Reverse (grad2) 
 
@@ -51,7 +49,7 @@ extremum f x0 = findZero (diff f) x0
 {-# INLINE extremum #-}
 
 gradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
-gradientDescent f x0 = go x0 fx0 gx0 0.1 0
+gradientDescent f x0 = go x0 fx0 gx0 0.1 (0 :: Int)
     where
         (fx0, gx0) = grad2 f x0
         go x fx gx !eta !i 

@@ -89,15 +89,15 @@ instance Lifted Forward => Jacobian Forward where
 deriveLifted $ conT ''Forward
 
 bind :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> f b
-bind f as = snd $ mapAccumL outer 0 as
+bind f as = snd $ mapAccumL outer (0 :: Int) as
     where
-        outer !i a = (i + 1, f $ snd $ mapAccumL (inner i) 0 as)
+        outer !i _ = (i + 1, f $ snd $ mapAccumL (inner i) 0 as)
         inner !i !j a = (j + 1, bundle a $ if i == j then 1 else 0)
 
 bind2 :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> (b, f b)
-bind2 f as = dropIx $ mapAccumL outer (0, b0) as 
+bind2 f as = dropIx $ mapAccumL outer (0 :: Int, b0) as 
     where
-        outer (!i, _) a = let b = f $ snd $ mapAccumL (inner i) 0 as in ((i + 1, b), b)
+        outer (!i, _) _ = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), b)
         inner !i !j a = (j + 1, bundle a $ if i == j then 1 else 0)
         b0 = f (lift <$> as)
         dropIx ((_,b),bs) = (b,bs)

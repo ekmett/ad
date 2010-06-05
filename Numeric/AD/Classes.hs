@@ -26,7 +26,7 @@ module Numeric.AD.Classes
 import Control.Applicative
 import Data.Char
 import Language.Haskell.TH
-import Text.Show
+-- import Text.Show
 
 infixl 8 **!
 infixl 7 *!, /!, ^*, *^, ^/
@@ -202,8 +202,8 @@ discrete3 f x y z = f (primal x) (primal y) (primal z)
 -- 
 -- The seemingly redundant @'Lifted' $t@ constraints are caused by Template Haskell staging restrictions.
 deriveLifted :: Q Type -> Q [Dec]
-deriveLifted t = [d| 
-    instance Lifted $t where
+deriveLifted _t = [d| 
+    instance Lifted $_t where
         (==!)         = (==) `on` primal
         compare1      = compare `on` primal
         maxBound1     = lift maxBound
@@ -263,7 +263,6 @@ deriveLifted t = [d|
         scaleFloat1 n = unary (scaleFloat n) (scaleFloat1 n one) 
         significand1 x =  unary significand (scaleFloat1 (- floatDigits1 x) one) x
         atan21 = lift2 atan2 $ \vx vy -> let r = recip1 (square1 vx +! square1 vy) in (vy *! r, negate1 vx *! r)
-     -- properFraction1 :: (RealFrac a, Integral b) => t a -> (b, t a)
         properFraction1 a = (w, a `withPrimal` pb) where 
              pa = primal a 
              (w, pb) = properFraction pa
@@ -273,8 +272,8 @@ deriveLifted t = [d|
         floor1    = discrete1 floor 
     |]
     
-a :: Q Type
-a = varT (mkName "a") 
+varA :: Q Type
+varA = varT (mkName "a") 
 
 -- | Find all the members defined in the 'Lifted' data type
 liftedMembers :: Q [String]
@@ -299,24 +298,24 @@ deriveNumeric :: Q Type -> Q Type -> Q [Dec]
 deriveNumeric t' t = do
     members <- liftedMembers
     let keep n = nameBase n `elem` members
-    xs <- lowerInstance keep (classP ''Num [a]:) t t' `mapM` [''Enum, ''Eq, ''Ord, ''Bounded]
-    ys <- lowerInstance keep id                  t t' `mapM` [''Show, ''Num, ''Fractional, ''Floating, ''RealFloat,''RealFrac, ''Real]
+    xs <- lowerInstance keep (classP ''Num [varA]:) t t' `mapM` [''Enum, ''Eq, ''Ord, ''Bounded]
+    ys <- lowerInstance keep id                     t t' `mapM` [''Show, ''Num, ''Fractional, ''Floating, ''RealFloat,''RealFrac, ''Real]
     return (xs ++ ys)
 
 lowerInstance :: (Name -> Bool) -> ([Q Pred] -> [Q Pred]) -> Q Type -> Q Type -> Name -> Q Dec
 lowerInstance p f t t' n = do
-    ClassI (ClassD _ _ ns fds ds) <- reify n
-    instanceD (cxt (f [classP ''Lifted [t], classP n [a]]))
-              (conT n `appT` (t' `appT` a))
+    ClassI (ClassD _ _ _ _ ds) <- reify n
+    instanceD (cxt (f [classP ''Lifted [t], classP n [varA]]))
+              (conT n `appT` (t' `appT` varA))
               (concatMap lower1 ds)
     where 
         lower1 :: Dec -> [Q Dec]
-        lower1 (SigD n _) | p n' = [valD (varP n) (normalB (varE n')) []] where n' = primed n
+        lower1 (SigD n' _) | p n'' = [valD (varP n') (normalB (varE n'')) []] where n'' = primed n'
         lower1 _          = []
 
-        primed n = mkName $ base ++ [prime]
+        primed n' = mkName $ base ++ [prime]
             where 
-                base = nameBase n
+                base = nameBase n'
                 h = head base
                 prime | isSymbol h || h `elem` "/*-<>" = '!'
                       | otherwise = '1'

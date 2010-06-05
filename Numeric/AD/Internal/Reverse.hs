@@ -60,8 +60,8 @@ newtype Reverse a = Reverse (Tape a (Reverse a)) deriving (Show)
 instance MuRef (Reverse a) where
     type DeRef (Reverse a) = Tape a
 
-    mapDeRef f (Reverse (Lift a)) = pure (Lift a)
-    mapDeRef f (Reverse (Var a v)) = pure (Var a v)
+    mapDeRef _ (Reverse (Lift a)) = pure (Lift a)
+    mapDeRef _ (Reverse (Var a v)) = pure (Var a v)
     mapDeRef f (Reverse (Binary a dadb dadc b c)) = Binary a dadb dadc <$> f b <*> f c
     mapDeRef f (Reverse (Unary a dadb b)) = Unary a dadb <$> f b
 
@@ -140,7 +140,7 @@ backPropagate vmap ss v = do
 -- | This returns a list of contributions to the partials.
 -- The variable ids returned in the list are likely /not/ unique!
 partials :: Num a => AD Reverse a -> [(Int, a)]
-partials (AD tape) = [ (id, sensitivities ! ix) | (ix, Var _ id) <- xs ]
+partials (AD tape) = [ (ident, sensitivities ! ix) | (ix, Var _ ident) <- xs ]
     where
         Reified.Graph xs start = unsafePerformIO $ reifyGraph tape
         (g, vmap) = graphFromEdges' (edgeSet <$> filter nonConst xs)
@@ -151,6 +151,7 @@ partials (AD tape) = [ (id, sensitivities ! ix) | (ix, Var _ id) <- xs ]
                 backPropagate vmap ss
             return ss
         sbounds ((a,_):as) = foldl' (\(lo,hi) (b,_) -> (min lo b, max hi b)) (a,a) as
+        sbounds _ = undefined -- the graph can't be empty, it contains the output node!
         edgeSet (i, t) = (t, i, successors t)
         nonConst (_, Lift{}) = False
         nonConst _ = True
@@ -174,7 +175,7 @@ instance Monad S where
     return a = S (\s -> (a,s))
     S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
 
--- | Pass variables for forward substitution
+-- | Used to mark variables for inspection during the reverse pass
 class Var t a | t -> a where
     var     :: a -> Int -> t
     fromVar :: t -> Int
@@ -183,9 +184,10 @@ class Var t a | t -> a where
     unbind :: Functor f => f t -> Array Int a -> f a
     unbindMap :: (Functor f, Num a) => f t -> IntMap a -> f a
 
-    bind xs = (r,(0,s))
+    -- TODO: tweak bounds
+    bind xs = (r,(0,hi))
         where
-        (r,s) = runS (mapM freshVar xs) 0
+        (r,hi) = runS (mapM freshVar xs) 0
         freshVar a = S (\s -> let s' = s + 1 in s' `seq` (var a s, s'))
     unbind xs ys = fmap (\v -> ys ! fromVar v) xs
     unbindMap xs ys = fmap (\v -> findWithDefault 0 (fromVar v) ys) xs
@@ -193,6 +195,7 @@ class Var t a | t -> a where
 instance Var (Reverse a) a where
     var a v = Reverse (Var a v)
     fromVar (Reverse (Var _ v)) = v
+    fromVar _ = error "fromVar: not a Var"
 
 instance Var (AD Reverse a) a where
     var a v = AD (var a v)

@@ -54,11 +54,11 @@ module Numeric.AD
     , Mode(..)
     ) where
 
-import Data.Traversable (Traversable, mapM)
+import Data.Traversable (Traversable)
 import Data.Foldable (Foldable, foldr')
 import Control.Applicative
 import Numeric.AD.Classes  (Mode(..))
-import Numeric.AD.Internal (AD(..), Id(..), probe, unprobe)
+import Numeric.AD.Internal (AD(..), probe, unprobe)
 import Numeric.AD.Forward  (diff, diffUU, diff2, diff2UU, diffUF, diff2UF)
 import Numeric.AD.Tower    (diffsUU, diffs0UU , diffsUF, diffs0UF , diffs, diffs0, taylor, taylor0) 
 import Numeric.AD.Reverse  (diffFU, diff2FU, grad, grad2)

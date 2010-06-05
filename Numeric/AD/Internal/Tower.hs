@@ -21,11 +21,9 @@ module Numeric.AD.Internal.Tower
     , getADTower
     ) where
 
-import Control.Applicative
 import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Language.Haskell.TH
-import Data.List (mapAccumL)
 
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'
 newtype Tower a = Tower { getTower :: [a] } deriving (Show)

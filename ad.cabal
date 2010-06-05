@@ -33,3 +33,5 @@ Exposed-Modules:
     Numeric.AD.Internal.Tower
 
 Extra-Source-Files: TODO
+
+GHC-Options: -Wall

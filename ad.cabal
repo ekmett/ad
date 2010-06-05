@@ -1,5 +1,5 @@
 Name:         ad
-Version:      0.8.1
+Version:      0.9
 License:      BSD3
 License-File: LICENSE
 Copyright:    Edward Kmett 2010
@@ -21,12 +21,12 @@ Build-Depends:
 
 Exposed-Modules:
     Numeric.AD
-    Numeric.AD.Classes
     Numeric.AD.Internal
+    Numeric.AD.Classes
     Numeric.AD.Forward
     Numeric.AD.Reverse
+    Numeric.AD.Reverse.Internal
     Numeric.AD.Tower
     Numeric.AD.Directed
-
 
 Extra-Source-Files: TODO

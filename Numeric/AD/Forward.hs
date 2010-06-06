@@ -32,8 +32,10 @@ module Numeric.AD.Forward
     , diffUF
     , diff2UF
     -- * Directional Derivatives
-    , diffMU 
+    , diffMU
     , diff2MU
+    , diffMF
+    , diff2MF
     -- * Synonyms
     , diff
     , diff2
@@ -55,6 +57,14 @@ diffMU f = tangent . f . fmap (uncurry bundle)
 diff2MU :: (Functor f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> (a, a)
 diff2MU f = unbundle . f . fmap (uncurry bundle)
 {-# INLINE diff2MU #-}
+
+diffMF :: (Functor f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f (a, a) -> g a
+diffMF f = fmap tangent . f . fmap (uncurry bundle)
+{-# INLINE diffMF #-}
+
+diff2MF :: (Functor f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f (a, a) -> g (a, a)
+diff2MF f = fmap unbundle . f . fmap (uncurry bundle)
+{-# INLINE diff2MF #-}
 
 -- | The 'diff2' function calculates the first derivative of scalar-to-scalar function by 'Forward' 'AD'
 diff :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
@@ -94,8 +104,8 @@ jacobianT f = bind (fmap tangent . f)
 
 -- | A fast, simple transposed Jacobian computed with forward-mode AD.
 jacobianWithT :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> f (g b)
-jacobianWithT g f = bindWith g' f 
-    where g' a ga = g a . tangent <$> ga 
+jacobianWithT g f = bindWith g' f
+    where g' a ga = g a . tangent <$> ga
 {-# INLINE jacobianWithT #-}
 
 jacobian :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f a)
@@ -108,7 +118,7 @@ jacobianWith :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> (foral
 jacobianWith g f as = transposeWith (const id) t p
     where
         (p, t) = bindWith2 g' f as
-        g' a ga = g a . tangent <$> ga 
+        g' a ga = g a . tangent <$> ga
 {-# INLINE jacobianWith #-}
 
 jacobian2 :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
@@ -123,7 +133,7 @@ jacobianWith2 g f as = transposeWith row t p
     where
         (p, t) = bindWith2 g' f as
         row x as' = (primal x, as')
-        g' a ga = g a . tangent <$> ga 
+        g' a ga = g a . tangent <$> ga
 {-# INLINE jacobianWith2 #-}
 
 grad :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a

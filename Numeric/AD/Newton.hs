@@ -95,5 +95,5 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
                 zeroGrad = all (\(_,g) -> g == 0)
                 x1 = fmap (\(xi,gxi) -> xi - eta * gxi) xgx
                 (fx1, xgx1) = gradWith2 (,) f x1
-                
+
 {-# INLINE gradientDescent #-}

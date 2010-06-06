@@ -32,19 +32,22 @@ module Numeric.AD.Reverse
     -- * Derivatives
     , diffUU
     , diff2UU
-    , diffFU
-    , diff2FU
     , diffUF
     , diff2UF
     -- * Synonyms
     , diff
     , diff2
+    -- * Monadic Gradient (Jacobian)
+    , gradM
+    , grad2M
+    , gradWithM
+    , gradWith2M
     -- * Exposed Types
     , AD(..)
     , Mode(..)
     ) where
 
-import Control.Applicative ((<$>))
+import Control.Applicative (WrappedMonad(..),(<$>))
 import Data.Traversable (Traversable)
 
 import Numeric.AD.Classes
@@ -67,7 +70,7 @@ grad2 f as = (primal r, unbind vs $ partialArray bds r)
 -- | @'grad' g f@ function calculates the gradient of a non-scalar-to-scalar function @f@ with reverse-mode AD in a single pass.
 -- The gradient is combined element-wise with the argument using the function @g@.
 --
--- > grad == gradWith (\_ dx -> dx) 
+-- > grad == gradWith (\_ dx -> dx)
 -- > id == gradWith const
 gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f b
 gradWith g f as = unbindWith g vs (partialArray bds $ f vs)
@@ -76,7 +79,7 @@ gradWith g f as = unbindWith g vs (partialArray bds $ f vs)
 
 -- | @'grad2' g f@ calculates the result and gradient of a non-scalar-to-scalar function @f@ with 'Reverse' AD in a single pass
 -- the gradient is combined element-wise with the argument using the function @g@.
--- 
+--
 -- > grad2 == gradWith2 (\_ dx -> dx)
 gradWith2 :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f b)
 gradWith2 g f as = (primal r, unbindWith g vs $ partialArray bds r)
@@ -101,7 +104,7 @@ jacobian2 f as = row <$> f vs where
 -- | 'jacobianWith g f' calculates the jacobian of a non-scalar-to-non-scalar function @f@ with reverse AD lazily in @m@ passes for @m@ outputs.
 --
 -- Instead of returning the Jacobian matrix, the elements of the matrix are combined with the input using the @g@.
--- 
+--
 -- > jacobian == jacobianWith (\_ dx -> dx)
 -- > jacobianWith const == (\f x -> const x <$> f x)
 --
@@ -112,7 +115,7 @@ jacobianWith g f as = unbindWith g vs . partialArray bds <$> f vs where
 
 -- | 'jacobianWith2 g f' calculates both the result and the Jacobian of a nonscalar-to-nonscalar function @f@, using @m@ invocations of reverse AD,
 -- where @m@ is the output dimensionality. Applying @fmap snd@ to the result will recover the result of 'jacobianWith'
--- 
+--
 -- Instead of returning the Jacobian matrix, the elements of the matrix are combined with the input using the @g@.
 --
 -- > jacobian2 == jacobianWith2 (\_ dx -> dx)
@@ -141,17 +144,6 @@ diff2UF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a
 diff2UF f a = derivative2 <$> f (var a 0)
 {-# INLINE diff2UF #-}
 
-diffFU :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a
-diffFU f as = unbind vs $ partialArray bds (f vs)
-    where (vs, bds) = bind as
-{-# INLINE diffFU #-}
-
-diff2FU :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
-diff2FU f as = (primal result, unbind vs $ partialArray bds result)
-    where (vs, bds) = bind as
-          result = f vs
-{-# INLINE diff2FU #-}
-
 -- | The 'diff' function is a synonym for 'diffUU'.
 diff :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
 diff = diffUU
@@ -161,4 +153,18 @@ diff = diffUU
 diff2 :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
 diff2 = diff2UU
 {-# INLINE diff2 #-}
+
+gradM :: (Traversable f, Monad m, Num a) => (forall s. Mode s => f (AD s a) -> m (AD s a)) -> f a -> m (f a)
+gradM f = unwrapMonad . jacobian (WrapMonad . f)
+{-# INLINE gradM #-}
+
+grad2M :: (Traversable f, Monad m, Num a) => (forall s. Mode s => f (AD s a) -> m (AD s a)) -> f a -> m (a, f a)
+grad2M f = unwrapMonad . jacobian2 (WrapMonad . f)
+{-# INLINE grad2M #-}
+
+gradWithM :: (Traversable f, Monad m, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> m (AD s a)) -> f a -> m (f b)
+gradWithM g f = unwrapMonad . jacobianWith g (WrapMonad . f)
+
+gradWith2M :: (Traversable f, Monad m, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> m (AD s a)) -> f a -> m (a, f b)
+gradWith2M g f = unwrapMonad . jacobianWith2 g (WrapMonad . f)
 

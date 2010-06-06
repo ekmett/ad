@@ -106,11 +106,11 @@ fixedPointM f = findZeroM (\x -> subtract x `liftM` f x)
 --
 -- > take 10 $ extremum cos 1 -- convert to 0 
 extremum :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-extremum f = findZero (diff (decompose . f . compose))
+extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}
 
 extremumM :: (Monad m, Fractional a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> MList m a
-extremumM f = findZeroM (diffM (liftM decompose . f . compose))
+extremumM f = findZeroM (diffM (liftM decomposeMode . f . composeMode))
 {-# INLINE extremumM #-}
 
 -- | The 'gradientDescent' function performs a multivariate

@@ -29,6 +29,11 @@ module Numeric.AD.Reverse
     , jacobian'
     , jacobianWith
     , jacobianWith'
+    -- * Hessian
+    , hessian
+    , hessianM
+    , hessianTensor
+    
     -- * Derivatives
     , diff
     , diff'
@@ -57,6 +62,7 @@ import Data.Traversable (Traversable)
 
 import Numeric.AD.Classes
 import Numeric.AD.Internal
+import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Reverse
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with 'Reverse' AD in a single pass.
@@ -193,3 +199,20 @@ gradWithM g f = unwrapMonad . jacobianWith g (WrapMonad . f)
 gradWithM' :: (Traversable f, Monad m, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> m (AD s a)) -> f a -> m (a, f b)
 gradWithM' g f = unwrapMonad . jacobianWith' g (WrapMonad . f)
 
+-- | Compute the hessian via the jacobian of the gradient. gradient is computed in reverse mode and then the jacobian is computed in reverse mode.
+--
+-- However, since the @'grad f :: f a -> f a'@ is square this is not as fast as using the forward-mode Jacobian of a reverse mode gradient provided by 'Numeric.AD.hessian' in "Numeric.AD".
+hessian :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f (f a)
+hessian f = jacobian (grad (decomposeMode . f . fmap composeMode))
+
+-- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the forward-mode Jacobian of the mixed-mode Jacobian of the function.
+--
+-- While this is less efficient than 'Numeric.AD.hessianTensor' from "Numeric.AD" or 'Numeric.AD.Forward.hessianTensor' from "Numeric.AD.Forward", the type signature is more permissive with regards to the output non-scalar, and it may be more efficient if only a few coefficients of the result are consumed.
+hessianTensor :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f (f a))
+hessianTensor f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))
+
+-- | Compute the hessian via the reverse-mode jacobian of the reverse-mode gradient of a non-scalar-to-scalar monadic action. 
+--
+-- While this is less efficient than 'Numeric.AD.hessianTensor' from "Numeric.AD" or 'Numeric.AD.Forward.hessianTensor' from "Numeric.AD.Forward", the type signature is more permissive with regards to the output non-scalar, and it may be more efficient if only a few coefficients of the result are consumed.
+hessianM :: (Traversable f, Monad m, Num a) => (forall s. Mode s => f (AD s a) -> m (AD s a)) -> f a -> m (f (f a))
+hessianM f = unwrapMonad . hessianTensor (WrapMonad . f)

@@ -16,12 +16,16 @@
 module Numeric.AD
     (
     -- * Gradients (Reverse Mode)
-      grad, grad'
-    , gradWith, gradWith'
+      grad
+    , grad'
+    , gradWith
+    , gradWith'
 
     -- * Jacobians (Mixed Mode)
-    , jacobian, jacobian'
-    , jacobianWith, jacobianWith'
+    , jacobian
+    , jacobian'
+    , jacobianWith
+    , jacobianWith'
 
     -- * Jacobians (Reverse Mode)
     , gradF
@@ -30,9 +34,16 @@ module Numeric.AD
     , gradWithF'
 
     -- * Jacobians (Forward Mode)
-    , jacobianT, jacobianWithT
+    , jacobianT
+    , jacobianWithT
 
-    -- * Hessians (Forward-On-Reverse Mode)
+    -- * Hessian (Forward-On-Reverse)
+    , hessian
+
+    -- * Hessian Tensors (Forward-On-Mixed)
+    , hessianTensor
+
+    -- * Hessian Vector Products (Forward-On-Reverse)
     , hessianProduct
     , hessianProduct'
 
@@ -87,7 +98,7 @@ import Numeric.AD.Internal (AD(..), probed, unprobe)
 import Numeric.AD.Forward  (diff, diff', diffF, diffF', du, du', duF, duF', diffM, diffM', jacobianT, jacobianWithT) 
 import Numeric.AD.Tower    (diffsF, diffs0F , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0)
 import Numeric.AD.Reverse  (grad, grad', gradWith, gradWith', gradM, gradM', gradWithM, gradWithM', gradF, gradF', gradWithF, gradWithF')
-import Numeric.AD.Internal.Composition (compose, decompose)
+import Numeric.AD.Internal.Composition
 
 import qualified Numeric.AD.Forward as Forward
 import qualified Numeric.AD.Reverse as Reverse
@@ -147,7 +158,7 @@ jacobianWith' g f bs
 -- 
 -- Or in other words, we take the directional derivative of the gradient.
 hessianProduct :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> f a
-hessianProduct f = duF (grad (decompose . f . fmap compose))
+hessianProduct f = duF (grad (decomposeMode . f . fmap composeMode))
 
 -- | @'hessianProduct'' f wv@ computes both the gradient of a non-scalar-to-scalar @f@ at @w = 'fst' <$> wv@ and the product of the hessian @H@ at @w@ with a vector @v = snd <$> wv@ using \"Pearlmutter\'s method\". The outputs are returned wrapped in the same functor.
 --
@@ -156,5 +167,14 @@ hessianProduct f = duF (grad (decompose . f . fmap compose))
 -- Or in other words, we take the directional derivative of the gradient.
 -- 
 hessianProduct' :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> f (a, a)
-hessianProduct' f = duF' (grad (decompose . f . fmap compose))
+hessianProduct' f = duF' (grad (decomposeMode . f . fmap composeMode))
 
+-- hessianProductWith' :: (Traversable f, Num a) => (a -> a -> a -> a -> b) -> (forall s. Mode s. f (AD s a) -> AD s a) -> f (a, a) -> f b
+
+-- | Compute the hessian via the jacobian of the gradient. gradient is computed in reverse mode and then the jacobian is computed in forward mode.
+hessian :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f (f a)
+hessian f = Forward.jacobian (grad (decomposeMode . f . fmap composeMode))
+
+-- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the forward-mode Jacobian of the mixed-mode Jacobian of the function.
+hessianTensor :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f (f a))
+hessianTensor f = decomposeFunctor . Forward.jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))

@@ -27,6 +27,9 @@ module Numeric.AD.Forward
     -- * Transposed Jacobian
     , jacobianT
     , jacobianWithT
+    -- * Hessian Product
+    , hessianProduct
+    , hessianProduct'
     -- * Derivatives
     , diff
     , diff'
@@ -50,6 +53,7 @@ import Control.Applicative
 import Control.Monad (liftM)
 import Numeric.AD.Classes
 import Numeric.AD.Internal
+import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Forward
 
 du :: (Functor f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> a
@@ -159,3 +163,11 @@ gradWith g f = bindWith g (tangent . f)
 gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f b)
 gradWith' g f = bindWith' g (tangent . f)
 {-# INLINE gradWith' #-}
+
+-- | Compute the product of a vector with the Hessian using forward-on-forward-mode AD. 
+hessianProduct :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> f a
+hessianProduct f = duF (grad (decompose . f . fmap compose))
+
+-- | Compute the gradient and hessian product using forward-on-forward-mode AD. 
+hessianProduct' :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> f (a, a)
+hessianProduct' f = duF' (grad (decompose . f . fmap compose))

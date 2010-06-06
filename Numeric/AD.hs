@@ -32,6 +32,10 @@ module Numeric.AD
     -- * Jacobians (Forward Mode)
     , jacobianT, jacobianWithT
 
+    -- * Hessians (Forward-On-Reverse Mode)
+    , hessianProduct
+    , hessianProduct'
+
     -- * Derivatives (Forward Mode)
     , diff
     , diffF
@@ -83,6 +87,7 @@ import Numeric.AD.Internal (AD(..), probed, unprobe)
 import Numeric.AD.Forward  (diff, diff', diffF, diffF', du, du', duF, duF', diffM, diffM', jacobianT, jacobianWithT) 
 import Numeric.AD.Tower    (diffsF, diffs0F , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0)
 import Numeric.AD.Reverse  (grad, grad', gradWith, gradWith', gradM, gradM', gradWithM, gradWithM', gradF, gradF', gradWithF, gradWithF')
+import Numeric.AD.Internal.Composition (compose, decompose)
 
 import qualified Numeric.AD.Forward as Forward
 import qualified Numeric.AD.Reverse as Reverse
@@ -135,4 +140,21 @@ jacobianWith' g f bs
         size :: Foldable f => f a -> Int
         size = foldr' (\_ b -> 1 + b) 0
 {-# INLINE jacobianWith' #-}
+
+-- | @'hessianProduct' f wv@ computes the product of the hessian @H@ of a non-scalar-to-scalar function @f@ at @w = 'fst' <$> wv@ with a vector @v = snd <$> wv@ using \"Pearlmutter\'s method\" from <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.29.6143>, which states:
+--
+-- > H v = (d/dr) grad_w (w + r v) | r = 0
+-- 
+-- Or in other words, we take the directional derivative of the gradient.
+hessianProduct :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> f a
+hessianProduct f = duF (grad (decompose . f . fmap compose))
+
+-- | @'hessianProduct'' f wv@ computes both the gradient of a non-scalar-to-scalar @f@ at @w = 'fst' <$> wv@ and the product of the hessian @H@ at @w@ with a vector @v = snd <$> wv@ using \"Pearlmutter\'s method\". The outputs are returned wrapped in the same functor.
+--
+-- > H v = (d/dr) grad_w (w + r v) | r = 0
+-- 
+-- Or in other words, we take the directional derivative of the gradient.
+-- 
+hessianProduct' :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> f (a, a)
+hessianProduct' f = duF' (grad (decompose . f . fmap compose))
 

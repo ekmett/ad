@@ -17,6 +17,7 @@ module Numeric.AD
     (
     -- * Gradients
       grad, grad2
+    , gradWith, gradWith2
 
     -- * Jacobians
     , jacobian, jacobian2
@@ -61,7 +62,7 @@ import Numeric.AD.Classes  (Mode(..))
 import Numeric.AD.Internal (AD(..), probed, unprobe)
 import Numeric.AD.Forward  (diff, diffUU, diff2, diff2UU, diffUF, diff2UF)
 import Numeric.AD.Tower    (diffsUU, diffs0UU , diffsUF, diffs0UF , diffs, diffs0, taylor, taylor0)
-import Numeric.AD.Reverse  (diffFU, diff2FU, grad, grad2)
+import Numeric.AD.Reverse  (diffFU, diff2FU, grad, grad2, gradWith, gradWith2)
 
 import qualified Numeric.AD.Forward as Forward
 import qualified Numeric.AD.Reverse as Reverse

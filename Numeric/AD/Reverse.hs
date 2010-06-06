@@ -37,7 +37,9 @@ module Numeric.AD.Reverse
     -- * Synonyms
     , diff
     , diff2
-    -- * Monadic Gradient (Jacobian)
+    -- * Monadic Combinators
+    , diffUM
+    , diff2UM
     , gradM
     , grad2M
     , gradWithM
@@ -47,6 +49,7 @@ module Numeric.AD.Reverse
     , Mode(..)
     ) where
 
+import Control.Monad (liftM)
 import Control.Applicative (WrappedMonad(..),(<$>))
 import Data.Traversable (Traversable)
 
@@ -130,19 +133,27 @@ diffUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
 diffUU f a = derivative $ f (var a 0)
 {-# INLINE diffUU #-}
 
-diffUF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f a
-diffUF f a = derivative <$> f (var a 0)
-{-# INLINE diffUF #-}
-
 -- | The 'diff2UU' function calculates the value and derivative, as a
 -- pair, of a scalar-to-scalar function.
 diff2UU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
 diff2UU f a = derivative2 $ f (var a 0)
 {-# INLINE diff2UU #-}
 
+diffUF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f a
+diffUF f a = derivative <$> f (var a 0)
+{-# INLINE diffUF #-}
+
 diff2UF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f (a, a)
 diff2UF f a = derivative2 <$> f (var a 0)
 {-# INLINE diff2UF #-}
+
+diffUM :: (Monad m, Num a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> m a
+diffUM f a = liftM derivative $ f (var a 0)
+{-# INLINE diffUM #-}
+
+diff2UM :: (Monad m, Num a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> m (a, a)
+diff2UM f a = liftM derivative2 $ f (var a 0)
+{-# INLINE diff2UM #-}
 
 -- | The 'diff' function is a synonym for 'diffUU'.
 diff :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a

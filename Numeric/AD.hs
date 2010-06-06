@@ -55,9 +55,15 @@ module Numeric.AD
     , maclaurin
     , maclaurin0
 
-    -- * Monadic Gradient (wrapped Jacobian)
-    , gradM, grad2M
-    , gradWithM, gradWith2M
+    -- * Monadic Combinators (Forward)
+    , diffUM
+    , diff2UM
+
+    -- * Monadic Combinators (Reverse)
+    , gradM
+    , grad2M
+    , gradWithM
+    , gradWith2M
 
     -- * Exposed Types
     , AD(..)
@@ -69,7 +75,7 @@ import Data.Foldable (Foldable, foldr')
 import Control.Applicative
 import Numeric.AD.Classes  (Mode(..))
 import Numeric.AD.Internal (AD(..), probed, unprobe)
-import Numeric.AD.Forward  (diff, diffUU, diff2, diff2UU, diffUF, diff2UF, diffMU, diff2MU, diffMF, diff2MF)
+import Numeric.AD.Forward  (diff, diffUU, diff2, diff2UU, diffUF, diff2UF, diffMU, diff2MU, diffMF, diff2MF, diffUM, diff2UM) 
 import Numeric.AD.Tower    (diffsUU, diffs0UU , diffsUF, diffs0UF , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0)
 import Numeric.AD.Reverse  (grad, grad2, gradWith, gradWith2, gradM, grad2M, gradWithM, gradWith2M)
 

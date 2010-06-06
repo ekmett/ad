@@ -36,6 +36,9 @@ module Numeric.AD.Forward
     , diff2MU
     , diffMF
     , diff2MF
+    -- * Monadic Combinators
+    , diffUM
+    , diff2UM
     -- * Synonyms
     , diff
     , diff2
@@ -46,6 +49,7 @@ module Numeric.AD.Forward
 
 import Data.Traversable (Traversable)
 import Control.Applicative
+import Control.Monad (liftM)
 import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Numeric.AD.Internal.Forward
@@ -96,10 +100,19 @@ diff2UF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a
 diff2UF f a = unbundle <$> apply f a
 {-# INLINE diff2UF #-}
 
+-- | The 'diffUM' function calculates the first derivative of scalar-to-scalar monadic function by 'Forward' 'AD'
+diffUM :: (Monad m, Num a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> m a
+diffUM f a = tangent `liftM` apply f a
+{-# INLINE diffUM #-}
+
+-- | The 'diff2UM' function calculates the result and first derivative of a scalar-to-scalar monadic function by 'Forward' 'AD'
+diff2UM :: (Monad m, Num a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> m (a, a)
+diff2UM f a = unbundle `liftM` apply f a
+{-# INLINE diff2UM #-}
+
 -- | A fast, simple transposed Jacobian computed with forward-mode AD.
 jacobianT :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> f (g a)
 jacobianT f = bind (fmap tangent . f)
--- jacobianT f as = fmap tangent <$> bind f as
 {-# INLINE jacobianT #-}
 
 -- | A fast, simple transposed Jacobian computed with forward-mode AD.

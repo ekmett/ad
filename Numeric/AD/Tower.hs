@@ -15,53 +15,55 @@
 module Numeric.AD.Tower
     (
     -- * Taylor Series
-      taylor, taylor0
-    , maclaurin, maclaurin0
+      taylor
+    , taylor0
+    -- * Maclaurin Series
+    , maclaurin
+    , maclaurin0
     -- * Derivatives
-    , diffUU
-    , diff2UU
-    , diffsUU
-    , diffs0UU
-    , diffsUF
-    , diffs0UF
-    -- * Synonyms
-    , diffs, diffs0
-    , diff, diff2
+    , diff
+    , diff'
+    , diffs
+    , diffs0
+    , diffsF
+    , diffs0F
+    -- * Monadic Combinators
+    , diffsM
+    , diffs0M
     -- * Exposed Types
     , Mode(..)
     , AD(..)
     ) where
 
--- TODO: argminNaiveGradient
-
+import Control.Monad (liftM)
 import Control.Applicative ((<$>))
 import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Numeric.AD.Internal.Tower
 
-diffsUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-diffsUU f a = getADTower $ apply f a
-{-# INLINE diffsUU #-}
-
-diffs0UU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-diffs0UU f a = zeroPad (diffsUU f a)
-{-# INLINE diffs0UU #-}
-
-diffs0UF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f [a]
-diffs0UF f a = (zeroPad . getADTower) <$> apply f a
-{-# INLINE diffs0UF #-}
-
-diffsUF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f [a]
-diffsUF f a = getADTower <$> apply f a
-{-# INLINE diffsUF #-}
-
 diffs :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-diffs = diffsUU
+diffs f a = getADTower $ apply f a
 {-# INLINE diffs #-}
 
 diffs0 :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-diffs0 = diffs0UU
+diffs0 f a = zeroPad (diffs f a)
 {-# INLINE diffs0 #-}
+
+diffsF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f [a]
+diffsF f a = getADTower <$> apply f a
+{-# INLINE diffsF #-}
+
+diffs0F :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f [a]
+diffs0F f a = (zeroPad . getADTower) <$> apply f a
+{-# INLINE diffs0F #-}
+
+diffsM :: (Monad m, Num a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> m [a]
+diffsM f a = getADTower `liftM` apply f a
+{-# INLINE diffsM #-}
+
+diffs0M :: (Monad m, Num a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> m [a]
+diffs0M f a = (zeroPad . getADTower) `liftM` apply f a
+{-# INLINE diffs0M #-}
 
 taylor :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
 taylor f x dx = go 1 1 (diffs f x)
@@ -81,18 +83,11 @@ maclaurin0 :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 maclaurin0 f = taylor0 f 0
 {-# INLINE maclaurin0 #-}
 
-diffUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
-diffUU f a = d $ diffs f a
-{-# INLINE diffUU #-}
-
-diff2UU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
-diff2UU f a = d2 $ diffs f a
-{-# INLINE diff2UU #-}
-
 diff :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
-diff = diffUU
+diff f a = d $ diffs f a
 {-# INLINE diff #-}
 
-diff2 :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
-diff2 = diff2UU
-{-# INLINE diff2 #-}
+diff' :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
+diff' f a = d' $ diffs f a
+{-# INLINE diff' #-}
+

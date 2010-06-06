@@ -16,32 +16,30 @@ module Numeric.AD.Forward
     (
     -- * Gradient
       grad
-    , grad2
+    , grad'
     , gradWith
-    , gradWith2
+    , gradWith'
     -- * Jacobian
     , jacobian
-    , jacobian2
-    , jacobianT
+    , jacobian'
     , jacobianWith
-    , jacobianWith2
+    , jacobianWith'
+    -- * Transposed Jacobian
+    , jacobianT
     , jacobianWithT
     -- * Derivatives
-    , diffUU
-    , diff2UU
-    , diffUF
-    , diff2UF
-    -- * Directional Derivatives
-    , diffMU
-    , diff2MU
-    , diffMF
-    , diff2MF
-    -- * Monadic Combinators
-    , diffUM
-    , diff2UM
-    -- * Synonyms
     , diff
-    , diff2
+    , diff'
+    , diffF
+    , diffF'
+    -- * Directional Derivatives
+    , du
+    , du'
+    , duF
+    , duF'
+    -- * Monadic Combinators
+    , diffM
+    , diffM'
     -- * Exposed Types
     , AD(..)
     , Mode(..)
@@ -54,61 +52,56 @@ import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Numeric.AD.Internal.Forward
 
-diffMU :: (Functor f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> a
-diffMU f = tangent . f . fmap (uncurry bundle)
-{-# INLINE diffMU #-}
+du :: (Functor f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> a
+du f = tangent . f . fmap (uncurry bundle)
+{-# INLINE du #-}
 
-diff2MU :: (Functor f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> (a, a)
-diff2MU f = unbundle . f . fmap (uncurry bundle)
-{-# INLINE diff2MU #-}
+du' :: (Functor f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> (a, a)
+du' f = unbundle . f . fmap (uncurry bundle)
+{-# INLINE du' #-}
 
-diffMF :: (Functor f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f (a, a) -> g a
-diffMF f = fmap tangent . f . fmap (uncurry bundle)
-{-# INLINE diffMF #-}
+duF :: (Functor f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f (a, a) -> g a
+duF f = fmap tangent . f . fmap (uncurry bundle)
+{-# INLINE duF #-}
 
-diff2MF :: (Functor f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f (a, a) -> g (a, a)
-diff2MF f = fmap unbundle . f . fmap (uncurry bundle)
-{-# INLINE diff2MF #-}
+duF' :: (Functor f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f (a, a) -> g (a, a)
+duF' f = fmap unbundle . f . fmap (uncurry bundle)
+{-# INLINE duF' #-}
 
--- | The 'diff2' function calculates the first derivative of scalar-to-scalar function by 'Forward' 'AD'
+-- | The 'diff' function calculates the first derivative of a scalar-to-scalar function by forward-mode 'AD'
+--
+-- > diff sin == cos
 diff :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
-diff = diffUU
+diff f a = tangent $ apply f a
 {-# INLINE diff #-}
 
--- | The 'diff2' function calculates the result and first derivative of scalar-to-scalar function by 'Forward' 'AD'
-diff2 :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
-diff2 = diff2UU
-{-# INLINE diff2 #-}
+-- | The 'd'UU' function calculates the result and first derivative of scalar-to-scalar function by F'orward' 'AD'
+-- 
+-- > d' sin == sin &&& cos
+-- > d' f = f &&& d f
+diff' :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
+diff' f a = unbundle $ apply f a
+{-# INLINE diff' #-}
 
--- | The 'diffUU' function calculates the first derivative of a scalar-to-scalar function by 'Forward' 'AD'
-diffUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
-diffUU f a = tangent $ apply f a
-{-# INLINE diffUU #-}
+-- | The 'diffF' function calculates the first derivative of scalar-to-nonscalar function by F'orward' 'AD'
+diffF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f a
+diffF f a = tangent <$> apply f a
+{-# INLINE diffF #-}
 
--- | The 'diff2UU' function calculates the result and first derivative of scalar-to-scalar function by 'Forward' 'AD'
-diff2UU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
-diff2UU f a = unbundle $ apply f a
-{-# INLINE diff2UU #-}
+-- | The 'diffF'' function calculates the result and first derivative of a scalar-to-non-scalar function by F'orward' 'AD'
+diffF' :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f (a, a)
+diffF' f a = unbundle <$> apply f a
+{-# INLINE diffF' #-}
 
--- | The 'diffUF' function calculates the first derivative of scalar-to-nonscalar function by 'Forward' 'AD'
-diffUF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f a
-diffUF f a = tangent <$> apply f a
-{-# INLINE diffUF #-}
+-- | The 'dUM' function calculates the first derivative of scalar-to-scalar monadic function by F'orward' 'AD'
+diffM :: (Monad m, Num a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> m a
+diffM f a = tangent `liftM` apply f a
+{-# INLINE diffM #-}
 
--- | The 'diff2UF' function calculates the result and first derivative of a scalar-to-non-scalar function by 'Forward' 'AD'
-diff2UF :: (Functor f, Num a) => (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f (a, a)
-diff2UF f a = unbundle <$> apply f a
-{-# INLINE diff2UF #-}
-
--- | The 'diffUM' function calculates the first derivative of scalar-to-scalar monadic function by 'Forward' 'AD'
-diffUM :: (Monad m, Num a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> m a
-diffUM f a = tangent `liftM` apply f a
-{-# INLINE diffUM #-}
-
--- | The 'diff2UM' function calculates the result and first derivative of a scalar-to-scalar monadic function by 'Forward' 'AD'
-diff2UM :: (Monad m, Num a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> m (a, a)
-diff2UM f a = unbundle `liftM` apply f a
-{-# INLINE diff2UM #-}
+-- | The 'd'UM' function calculates the result and first derivative of a scalar-to-scalar monadic function by F'orward' 'AD'
+diffM' :: (Monad m, Num a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> m (a, a)
+diffM' f a = unbundle `liftM` apply f a
+{-# INLINE diffM' #-}
 
 -- | A fast, simple transposed Jacobian computed with forward-mode AD.
 jacobianT :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> f (g a)
@@ -124,46 +117,45 @@ jacobianWithT g f = bindWith g' f
 jacobian :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f a)
 jacobian f as = transposeWith (const id) t p
     where
-        (p, t) = bind2 (fmap tangent . f) as
+        (p, t) = bind' (fmap tangent . f) as
 {-# INLINE jacobian #-}
 
 jacobianWith :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f b)
 jacobianWith g f as = transposeWith (const id) t p
     where
-        (p, t) = bindWith2 g' f as
+        (p, t) = bindWith' g' f as
         g' a ga = g a . tangent <$> ga
 {-# INLINE jacobianWith #-}
 
-jacobian2 :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
-jacobian2 f as = transposeWith row t p
+jacobian' :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
+jacobian' f as = transposeWith row t p
     where
-        (p, t) = bind2 f as
+        (p, t) = bind' f as
         row x as' = (primal x, tangent <$> as')
-{-# INLINE jacobian2 #-}
+{-# INLINE jacobian' #-}
 
-jacobianWith2 :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f b)
-jacobianWith2 g f as = transposeWith row t p
+jacobianWith' :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f b)
+jacobianWith' g f as = transposeWith row t p
     where
-        (p, t) = bindWith2 g' f as
+        (p, t) = bindWith' g' f as
         row x as' = (primal x, as')
         g' a ga = g a . tangent <$> ga
-{-# INLINE jacobianWith2 #-}
+{-# INLINE jacobianWith' #-}
 
 grad :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a
 grad f = bind (tangent . f)
 {-# INLINE grad #-}
 
-
-grad2 :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
-grad2 f as = (primal b, tangent <$> bs)
+grad' :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
+grad' f as = (primal b, tangent <$> bs)
     where
-        (b, bs) = bind2 f as
-{-# INLINE grad2 #-}
+        (b, bs) = bind' f as
+{-# INLINE grad' #-}
 
 gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f b
 gradWith g f = bindWith g (tangent . f)
 {-# INLINE gradWith #-}
 
-gradWith2 :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f b)
-gradWith2 g f = bindWith2 g (tangent . f)
-{-# INLINE gradWith2 #-}
+gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f b)
+gradWith' g f = bindWith' g (tangent . f)
+{-# INLINE gradWith' #-}

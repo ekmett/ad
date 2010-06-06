@@ -24,7 +24,7 @@ module Numeric.AD.Internal.Reverse
     , partialArray
     , partialMap
     , derivative
-    , derivative2
+    , derivative'
     , Var(..)
     , bind
     , unbind
@@ -118,9 +118,9 @@ derivative :: Num a => AD Reverse a -> a
 derivative = sum . map snd . partials
 {-# INLINE derivative #-}
 
-derivative2 :: Num a => AD Reverse a -> (a, a)
-derivative2 r = (primal r, derivative r)
-{-# INLINE derivative2 #-}
+derivative' :: Num a => AD Reverse a -> (a, a)
+derivative' r = (primal r, derivative r)
+{-# INLINE derivative' #-}
 
 -- | back propagate sensitivities along a tape.
 backPropagate :: Num a => (Vertex -> (Tape a Int, Int, [Int])) -> STArray s Int a -> Vertex -> ST s ()

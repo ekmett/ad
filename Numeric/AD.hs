@@ -16,38 +16,32 @@
 module Numeric.AD
     (
     -- * Gradients
-      grad, grad2
-    , gradWith, gradWith2
+      grad, grad'
+    , gradWith, gradWith'
 
     -- * Jacobians
-    , jacobian, jacobian2
-    , jacobianWith, jacobianWith2
-
-    -- * Synonyms
-    , diff
-    , diff2
-    , diffs
-    , diffs0
+    , jacobian, jacobian'
+    , jacobianWith, jacobianWith'
 
     -- * Derivatives (Forward)
-    , diffUU
-    , diffUF
+    , diff
+    , diffF
 
-    , diff2UU
-    , diff2UF
+    , diff'
+    , diffF'
 
     -- * Derivatives (Tower)
-    , diffsUU
-    , diffsUF
+    , diffs
+    , diffsF
 
-    , diffs0UU
-    , diffs0UF
+    , diffs0
+    , diffs0F
 
     -- * Directional Derivatives (Forward)
-    , diffMU
-    , diff2MU
-    , diffMF
-    , diff2MF
+    , du
+    , du'
+    , duF
+    , duF'
 
     -- * Taylor Series (Tower)
     , taylor
@@ -56,14 +50,14 @@ module Numeric.AD
     , maclaurin0
 
     -- * Monadic Combinators (Forward)
-    , diffUM
-    , diff2UM
+    , diffM
+    , diffM'
 
     -- * Monadic Combinators (Reverse)
     , gradM
-    , grad2M
+    , gradM'
     , gradWithM
-    , gradWith2M
+    , gradWithM'
 
     -- * Exposed Types
     , AD(..)
@@ -75,9 +69,9 @@ import Data.Foldable (Foldable, foldr')
 import Control.Applicative
 import Numeric.AD.Classes  (Mode(..))
 import Numeric.AD.Internal (AD(..), probed, unprobe)
-import Numeric.AD.Forward  (diff, diffUU, diff2, diff2UU, diffUF, diff2UF, diffMU, diff2MU, diffMF, diff2MF, diffUM, diff2UM) 
-import Numeric.AD.Tower    (diffsUU, diffs0UU , diffsUF, diffs0UF , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0)
-import Numeric.AD.Reverse  (grad, grad2, gradWith, gradWith2, gradM, grad2M, gradWithM, gradWith2M)
+import Numeric.AD.Forward  (diff, diff', diffF, diffF', du, du', duF, duF', diffM, diffM') 
+import Numeric.AD.Tower    (diffsF, diffs0F , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0)
+import Numeric.AD.Reverse  (grad, grad', gradWith, gradWith', gradM, gradM', gradWithM, gradWithM')
 
 import qualified Numeric.AD.Forward as Forward
 import qualified Numeric.AD.Reverse as Reverse
@@ -86,23 +80,23 @@ import qualified Numeric.AD.Reverse as Reverse
 --
 -- If you need to support functions where the output is only a 'Functor' or 'Monad', consider 'Numeric.AD.Reverse.jacobian' or 'Numeric.AD.Reverse.gradM' from "Numeric.AD.Reverse".
 jacobian :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f a)
-jacobian f bs = snd <$> jacobian2 f bs
+jacobian f bs = snd <$> jacobian' f bs
 {-# INLINE jacobian #-}
 
 -- | Calculate both the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward- and reverse- mode AD based on the relative, number of inputs and outputs.
 --
--- If you need to support functions where the output is only a 'Functor' or 'Monad', consider 'Numeric.AD.Reverse.jacobian2' or 'Numeric.AD.Reverse.grad2M' from "Numeric.AD.Reverse".
-jacobian2 :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
-jacobian2 f bs | n == 0    = fmap (\x -> (unprobe x, bs)) as
-               | n > m     = Reverse.jacobian2 f bs
-               | otherwise = Forward.jacobian2 f bs
+-- If you need to support functions where the output is only a 'Functor' or 'Monad', consider 'Numeric.AD.Reverse.jacobian'' or 'Numeric.AD.Reverse.gradM'' from "Numeric.AD.Reverse".
+jacobian' :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
+jacobian' f bs | n == 0    = fmap (\x -> (unprobe x, bs)) as
+               | n > m     = Reverse.jacobian' f bs
+               | otherwise = Forward.jacobian' f bs
     where
         as = f (probed bs)
         n = size bs
         m = size as
         size :: Foldable f => f a -> Int
         size = foldr' (\_ b -> 1 + b) 0
-{-# INLINE jacobian2 #-}
+{-# INLINE jacobian' #-}
 
 -- | @'jacobianWith' g f@ calculates the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
 --
@@ -110,24 +104,24 @@ jacobian2 f bs | n == 0    = fmap (\x -> (unprobe x, bs)) as
 --
 -- If you need to support functions where the output is only a 'Functor' or 'Monad', consider 'Numeric.AD.Reverse.jacobianWith' or 'Numeric.AD.Reverse.gradWithM' from "Numeric.AD.Reverse".
 jacobianWith :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f b)
-jacobianWith g f bs = snd <$> jacobianWith2 g f bs
+jacobianWith g f bs = snd <$> jacobianWith' g f bs
 {-# INLINE jacobianWith #-}
 
--- | @'jacobianWith2' g f@ calculates the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
+-- | @'jacobianWith'' g f@ calculates the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
 --
 -- The resulting Jacobian matrix is then recombined element-wise with the input using @g@.
 --
--- If you need to support functions where the output is only a 'Functor' or 'Monad', consider 'Numeric.AD.Reverse.jacobianWith2' or 'Numeric.AD.Reverse.gradWith2M' from "Numeric.AD.Reverse".
-jacobianWith2 :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f b)
-jacobianWith2 g f bs
+-- If you need to support functions where the output is only a 'Functor' or 'Monad', consider 'Numeric.AD.Reverse.jacobianWith'' or 'Numeric.AD.Reverse.gradWithM'' from "Numeric.AD.Reverse".
+jacobianWith' :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f b)
+jacobianWith' g f bs
     | n == 0    = fmap (\x -> (unprobe x, undefined <$> bs)) as
-    | n > m     = Reverse.jacobianWith2 g f bs
-    | otherwise = Forward.jacobianWith2 g f bs
+    | n > m     = Reverse.jacobianWith' g f bs
+    | otherwise = Forward.jacobianWith' g f bs
     where
         as = f (probed bs)
         n = size bs
         m = size as
         size :: Foldable f => f a -> Int
         size = foldr' (\_ b -> 1 + b) 0
-{-# INLINE jacobianWith2 #-}
+{-# INLINE jacobianWith' #-}
 

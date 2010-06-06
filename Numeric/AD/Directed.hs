@@ -14,18 +14,15 @@
 
 module Numeric.AD.Directed
     (
-    -- * Derivatives
-      diffUU
-    , diff2UU
-    -- * Common access patterns
-    , diff
-    , diff2
+    -- * Gradients
+      grad
+    , grad'
     -- * Jacobians
     , jacobian
-    , jacobian2
-    -- * Gradients
-    , grad
-    , grad2
+    , jacobian'
+    -- * Derivatives
+    , diff
+    , diff'
     -- * Exposed Types
     , Direction(..)
     , Mode(..)
@@ -51,53 +48,45 @@ data Direction
     | Mixed
     deriving (Show, Eq, Ord, Read, Bounded, Enum, Ix)
 
-diffUU :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> a
-diffUU Forward = F.diffUU
-diffUU Reverse = R.diffUU
-diffUU Tower = T.diffUU
-diffUU Mixed = F.diffUU
-{-# INLINE diffUU #-}
-
-diff2UU :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
-diff2UU Forward = F.diff2UU
-diff2UU Reverse = R.diff2UU
-diff2UU Tower = T.diff2UU
-diff2UU Mixed = F.diff2UU
-{-# INLINE diff2UU #-}
-
 diff :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> a
-diff = diffUU
+diff Forward = F.diff
+diff Reverse = R.diff
+diff Tower = T.diff
+diff Mixed = F.diff
 {-# INLINE diff #-}
 
-diff2 :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
-diff2 = diff2UU
-{-# INLINE diff2 #-}
+diff' :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
+diff' Forward = F.diff'
+diff' Reverse = R.diff'
+diff' Tower = T.diff'
+diff' Mixed = F.diff'
+{-# INLINE diff' #-}
 
 jacobian :: (Traversable f, Traversable g, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f a)
 jacobian Forward = F.jacobian
 jacobian Reverse = R.jacobian
-jacobian Tower = error "jacobian Tower: unimplemented"
+jacobian Tower = F.jacobian -- error "jacobian Tower: unimplemented"
 jacobian Mixed = M.jacobian
 {-# INLINE jacobian #-}
 
-jacobian2 :: (Traversable f, Traversable g, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
-jacobian2 Forward = F.jacobian2
-jacobian2 Reverse = R.jacobian2
-jacobian2 Tower = error "jacobian2 Tower: unimplemented"
-jacobian2 Mixed = M.jacobian2
-{-# INLINE jacobian2 #-}
+jacobian' :: (Traversable f, Traversable g, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
+jacobian' Forward = F.jacobian'
+jacobian' Reverse = R.jacobian'
+jacobian' Tower = F.jacobian' -- error "jacobian' Tower: unimplemented"
+jacobian' Mixed = M.jacobian'
+{-# INLINE jacobian' #-}
 
 grad :: (Traversable f, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a
 grad Forward = F.grad
 grad Reverse = R.grad
-grad Tower   = error "grad Tower: unimplemented"
+grad Tower   = F.grad -- error "grad Tower: unimplemented"
 grad Mixed   = M.grad
 {-# INLINE grad #-}
 
-grad2 :: (Traversable f, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
-grad2 Forward = F.grad2
-grad2 Reverse = R.grad2
-grad2 Tower   = error "grad2 Tower: unimplemented"
-grad2 Mixed   = M.grad2
-{-# INLINE grad2 #-}
+grad' :: (Traversable f, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
+grad' Forward = F.grad'
+grad' Reverse = R.grad'
+grad' Tower   = F.grad' -- error "grad' Tower: unimplemented"
+grad' Mixed   = M.grad'
+{-# INLINE grad' #-}
 

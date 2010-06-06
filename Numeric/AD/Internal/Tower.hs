@@ -14,7 +14,7 @@ module Numeric.AD.Internal.Tower
     ( Tower(..)
     , zeroPad
     , d
-    , d2
+    , d'
     , tangents
     , bundle
     , apply
@@ -39,11 +39,11 @@ d (_:da:_) = da
 d _ = 0
 {-# INLINE d #-}
 
-d2 :: Num a => [a] -> (a, a)
-d2 (a:da:_) = (a, da)
-d2 (a:_)    = (a, 0)
-d2 _        = (0, 0)
-{-# INLINE d2 #-}
+d' :: Num a => [a] -> (a, a)
+d' (a:da:_) = (a, da)
+d' (a:_)    = (a, 0)
+d' _        = (0, 0)
+{-# INLINE d' #-}
 
 tangents :: Tower a -> Tower a
 tangents (Tower []) = Tower []

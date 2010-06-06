@@ -29,8 +29,8 @@ import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Data.Foldable (all)
 import Data.Traversable (Traversable)
-import Numeric.AD.Forward (diff, diff2)
-import Numeric.AD.Reverse (gradWith2)
+import Numeric.AD.Forward (diff, diff')
+import Numeric.AD.Reverse (gradWith')
 
 -- | The 'findZero' function finds a zero of a scalar function using
 -- Newton's method; its output is a stream of increasingly accurate
@@ -44,7 +44,7 @@ import Numeric.AD.Reverse (gradWith2)
 --  > take 10 $ findZero ((+1).(^2)) (1 :+ 1)  -- converge to (0 :+ 1)@
 --
 findZero :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-findZero f x0 = iterate (\x -> let (y,y') = diff2 f x in x - y/y') x0
+findZero f x0 = iterate (\x -> let (y,y') = diff' f x in x - y/y') x0
 {-# INLINE findZero #-}
 
 -- | The 'inverseNewton' function inverts a scalar function using
@@ -83,7 +83,7 @@ extremum f x0 = findZero (diff f) x0
 gradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
 gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
     where
-        (fx0, xgx0) = gradWith2 (,) f x0
+        (fx0, xgx0) = gradWith' (,) f x0
         go x fx xgx !eta !i
             | eta == 0     = [] -- step size is 0
             | fx1 > fx     = go x fx xgx (eta/2) 0 -- we stepped too far
@@ -94,6 +94,6 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
             where
                 zeroGrad = all (\(_,g) -> g == 0)
                 x1 = fmap (\(xi,gxi) -> xi - eta * gxi) xgx
-                (fx1, xgx1) = gradWith2 (,) f x1
+                (fx1, xgx1) = gradWith' (,) f x1
 
 {-# INLINE gradientDescent #-}

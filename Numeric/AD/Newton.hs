@@ -30,7 +30,7 @@ import Numeric.AD.Internal
 import Data.Foldable (all)
 import Data.Traversable (Traversable)
 import Numeric.AD.Forward (diff, diff2)
-import Numeric.AD.Reverse (grad2)
+import Numeric.AD.Reverse (gradWith2)
 
 -- | The 'findZero' function finds a zero of a scalar function using
 -- Newton's method; its output is a stream of increasingly accurate
@@ -81,18 +81,19 @@ extremum f x0 = findZero (diff f) x0
 --
 -- It uses reverse mode automatic differentiation to compute the gradient.
 gradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
-gradientDescent f x0 = go x0 fx0 gx0 0.1 (0 :: Int)
+gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
     where
-        (fx0, gx0) = grad2 f x0
-        go x fx gx !eta !i
+        (fx0, xgx0) = gradWith2 (,) f x0
+        go x fx xgx !eta !i
             | eta == 0     = [] -- step size is 0
-            | fx1 > fx     = go x fx gx (eta/2) 0 -- we stepped too far
-            | all (==0) gx = [] -- gradient is 0
+            | fx1 > fx     = go x fx xgx (eta/2) 0 -- we stepped too far
+            | zeroGrad xgx = [] -- gradient is 0
             | otherwise    = x1 : if i == 10
-                                  then go x1 fx1 gx1 (eta*2) 0
-                                  else go x1 fx1 gx1 eta (i+1)
+                                  then go x1 fx1 xgx1 (eta*2) 0
+                                  else go x1 fx1 xgx1 eta (i+1)
             where
-                -- should check gx = 0 here
-                x1 = zipWithT (\xi gxi -> xi - eta * gxi) x gx
-                (fx1, gx1) = grad2 f x1
+                zeroGrad = all (\(_,g) -> g == 0)
+                x1 = fmap (\(xi,gxi) -> xi - eta * gxi) xgx
+                (fx1, xgx1) = gradWith2 (,) f x1
+                
 {-# INLINE gradientDescent #-}

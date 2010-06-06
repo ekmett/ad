@@ -21,6 +21,8 @@ module Numeric.AD.Internal.Forward
     , apply
     , bind
     , bind2
+    , bindWith
+    , bindWith2
     , transposeWith
     ) where
 
@@ -98,6 +100,20 @@ bind2 :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> (b, f b)
 bind2 f as = dropIx $ mapAccumL outer (0 :: Int, b0) as
     where
         outer (!i, _) _ = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), b)
+        inner !i !j a = (j + 1, bundle a $ if i == j then 1 else 0)
+        b0 = f (lift <$> as)
+        dropIx ((_,b),bs) = (b,bs)
+
+bindWith :: (Traversable f, Num a) => (a -> b -> c) -> (f (AD Forward a) -> b) -> f a -> f c
+bindWith g f as = snd $ mapAccumL outer (0 :: Int) as
+    where
+        outer !i a = (i + 1, g a $ f $ snd $ mapAccumL (inner i) 0 as)
+        inner !i !j a = (j + 1, bundle a $ if i == j then 1 else 0)
+
+bindWith2 :: (Traversable f, Num a) => (a -> b -> c) -> (f (AD Forward a) -> b) -> f a -> (b, f c)
+bindWith2 g f as = dropIx $ mapAccumL outer (0 :: Int, b0) as
+    where
+        outer (!i, _) a = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), g a b)
         inner !i !j a = (j + 1, bundle a $ if i == j then 1 else 0)
         b0 = f (lift <$> as)
         dropIx ((_,b),bs) = (b,bs)

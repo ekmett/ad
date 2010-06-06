@@ -26,6 +26,11 @@ module Numeric.AD.Internal.Reverse
     , derivative
     , derivative2
     , Var(..)
+    , bind
+    , unbind
+    , unbindMap
+    , unbindWith
+    , unbindMapWithDefault
     ) where
 
 import Prelude hiding (mapM)
@@ -176,27 +181,33 @@ instance Monad S where
     S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
 
 -- | Used to mark variables for inspection during the reverse pass
-class Var t a | t -> a where
-    var     :: a -> Int -> t
-    fromVar :: t -> Int
+class Primal v => Var v where
+    var   :: a -> Int -> v a
+    varId :: v a -> Int
 
-    bind :: Traversable f => f a -> (f t, (Int,Int))
-    unbind :: Functor f => f t -> Array Int a -> f a
-    unbindMap :: (Functor f, Num a) => f t -> IntMap a -> f a
+instance Var Reverse where
+    var a v = Reverse (Var a v)
+    varId (Reverse (Var _ v)) = v
+    varId _ = error "varId: not a Var"
 
-    -- TODO: tweak bounds
-    bind xs = (r,(0,hi))
-        where
+instance Var (AD Reverse) where
+    var a v = AD (var a v)
+    varId (AD v) = varId v
+
+bind :: (Traversable f, Var v) => f a -> (f (v a), (Int,Int))
+bind xs = (r,(0,hi))
+    where
         (r,hi) = runS (mapM freshVar xs) 0
         freshVar a = S (\s -> let s' = s + 1 in s' `seq` (var a s, s'))
-    unbind xs ys = fmap (\v -> ys ! fromVar v) xs
-    unbindMap xs ys = fmap (\v -> findWithDefault 0 (fromVar v) ys) xs
 
-instance Var (Reverse a) a where
-    var a v = Reverse (Var a v)
-    fromVar (Reverse (Var _ v)) = v
-    fromVar _ = error "fromVar: not a Var"
+unbind :: (Functor f, Var v)  => f (v a) -> Array Int a -> f a
+unbind xs ys = fmap (\v -> ys ! varId v) xs
 
-instance Var (AD Reverse a) a where
-    var a v = AD (var a v)
-    fromVar (AD v) = fromVar v
+unbindWith :: (Functor f, Var v, Num a) => (a -> b -> c) -> f (v a) -> Array Int b -> f c
+unbindWith f xs ys = fmap (\v -> f (primal v) (ys ! varId v)) xs 
+
+unbindMap :: (Functor f, Var v, Num a) => f (v a) -> IntMap a -> f a
+unbindMap xs ys = fmap (\v -> findWithDefault 0 (varId v) ys) xs
+
+unbindMapWithDefault :: (Functor f, Var v, Num a) => b -> (a -> b -> c) -> f (v a) -> IntMap b -> f c
+unbindMapWithDefault z f xs ys = fmap (\v -> f (primal v) $ findWithDefault z (varId v) ys) xs 

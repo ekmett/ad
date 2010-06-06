@@ -22,9 +22,13 @@ module Numeric.AD.Reverse
     -- * Gradient
       grad
     , grad2
+    , gradWith
+    , gradWith2
     -- * Jacobian
     , jacobian
     , jacobian2
+    , jacobianWith
+    , jacobianWith2
     -- * Derivatives
     , diffUU
     , diff2UU
@@ -60,6 +64,26 @@ grad2 f as = (primal r, unbind vs $ partialArray bds r)
           r = f vs
 {-# INLINE grad2 #-}
 
+-- | @'grad' g f@ function calculates the gradient of a non-scalar-to-scalar function @f@ with reverse-mode AD in a single pass.
+-- The gradient is combined element-wise with the argument using the function @g@.
+--
+-- > grad == gradWith (\_ dx -> dx) 
+-- > id == gradWith const
+gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f b
+gradWith g f as = unbindWith g vs (partialArray bds $ f vs)
+    where (vs,bds) = bind as
+{-# INLINE gradWith #-}
+
+-- | @'grad2' g f@ calculates the result and gradient of a non-scalar-to-scalar function @f@ with 'Reverse' AD in a single pass
+-- the gradient is combined element-wise with the argument using the function @g@.
+-- 
+-- > grad2 == gradWith2 (\_ dx -> dx)
+gradWith2 :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f b)
+gradWith2 g f as = (primal r, unbindWith g vs $ partialArray bds r)
+    where (vs, bds) = bind as
+          r = f vs
+{-# INLINE gradWith2 #-}
+
 -- | The 'jacobian' function calculates the jacobian of a non-scalar-to-non-scalar function with reverse AD lazily in @m@ passes for @m@ outputs.
 jacobian :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f a)
 jacobian f as = unbind vs . partialArray bds <$> f vs where
@@ -73,6 +97,31 @@ jacobian2 f as = row <$> f vs where
     (vs, bds) = bind as
     row a = (primal a, unbind vs (partialArray bds a))
 {-# INLINE jacobian2 #-}
+
+-- | 'jacobianWith g f' calculates the jacobian of a non-scalar-to-non-scalar function @f@ with reverse AD lazily in @m@ passes for @m@ outputs.
+--
+-- Instead of returning the Jacobian matrix, the elements of the matrix are combined with the input using the @g@.
+-- 
+-- > jacobian == jacobianWith (\_ dx -> dx)
+-- > jacobianWith const == (\f x -> const x <$> f x)
+--
+jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f b)
+jacobianWith g f as = unbindWith g vs . partialArray bds <$> f vs where
+    (vs, bds) = bind as
+{-# INLINE jacobianWith #-}
+
+-- | 'jacobianWith2 g f' calculates both the result and the Jacobian of a nonscalar-to-nonscalar function @f@, using @m@ invocations of reverse AD,
+-- where @m@ is the output dimensionality. Applying @fmap snd@ to the result will recover the result of 'jacobianWith'
+-- 
+-- Instead of returning the Jacobian matrix, the elements of the matrix are combined with the input using the @g@.
+--
+-- > jacobian2 == jacobianWith2 (\_ dx -> dx)
+--
+jacobianWith2 :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f b)
+jacobianWith2 g f as = row <$> f vs where
+    (vs, bds) = bind as
+    row a = (primal a, unbindWith g vs (partialArray bds a))
+{-# INLINE jacobianWith2 #-}
 
 diffUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
 diffUU f a = derivative $ f (var a 0)

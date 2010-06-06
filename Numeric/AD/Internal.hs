@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Numeric.AD.Internal
     ( zipWithT
+    , zipWithDefaultT
     , AD(..)
     , Id(..)
     , probe
@@ -28,6 +29,9 @@ import Data.Foldable (Foldable, toList)
 
 zipWithT :: (Foldable f, Traversable g) => (a -> b -> c) -> f a -> g b -> g c
 zipWithT f as = snd . mapAccumL (\(a:as') b -> (as', f a b)) (toList as)
+
+zipWithDefaultT :: (Foldable f, Traversable g) => a -> (a -> b -> c) -> f a -> g b -> g c
+zipWithDefaultT z f as = zipWithT f (toList as ++ repeat z)
 
 class Iso a b where
     iso :: f a -> f b

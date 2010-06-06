@@ -26,9 +26,15 @@ module Numeric.AD.Forward
     , diff2UU
     , diffUF
     , diff2UF
+    -- * Directional Derivatives
+    , diffMU 
+    , diff2MU
     -- * Synonyms
     , diff
     , diff2
+    -- * Exotic Combinators
+    , gradWith
+    , gradWith2
     -- * Exposed Types
     , AD(..)
     , Mode(..)
@@ -39,6 +45,14 @@ import Control.Applicative
 import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Numeric.AD.Internal.Forward
+
+diffMU :: (Functor f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> a
+diffMU f = tangent . f . fmap (uncurry bundle)
+{-# INLINE diffMU #-}
+
+diff2MU :: (Functor f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> (a, a)
+diff2MU f = unbundle . f . fmap (uncurry bundle)
+{-# INLINE diff2MU #-}
 
 -- | The 'diff2' function calculates the first derivative of scalar-to-scalar function by 'Forward' 'AD'
 diff :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
@@ -93,8 +107,17 @@ grad :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> 
 grad f = bind (tangent . f)
 {-# INLINE grad #-}
 
+
 grad2 :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
 grad2 f as = (primal b, tangent <$> bs)
     where
         (b, bs) = bind2 f as
 {-# INLINE grad2 #-}
+
+gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f b
+gradWith g f = bindWith g (tangent . f)
+{-# INLINE gradWith #-}
+
+gradWith2 :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f b)
+gradWith2 g f = bindWith2 g (tangent . f)
+{-# INLINE gradWith2 #-}

@@ -66,6 +66,10 @@ module Numeric.AD
     , du'
     , duF
     , duF'
+    , dus
+    , dus0
+    , dusF
+    , dus0F
 
     -- * Taylor Series (Tower)
     , taylor
@@ -96,7 +100,7 @@ import Control.Applicative
 import Numeric.AD.Classes  (Mode(..))
 import Numeric.AD.Internal (AD(..), probed, unprobe)
 import Numeric.AD.Forward  (diff, diff', diffF, diffF', du, du', duF, duF', diffM, diffM', jacobianT, jacobianWithT) 
-import Numeric.AD.Tower    (diffsF, diffs0F , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0)
+import Numeric.AD.Tower    (diffsF, diffs0F , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0, dus, dus0, dusF, dus0F)
 import Numeric.AD.Reverse  (grad, grad', gradWith, gradWith', gradM, gradM', gradWithM, gradWithM', gradF, gradF', gradWithF, gradWithF')
 import Numeric.AD.Internal.Composition
 
@@ -178,3 +182,10 @@ hessian f = Forward.jacobian (grad (decomposeMode . f . fmap composeMode))
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the forward-mode Jacobian of the mixed-mode Jacobian of the function.
 hessianTensor :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f (f a))
 hessianTensor f = decomposeFunctor . Forward.jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))
+
+-- the cofree comonad of f
+-- data f :> a = (f :> a) :> a
+
+-- gradients :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (f :> a) 
+
+-- jacobians :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f :> a) 

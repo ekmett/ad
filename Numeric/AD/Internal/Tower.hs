@@ -13,17 +13,24 @@
 module Numeric.AD.Internal.Tower
     ( Tower(..)
     , zeroPad
+    , zeroPadF
+    , transposePadF
     , d
     , d'
+    , withD
     , tangents
     , bundle
     , apply
     , getADTower
+    , tower
     ) where
 
+import Prelude hiding (all)
+import Control.Applicative
+import Data.Foldable
+import Language.Haskell.TH
 import Numeric.AD.Classes
 import Numeric.AD.Internal
-import Language.Haskell.TH
 
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'
 newtype Tower a = Tower { getTower :: [a] } deriving (Show)
@@ -33,6 +40,21 @@ newtype Tower a = Tower { getTower :: [a] } deriving (Show)
 zeroPad :: Num a => [a] -> [a]
 zeroPad xs = xs ++ repeat 0
 {-# INLINE zeroPad #-}
+
+zeroPadF :: (Functor f, Num a) => [f a] -> [f a]
+zeroPadF fxs@(fx:_) = fxs ++ repeat (const 0 <$> fx)
+zeroPadF _ = error "zeroPadF :: empty list"
+{-# INLINE zeroPadF #-}
+
+transposePadF :: (Foldable f, Functor f) => a -> f [a] -> [f a]
+transposePadF pad fx
+    | all null fx = []
+    | otherwise = fmap headPad fx : transposePadF pad (drop1 <$> fx)
+    where
+        headPad [] = pad
+        headPad (x:_) = x
+        drop1 (_:xs) = xs
+        drop1 xs = xs
 
 d :: Num a => [a] -> a
 d (_:da:_) = da
@@ -54,6 +76,10 @@ bundle :: a -> Tower a -> Tower a
 bundle a (Tower as) = Tower (a:as)
 {-# INLINE bundle #-}
 
+withD :: (a, a) -> AD Tower a
+withD (a, da) = AD (Tower [a,da])
+{-# INLINE withD #-}
+
 apply :: Num a => (AD Tower a -> b) -> a -> b
 apply f a = f (AD (Tower [a,1]))
 {-# INLINE apply #-}
@@ -61,6 +87,9 @@ apply f a = f (AD (Tower [a,1]))
 getADTower :: AD Tower a -> [a]
 getADTower (AD t) = getTower t
 {-# INLINE getADTower #-}
+
+tower :: [a] -> AD Tower a
+tower as = AD (Tower as)
 
 instance Primal Tower where
     primal (Tower (x:_)) = x

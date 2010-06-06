@@ -8,8 +8,11 @@ Maintainer:   ekmett@gmail.com
 Stability:    Experimental
 Category:     Math
 Homepage:     http://comonad.com/reader/
-Synopsis:     Mixed-Mode Automatic Differentiation.
-Description:  Forward, reverse, and higher-order automatic differentiation with a common API
+Synopsis:     Automatic Differentiation
+Description:  
+    Forward, reverse, and higher-order automatic differentiation combinators with a common API.
+    . 
+    Type-level \"branding\" is used to prevent the end user from confusing infinitesimals.
 
 Build-Type:   Simple
 Build-Depends:       

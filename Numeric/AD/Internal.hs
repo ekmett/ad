@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, TemplateHaskell, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, TemplateHaskell, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal
@@ -15,6 +15,8 @@ module Numeric.AD.Internal
     , Id(..)
     , probe
     , unprobe
+    , probed
+    , unprobed
     ) where
 
 import Control.Applicative
@@ -27,22 +29,42 @@ import Data.Foldable (Foldable, toList)
 zipWithT :: (Foldable f, Traversable g) => (a -> b -> c) -> f a -> g b -> g c 
 zipWithT f as = snd . mapAccumL (\(a:as') b -> (as', f a b)) (toList as)
 
+class Iso a b where
+    iso :: f a -> f b
+    osi :: f b -> f a
+
+instance Iso a a where
+    iso = id
+    osi = id
+
 -- | 'AD' serves as a common wrapper for different 'Mode' instances, exposing a traditional 
 -- numerical tower. Universal quantification is used to limit the actions in user code to 
 -- machinery that will return the same answers under all AD modes, allowing us to use modes
 -- interchangeably as both the type level \"brand\" and dictionary, providing a common API.
-newtype AD f a = AD { runAD :: f a } deriving (Lifted, Mode, Primal)
+newtype AD f a = AD { runAD :: f a } deriving (Iso (f a), Lifted, Mode, Primal)
 
 let f = varT (mkName "f") in deriveNumeric (conT ''AD `appT` f) f
 
 newtype Id a = Id a deriving
-    (Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid)
+    (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid)
 
 probe :: a -> AD Id a
 probe a = AD (Id a)
 
 unprobe :: AD Id a -> a
 unprobe (AD (Id a)) = a
+
+pid :: f a -> f (Id a)
+pid = iso 
+
+unpid :: f (Id a) -> f a
+unpid = osi
+
+probed :: f a -> f (AD Id a)
+probed = iso . pid
+
+unprobed :: f (AD Id a) -> f a
+unprobed = unpid . osi
 
 instance Functor Id where
     fmap f (Id a) = Id (f a)

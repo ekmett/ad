@@ -58,7 +58,7 @@ import Data.Traversable (Traversable)
 import Data.Foldable (Foldable, foldr')
 import Control.Applicative
 import Numeric.AD.Classes  (Mode(..))
-import Numeric.AD.Internal (AD(..), probe, unprobe)
+import Numeric.AD.Internal (AD(..), probed, unprobe)
 import Numeric.AD.Forward  (diff, diffUU, diff2, diff2UU, diffUF, diff2UF)
 import Numeric.AD.Tower    (diffsUU, diffs0UU , diffsUF, diffs0UF , diffs, diffs0, taylor, taylor0) 
 import Numeric.AD.Reverse  (diffFU, diff2FU, grad, grad2)
@@ -77,7 +77,7 @@ jacobian2 f bs | n == 0    = fmap (\x -> (unprobe x, bs)) as
                | n > m     = Reverse.jacobian2 f bs
                | otherwise = Forward.jacobian2 f bs
     where
-        as = f (probe <$> bs)
+        as = f (probed bs)
         n = size bs
         m = size as
         size :: Foldable f => f a -> Int

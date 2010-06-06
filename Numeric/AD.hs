@@ -21,6 +21,7 @@ module Numeric.AD
 
     -- * Jacobians
     , jacobian, jacobian2
+    , jacobianWith, jacobianWith2
 
     -- * Synonyms
     , diff
@@ -84,3 +85,26 @@ jacobian2 f bs | n == 0    = fmap (\x -> (unprobe x, bs)) as
         size :: Foldable f => f a -> Int
         size = foldr' (\_ b -> 1 + b) 0
 {-# INLINE jacobian2 #-}
+
+-- | @'jacobianWith' g f@ calculates the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
+-- 
+-- The resulting Jacobian matrix is then recombined element-wise with the input using @g@. 
+jacobianWith :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f b)
+jacobianWith g f bs = snd <$> jacobianWith2 g f bs
+{-# INLINE jacobianWith #-}
+
+-- | @'jacobianWith2' g f@ calculates the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
+--
+-- The resulting Jacobian matrix is then recombined element-wise with the input using @g@. 
+jacobianWith2 :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f b)
+jacobianWith2 g f bs 
+    | n == 0    = fmap (\x -> (unprobe x, undefined <$> bs)) as
+    | n > m     = Reverse.jacobianWith2 g f bs
+    | otherwise = Forward.jacobianWith2 g f bs
+    where
+        as = f (probed bs)
+        n = size bs
+        m = size as
+        size :: Foldable f => f a -> Int
+        size = foldr' (\_ b -> 1 + b) 0
+{-# INLINE jacobianWith2 #-}

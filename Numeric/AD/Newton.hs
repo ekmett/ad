@@ -31,6 +31,7 @@ import Data.Foldable (all)
 import Data.Traversable (Traversable)
 import Numeric.AD.Forward (diff, diff')
 import Numeric.AD.Reverse (gradWith')
+import Numeric.AD.Internal.Composition
 
 -- | The 'findZero' function finds a zero of a scalar function using
 -- Newton's method; its output is a stream of increasingly accurate
@@ -69,8 +70,8 @@ fixedPoint f = findZero (\x -> f x - x)
 -- | The 'extremum' function finds an extremum of a scalar
 -- function using Newton's method; produces a stream of increasingly
 -- accurate results.  (Modulo the usual caveats.)
-extremum :: Fractional a => (forall t s. (Mode t, Mode s) => AD t (AD s a) -> AD t (AD s a)) -> a -> [a]
-extremum f x0 = findZero (diff f) x0
+extremum :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
+extremum f x0 = findZero (diff (decompose . f . compose)) x0
 {-# INLINE extremum #-}
 
 -- | The 'gradientDescent' function performs a multivariate

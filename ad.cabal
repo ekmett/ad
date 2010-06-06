@@ -1,5 +1,5 @@
 Name:         ad
-Version:      0.18
+Version:      0.19
 License:      BSD3
 License-File: LICENSE
 Copyright:    Edward Kmett 2010
@@ -32,6 +32,7 @@ Exposed-Modules:
     Numeric.AD.Newton
     Numeric.AD.Classes
     Numeric.AD.Internal
+    Numeric.AD.Internal.Composition
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Reverse
     Numeric.AD.Internal.Tower

@@ -6,7 +6,7 @@
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
--- Portability :  GHC only 
+-- Portability :  GHC only
 --
 -- Unsafe and often partial combinators intended for internal usage.
 --
@@ -65,23 +65,23 @@ instance Lifted Forward => Jacobian Forward where
     type D Forward = Id
     unary f (Id dadb) (Forward b db) = Forward (f b) (dadb * db)
     lift1 f df (Forward b db) = Forward (f b) (dadb * db)
-        where 
+        where
             Id dadb = df (Id b)
     lift1_ f df (Forward b db) = Forward a da
-        where 
+        where
             a = f b
             Id da = df (Id a) (Id b) ^* db
 
     binary f (Id dadb) (Id dadc) (Forward b db) (Forward c dc) = Forward (f b c) da
-        where 
+        where
             da = dadb * db + dc * dadc
     lift2 f df (Forward b db) (Forward c dc) = Forward a da
-        where 
+        where
             a = f b c
-            (Id dadb, Id dadc) = df (Id b) (Id c) 
+            (Id dadb, Id dadc) = df (Id b) (Id c)
             da = dadb * db + dc * dadc
     lift2_ f df (Forward b db) (Forward c dc) = Forward a da
-        where 
+        where
             a = f b c
             (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
             da = dadb * db + dc * dadc
@@ -95,7 +95,7 @@ bind f as = snd $ mapAccumL outer (0 :: Int) as
         inner !i !j a = (j + 1, bundle a $ if i == j then 1 else 0)
 
 bind2 :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> (b, f b)
-bind2 f as = dropIx $ mapAccumL outer (0 :: Int, b0) as 
+bind2 f as = dropIx $ mapAccumL outer (0 :: Int, b0) as
     where
         outer (!i, _) _ = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), b)
         inner !i !j a = (j + 1, bundle a $ if i == j then 1 else 0)
@@ -106,7 +106,7 @@ bind2 f as = dropIx $ mapAccumL outer (0 :: Int, b0) as
 -- traversable could be empty. So instead we use one as a 'skeleton'
 transposeWith :: (Functor f, Foldable f, Traversable g) => (b -> f a -> c) -> f (g a) -> g b -> g c
 transposeWith f as = snd . mapAccumL go xss0
-    where 
+    where
         go xss b = (tail <$> xss, f b (head <$> xss))
         xss0 = toList <$> as
 

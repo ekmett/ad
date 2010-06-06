@@ -6,14 +6,14 @@
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
--- Portability :  GHC only 
+-- Portability :  GHC only
 --
 -- Allows the choice of AD 'Mode' to be specified at the term level for
 -- benchmarking or more complicated usage patterns.
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Directed
-    ( 
+    (
     -- * Derivatives
       diffUU
     , diff2UU
@@ -44,11 +44,11 @@ import Data.Ix
 
 -- TODO: use a data types a la carte approach, so we can expose more methods here
 -- rather than just the intersection of all of the functionality
-data Direction 
-    = Forward 
-    | Reverse 
-    | Tower 
-    | Mixed 
+data Direction
+    = Forward
+    | Reverse
+    | Tower
+    | Mixed
     deriving (Show, Eq, Ord, Read, Bounded, Enum, Ix)
 
 diffUU :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> a
@@ -58,7 +58,7 @@ diffUU Tower = T.diffUU
 diffUU Mixed = F.diffUU
 {-# INLINE diffUU #-}
 
-diff2UU :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a) 
+diff2UU :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
 diff2UU Forward = F.diff2UU
 diff2UU Reverse = R.diff2UU
 diff2UU Tower = T.diff2UU
@@ -69,7 +69,7 @@ diff :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> a
 diff = diffUU
 {-# INLINE diff #-}
 
-diff2 :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a) 
+diff2 :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
 diff2 = diff2UU
 {-# INLINE diff2 #-}
 

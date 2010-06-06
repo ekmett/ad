@@ -6,7 +6,7 @@
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
--- Portability :  GHC only 
+-- Portability :  GHC only
 --
 -----------------------------------------------------------------------------
 module Numeric.AD.Internal
@@ -26,7 +26,7 @@ import Data.Monoid
 import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)
 
-zipWithT :: (Foldable f, Traversable g) => (a -> b -> c) -> f a -> g b -> g c 
+zipWithT :: (Foldable f, Traversable g) => (a -> b -> c) -> f a -> g b -> g c
 zipWithT f as = snd . mapAccumL (\(a:as') b -> (as', f a b)) (toList as)
 
 class Iso a b where
@@ -37,8 +37,8 @@ instance Iso a a where
     iso = id
     osi = id
 
--- | 'AD' serves as a common wrapper for different 'Mode' instances, exposing a traditional 
--- numerical tower. Universal quantification is used to limit the actions in user code to 
+-- | 'AD' serves as a common wrapper for different 'Mode' instances, exposing a traditional
+-- numerical tower. Universal quantification is used to limit the actions in user code to
 -- machinery that will return the same answers under all AD modes, allowing us to use modes
 -- interchangeably as both the type level \"brand\" and dictionary, providing a common API.
 newtype AD f a = AD { runAD :: f a } deriving (Iso (f a), Lifted, Mode, Primal)
@@ -55,7 +55,7 @@ unprobe :: AD Id a -> a
 unprobe (AD (Id a)) = a
 
 pid :: f a -> f (Id a)
-pid = iso 
+pid = iso
 
 unpid :: f (Id a) -> f a
 unpid = osi
@@ -75,7 +75,7 @@ instance Applicative Id where
 
 instance Monad Id where
     return = Id
-    Id a >>= f = f a 
+    Id a >>= f = f a
 
 instance Lifted Id where
     (==!) = (==)
@@ -84,14 +84,14 @@ instance Lifted Id where
     fromInteger1 = fromInteger
     (+!) = (+)
     (-!) = (-)
-    (*!) = (*) 
+    (*!) = (*)
     negate1 = negate
     abs1 = abs
     signum1 = signum
     (/!) = (/)
     recip1 = recip
     fromRational1 = fromRational
-    toRational1 = toRational   
+    toRational1 = toRational
     pi1 = pi
     exp1 = exp
     log1 = log

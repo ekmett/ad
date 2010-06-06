@@ -6,14 +6,14 @@
 -- License     : BSD3
 -- Maintainer  : ekmett@gmail.com
 -- Stability   : experimental
--- Portability : GHC only 
+-- Portability : GHC only
 --
 -- Higher order derivatives via a \"dual number tower\".
 --
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Tower
-    ( 
+    (
     -- * Taylor Series
       taylor, taylor0
     , maclaurin, maclaurin0
@@ -23,7 +23,7 @@ module Numeric.AD.Tower
     , diffsUU
     , diffs0UU
     , diffsUF
-    , diffs0UF 
+    , diffs0UF
     -- * Synonyms
     , diffs, diffs0
     , diff, diff2
@@ -40,7 +40,7 @@ import Numeric.AD.Internal
 import Numeric.AD.Internal.Tower
 
 diffsUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-diffsUU f a = getADTower $ apply f a 
+diffsUU f a = getADTower $ apply f a
 {-# INLINE diffsUU #-}
 
 diffs0UU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
@@ -74,19 +74,19 @@ taylor0 f x dx = zeroPad (taylor f x dx)
 {-# INLINE taylor0 #-}
 
 maclaurin :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-maclaurin f = taylor f 0 
+maclaurin f = taylor f 0
 {-# INLINE maclaurin #-}
 
 maclaurin0 :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-maclaurin0 f = taylor0 f 0 
+maclaurin0 f = taylor0 f 0
 {-# INLINE maclaurin0 #-}
 
 diffUU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
-diffUU f a = d $ diffs f a 
+diffUU f a = d $ diffs f a
 {-# INLINE diffUU #-}
 
 diff2UU :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
-diff2UU f a = d2 $ diffs f a 
+diff2UU f a = d2 $ diffs f a
 {-# INLINE diff2UU #-}
 
 diff :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a

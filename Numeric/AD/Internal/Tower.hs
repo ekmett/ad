@@ -6,7 +6,7 @@
 -- License     : BSD3
 -- Maintainer  : ekmett@gmail.com
 -- Stability   : experimental
--- Portability : GHC only 
+-- Portability : GHC only
 --
 -----------------------------------------------------------------------------
 
@@ -31,7 +31,7 @@ newtype Tower a = Tower { getTower :: [a] } deriving (Show)
 -- Local combinators
 
 zeroPad :: Num a => [a] -> [a]
-zeroPad xs = xs ++ repeat 0 
+zeroPad xs = xs ++ repeat 0
 {-# INLINE zeroPad #-}
 
 d :: Num a => [a] -> a
@@ -39,7 +39,7 @@ d (_:da:_) = da
 d _ = 0
 {-# INLINE d #-}
 
-d2 :: Num a => [a] -> (a, a) 
+d2 :: Num a => [a] -> (a, a)
 d2 (a:da:_) = (a, da)
 d2 (a:_)    = (a, 0)
 d2 _        = (0, 0)
@@ -73,7 +73,7 @@ instance Lifted Tower => Mode Tower where
     Tower [] <+> bs = bs
     as <+> Tower [] = as
     Tower (a:as) <+> Tower (b:bs) = Tower (c:cs)
-        where 
+        where
             c = a + b
             Tower cs = Tower as <+> Tower bs
 
@@ -86,16 +86,16 @@ instance Lifted Tower => Jacobian Tower where
     type D Tower = Tower
     unary f dadb b = bundle (f (primal b)) (tangents b *! dadb)
     lift1 f df b   = bundle (f (primal b)) (tangents b *! df b)
-    lift1_ f df b = a where 
+    lift1_ f df b = a where
         a = bundle (f (primal b)) (tangents b *! df a b)
 
-    binary f dadb dadc b c = bundle (f (primal b) (primal c)) (tangents b *! dadb +! tangents c *! dadc) 
+    binary f dadb dadc b c = bundle (f (primal b) (primal c)) (tangents b *! dadb +! tangents c *! dadc)
     lift2 f df b c = bundle (f (primal b) (primal c)) (tangents b *! dadb +! tangents c *! dadc) where
-        (dadb, dadc) = df b c 
-    lift2_ f df b c = a where 
+        (dadb, dadc) = df b c
+    lift2_ f df b c = a where
         a0 = f (primal b) (primal c)
         da = tangents b *! dadb +! tangents c *! dadc
-        a = bundle a0 da 
+        a = bundle a0 da
         (dadb, dadc) = df a b c
 
 deriveLifted (conT ''Tower)

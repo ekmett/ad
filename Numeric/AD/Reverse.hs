@@ -6,11 +6,11 @@
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
--- Portability :  GHC only 
+-- Portability :  GHC only
 --
 -- Mixed-Mode Automatic Differentiation.
--- 
--- For reverse mode AD we use 'System.Mem.StableName.StableName' to recover sharing information from 
+--
+-- For reverse mode AD we use 'System.Mem.StableName.StableName' to recover sharing information from
 -- the tape to avoid combinatorial explosion, and thus run asymptotically faster
 -- than it could without such sharing information, but the use of side-effects
 -- contained herein is benign.
@@ -18,7 +18,7 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Reverse
-    ( 
+    (
     -- * Gradient
       grad
     , grad2
@@ -57,19 +57,19 @@ grad f as = unbind vs (partialArray bds $ f vs)
 grad2 :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
 grad2 f as = (primal r, unbind vs $ partialArray bds r)
     where (vs, bds) = bind as
-          r = f vs 
+          r = f vs
 {-# INLINE grad2 #-}
 
 -- | The 'jacobian' function calculates the jacobian of a non-scalar-to-non-scalar function with reverse AD lazily in @m@ passes for @m@ outputs.
 jacobian :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f a)
-jacobian f as = unbind vs . partialArray bds <$> f vs where 
+jacobian f as = unbind vs . partialArray bds <$> f vs where
     (vs, bds) = bind as
 {-# INLINE jacobian #-}
 
 -- | The 'jacobian2' function calculates both the result and the Jacobian of a nonscalar-to-nonscalar function, using @m@ invocations of reverse AD,
 -- where @m@ is the output dimensionality. Applying @fmap snd@ to the result will recover the result of 'jacobian'
 jacobian2 :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
-jacobian2 f as = row <$> f vs where 
+jacobian2 f as = row <$> f vs where
     (vs, bds) = bind as
     row a = (primal a, unbind vs (partialArray bds a))
 {-# INLINE jacobian2 #-}
@@ -105,7 +105,7 @@ diff2FU f as = (primal result, unbind vs $ partialArray bds result)
 
 -- | The 'diff' function is a synonym for 'diffUU'.
 diff :: Num a => (forall s. Mode s => AD s a -> AD s a) -> a -> a
-diff = diffUU 
+diff = diffUU
 {-# INLINE diff #-}
 
 -- | The 'diff2' function is a synonym for 'diff2UU'.

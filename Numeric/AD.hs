@@ -29,6 +29,9 @@ module Numeric.AD
     , gradWithF
     , gradWithF'
 
+    -- * Jacobians (Forward Mode)
+    , jacobianT, jacobianWithT
+
     -- * Derivatives (Forward Mode)
     , diff
     , diffF
@@ -77,7 +80,7 @@ import Data.Foldable (Foldable, foldr')
 import Control.Applicative
 import Numeric.AD.Classes  (Mode(..))
 import Numeric.AD.Internal (AD(..), probed, unprobe)
-import Numeric.AD.Forward  (diff, diff', diffF, diffF', du, du', duF, duF', diffM, diffM') 
+import Numeric.AD.Forward  (diff, diff', diffF, diffF', du, du', duF, duF', diffM, diffM', jacobianT, jacobianWithT) 
 import Numeric.AD.Tower    (diffsF, diffs0F , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0)
 import Numeric.AD.Reverse  (grad, grad', gradWith, gradWith', gradM, gradM', gradWithM, gradWithM', gradF, gradF', gradWithF, gradWithF')
 

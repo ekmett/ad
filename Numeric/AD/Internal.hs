@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, TemplateHaskell, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, TemplateHaskell, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal
@@ -18,6 +18,7 @@ module Numeric.AD.Internal
     , unprobe
     , probed
     , unprobed
+    , Pair(..)
     ) where
 
 import Control.Applicative
@@ -26,6 +27,8 @@ import Numeric.AD.Classes
 import Data.Monoid
 import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)
+
+data Pair a b = Pair a b deriving (Eq, Ord, Show, Read, Functor, Foldable, Traversable)
 
 zipWithT :: (Foldable f, Traversable g) => (a -> b -> c) -> f a -> g b -> g c
 zipWithT f as = snd . mapAccumL (\(a:as') b -> (as', f a b)) (toList as)

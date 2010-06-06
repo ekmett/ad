@@ -15,15 +15,21 @@
 
 module Numeric.AD
     (
-    -- * Gradients
+    -- * Gradients (Reverse Mode)
       grad, grad'
     , gradWith, gradWith'
 
-    -- * Jacobians
+    -- * Jacobians (Mixed Mode)
     , jacobian, jacobian'
     , jacobianWith, jacobianWith'
 
-    -- * Derivatives (Forward)
+    -- * Jacobians (Reverse Mode)
+    , gradF
+    , gradF'
+    , gradWithF
+    , gradWithF'
+
+    -- * Derivatives (Forward Mode)
     , diff
     , diffF
 
@@ -37,7 +43,7 @@ module Numeric.AD
     , diffs0
     , diffs0F
 
-    -- * Directional Derivatives (Forward)
+    -- * Directional Derivatives (Forward Mode)
     , du
     , du'
     , duF
@@ -46,14 +52,16 @@ module Numeric.AD
     -- * Taylor Series (Tower)
     , taylor
     , taylor0
+
+    -- * Maclaurin Series (Tower)
     , maclaurin
     , maclaurin0
 
-    -- * Monadic Combinators (Forward)
+    -- * Monadic Combinators (Forward Mode)
     , diffM
     , diffM'
 
-    -- * Monadic Combinators (Reverse)
+    -- * Monadic Combinators (Reverse Mode)
     , gradM
     , gradM'
     , gradWithM
@@ -71,7 +79,7 @@ import Numeric.AD.Classes  (Mode(..))
 import Numeric.AD.Internal (AD(..), probed, unprobe)
 import Numeric.AD.Forward  (diff, diff', diffF, diffF', du, du', duF, duF', diffM, diffM') 
 import Numeric.AD.Tower    (diffsF, diffs0F , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0)
-import Numeric.AD.Reverse  (grad, grad', gradWith, gradWith', gradM, gradM', gradWithM, gradWithM')
+import Numeric.AD.Reverse  (grad, grad', gradWith, gradWith', gradM, gradM', gradWithM, gradWithM', gradF, gradF', gradWithF, gradWithF')
 
 import qualified Numeric.AD.Forward as Forward
 import qualified Numeric.AD.Reverse as Reverse

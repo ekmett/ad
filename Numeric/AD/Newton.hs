@@ -27,6 +27,7 @@ module Numeric.AD.Newton
     , gradientAscent
     , gradientAscentM
     -- * Exposed Types
+    , UU, UF, FU, FF
     , AD(..)
     , Mode(..)
     ) where
@@ -52,7 +53,7 @@ import Numeric.AD.Internal.Composition
 --  > module Data.Complex
 --  > take 10 $ findZero ((+1).(^2)) (1 :+ 1)  -- converge to (0 :+ 1)@
 --
-findZero :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
+findZero :: Fractional a => UU a -> a -> [a]
 findZero f = go
     where
         go x = x : go (x - y/y') 
@@ -60,7 +61,7 @@ findZero f = go
                 (y,y') = diff' f x
 {-# INLINE findZero #-}
 
-findZeroM :: (Monad m, Fractional a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> MList m a
+findZeroM :: (Monad m, Fractional a) => UF m a -> a -> MList m a
 findZeroM f x0 = MList (go x0)
     where
         go x = return $ 
@@ -78,11 +79,11 @@ findZeroM f x0 = MList (go x0)
 --
 -- > take 10 $ inverseNewton sqrt 1 (sqrt 10)  -- converges to 10
 --
-inverse :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
+inverse :: Fractional a => UU a -> a -> a -> [a]
 inverse f x0 y = findZero (\x -> f x - lift y) x0
 {-# INLINE inverse  #-}
 
-inverseM :: (Monad m, Fractional a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> a -> MList m a
+inverseM :: (Monad m, Fractional a) => UF m a -> a -> a -> MList m a
 inverseM f x0 y = findZeroM (\x -> subtract (lift y) `liftM` f x) x0
 {-# INLINE inverseM  #-}
 
@@ -91,11 +92,11 @@ inverseM f x0 y = findZeroM (\x -> subtract (lift y) `liftM` f x) x0
 -- increasingly accurate results.  (Modulo the usual caveats.)
 -- 
 -- > take 10 $ fixedPoint cos 1 -- converges to 0.7390851332151607
-fixedPoint :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
+fixedPoint :: Fractional a => UU a -> a -> [a]
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
 
-fixedPointM :: (Monad m, Fractional a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> MList m a
+fixedPointM :: (Monad m, Fractional a) => UF m a -> a -> MList m a
 fixedPointM f = findZeroM (\x -> subtract x `liftM` f x)
 {-# INLINE fixedPointM #-}
 
@@ -104,11 +105,11 @@ fixedPointM f = findZeroM (\x -> subtract x `liftM` f x)
 -- accurate results.  (Modulo the usual caveats.)
 --
 -- > take 10 $ extremum cos 1 -- convert to 0 
-extremum :: Fractional a => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
+extremum :: Fractional a => UU a -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}
 
-extremumM :: (Monad m, Fractional a) => (forall s. Mode s => AD s a -> m (AD s a)) -> a -> MList m a
+extremumM :: (Monad m, Fractional a) => UF m a -> a -> MList m a
 extremumM f = findZeroM (diffM (liftM decomposeMode . f . composeMode))
 {-# INLINE extremumM #-}
 
@@ -119,7 +120,7 @@ extremumM f = findZeroM (diffM (liftM decomposeMode . f . composeMode))
 -- increasingly accurate results.  (Modulo the usual caveats.)
 --
 -- It uses reverse mode automatic differentiation to compute the gradient.
-gradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
+gradientDescent :: (Traversable f, Fractional a, Ord a) => FU f a -> f a -> [f a]
 gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
     where
         (fx0, xgx0) = gradWith' (,) f x0
@@ -136,12 +137,12 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
                 (fx1, xgx1) = gradWith' (,) f x1
 {-# INLINE gradientDescent #-}
 
-gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
+gradientAscent :: (Traversable f, Fractional a, Ord a) => FU f a -> f a -> [f a]
 gradientAscent f = gradientDescent (negate . f)
 {-# INLINE gradientAscent #-}
 
 -- monadic gradient descent
-gradientDescentM :: (Traversable f, Monad m, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> m (AD s a)) -> f a -> MList m (f a)
+gradientDescentM :: (Traversable f, Monad m, Fractional a, Ord a) => FF f m a -> f a -> MList m (f a)
 gradientDescentM f x0 = MList $ do
         (fx0, xgx0) <- gradWithM' (,) f x0
         go x0 fx0 xgx0 0.1 (0 :: Int)
@@ -164,6 +165,6 @@ gradientDescentM f x0 = MList $ do
                 zeroGrad = all (\(_,g) -> g == 0)
 {-# INLINE gradientDescentM #-}
 
-gradientAscentM :: (Traversable f, Monad m, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> m (AD s a)) -> f a -> MList m (f a)
+gradientAscentM :: (Traversable f, Monad m, Fractional a, Ord a) => FF f m a -> f a -> MList m (f a)
 gradientAscentM f = gradientDescentM (liftM negate . f)
 {-# INLINE gradientAscentM #-}

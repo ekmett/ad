@@ -30,10 +30,10 @@ newtype ComposeFunctor f g a = ComposeFunctor { decomposeFunctor :: f (g a) }
 
 instance (Functor f, Functor g) => Functor (ComposeFunctor f g) where
     fmap f (ComposeFunctor a) = ComposeFunctor (fmap (fmap f) a)
-    
+
 instance (Foldable f, Foldable g) => Foldable (ComposeFunctor f g) where
     foldMap f (ComposeFunctor a) = foldMap (foldMap f) a
-    
+
 instance (Traversable f, Traversable g) => Traversable (ComposeFunctor f g) where
     traverse f (ComposeFunctor a) = ComposeFunctor <$> traverse (traverse f) a
 
@@ -50,8 +50,8 @@ instance (Primal f, Mode g, Primal g) => Primal (ComposeMode f g) where
 
 instance (Mode f, Mode g) => Mode (ComposeMode f g) where
     lift = ComposeMode . lift . lift
-    ComposeMode a <+> ComposeMode b = ComposeMode (a <+> b) 
-    a *^ ComposeMode b = ComposeMode (lift a *^ b) 
+    ComposeMode a <+> ComposeMode b = ComposeMode (a <+> b)
+    a *^ ComposeMode b = ComposeMode (lift a *^ b)
     ComposeMode a ^* b = ComposeMode (a ^* lift b)
     ComposeMode a ^/ b = ComposeMode (a ^/ lift b)
 
@@ -66,13 +66,13 @@ instance (Mode f, Mode g) => Lifted (ComposeMode f g) where
     negate1 (ComposeMode a) = ComposeMode (negate1 a)
     abs1 (ComposeMode a) = ComposeMode (abs1 a)
     signum1 (ComposeMode a) = ComposeMode (signum1 a)
-    ComposeMode a /! ComposeMode b = ComposeMode (a /! b) 
+    ComposeMode a /! ComposeMode b = ComposeMode (a /! b)
     recip1 (ComposeMode a) = ComposeMode (recip1 a)
     fromRational1 = ComposeMode . lift . fromRational1
     toRational1 (ComposeMode a) = toRational1 a
     pi1 = ComposeMode pi1
     exp1 (ComposeMode a) = ComposeMode (exp1 a)
-    log1 (ComposeMode a) = ComposeMode (log1 a) 
+    log1 (ComposeMode a) = ComposeMode (log1 a)
     sqrt1 (ComposeMode a) = ComposeMode (sqrt1 a)
     ComposeMode a **! ComposeMode b = ComposeMode (a **! b)
     logBase1 (ComposeMode a) (ComposeMode b) = ComposeMode (logBase1 a b)
@@ -102,7 +102,7 @@ instance (Mode f, Mode g) => Lifted (ComposeMode f g) where
     exponent1 (ComposeMode a) = exponent1 a
     significand1 (ComposeMode a) = ComposeMode (significand1 a)
     scaleFloat1 n (ComposeMode a) = ComposeMode (scaleFloat1 n a)
-    isNaN1 (ComposeMode a) = isNaN1 a 
+    isNaN1 (ComposeMode a) = isNaN1 a
     isInfinite1 (ComposeMode a) = isInfinite1 a
     isDenormalized1 (ComposeMode a) = isDenormalized1 a
     isNegativeZero1 (ComposeMode a) = isNegativeZero1 a
@@ -119,4 +119,4 @@ instance (Mode f, Mode g) => Lifted (ComposeMode f g) where
     minBound1 = ComposeMode minBound1
     maxBound1 = ComposeMode maxBound1
 
--- deriveNumeric (conT `appT` varT (mkName "f") `appT` varT (mkName "g")) 
+-- deriveNumeric (conT `appT` varT (mkName "f") `appT` varT (mkName "g"))

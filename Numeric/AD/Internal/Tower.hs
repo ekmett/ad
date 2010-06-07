@@ -1,5 +1,5 @@
 {-# LANGUAGE Rank2Types, TypeFamilies, FlexibleContexts, UndecidableInstances, TemplateHaskell #-}
-{-# OPTIONS_HADDOCK hide, prune #-}
+-- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      : Numeric.AD.Tower.Internal

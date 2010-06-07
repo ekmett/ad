@@ -1,5 +1,5 @@
 Name:         ad
-Version:      0.27
+Version:      0.28
 License:      BSD3
 License-File: LICENSE
 Copyright:    (c) Edward Kmett 2010,
@@ -31,14 +31,19 @@ Exposed-Modules:
     Numeric.AD.Tower
     Numeric.AD.Directed
     Numeric.AD.Newton
-    Numeric.AD.Stream
+    Numeric.AD.Tensors
+
     Numeric.AD.Internal
     Numeric.AD.Internal.Classes
+    Numeric.AD.Internal.Comonad
+    Numeric.AD.Internal.Stream
+    Numeric.AD.Internal.Tensors
+
     Numeric.AD.Internal.Composition
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Reverse
     Numeric.AD.Internal.Tower
-    Numeric.AD.Internal.Stream
+    Numeric.AD.Internal.Iterated
 
 Extra-Source-Files: TODO
 GHC-Options: -Wall

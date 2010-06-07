@@ -12,6 +12,7 @@
 module Numeric.AD.Internal
     ( zipWithT
     , zipWithDefaultT
+    , on
     , AD(..)
     , Id(..)
     , probe
@@ -27,6 +28,9 @@ import Numeric.AD.Classes
 import Data.Monoid
 import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)
+
+on :: (a -> a -> b) -> (c -> a) -> c -> c -> b
+on f g a b = f (g a) (g b)
 
 data Pair a b = Pair a b deriving (Eq, Ord, Show, Read, Functor, Foldable, Traversable)
 
@@ -50,7 +54,13 @@ instance Iso a a where
 -- interchangeably as both the type level \"brand\" and dictionary, providing a common API.
 newtype AD f a = AD { runAD :: f a } deriving (Iso (f a), Lifted, Mode, Primal)
 
-let f = varT (mkName "f") in deriveNumeric (conT ''AD `appT` f) f
+
+-- > instance (Lifted f, Num a) => Num (AD f a)
+-- etc.
+let f = varT (mkName "f") in 
+    deriveNumeric 
+        (classP ''Lifted [f]:) 
+        (conT ''AD `appT` f)
 
 newtype Id a = Id a deriving
     (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid)

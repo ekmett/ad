@@ -32,6 +32,7 @@ Exposed-Modules:
     Numeric.AD.Directed
     Numeric.AD.Newton
     Numeric.AD.Classes
+    Numeric.AD.Stream
     Numeric.AD.Internal
     Numeric.AD.Internal.Composition
     Numeric.AD.Internal.Forward

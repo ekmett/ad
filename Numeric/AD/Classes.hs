@@ -286,7 +286,8 @@ liftedMembers = do
 -- > instance ('Lifted' $f, 'Num' a, 'Enum' a) => 'Enum' ($g a)
 -- > instance ('Lifted' $f, 'Num' a, 'Eq' a) => 'Eq' ($g a)
 -- > instance ('Lifted' $f, 'Num' a, 'Ord' a) => 'Ord' ($g a)
--- > instance ('Lifted' $f, 'Num a, 'Bounded' a) => 'Bounded' ($g a)
+-- > instance ('Lifted' $f, 'Num' a, 'Bounded' a) => 'Bounded' ($g a)
+--
 -- > instance ('Lifted' $f, 'Show' a) => 'Show' ($g a)
 -- > instance ('Lifted' $f, 'Num' a) => 'Num' ($g a)
 -- > instance ('Lifted' $f, 'Fractional' a) => 'Fractional' ($g a)
@@ -294,19 +295,19 @@ liftedMembers = do
 -- > instance ('Lifted' $f, 'RealFloat' a) => 'RealFloat' ($g a)
 -- > instance ('Lifted' $f, 'RealFrac' a) => 'RealFrac' ($g a)
 -- > instance ('Lifted' $f, 'Real' a) => 'Real' ($g a)
-deriveNumeric :: Q Type -> Q Type -> Q [Dec]
-deriveNumeric t' t = do
+deriveNumeric :: ([Q Pred] -> [Q Pred]) -> Q Type -> Q [Dec]
+deriveNumeric f t = do
     members <- liftedMembers
     let keep n = nameBase n `elem` members
-    xs <- lowerInstance keep (classP ''Num [varA]:) t t' `mapM` [''Enum, ''Eq, ''Ord, ''Bounded]
-    ys <- lowerInstance keep id                     t t' `mapM` [''Show, ''Num, ''Fractional, ''Floating, ''RealFloat,''RealFrac, ''Real]
+    xs <- lowerInstance keep ((classP ''Num [varA]:) . f) t `mapM` [''Enum, ''Eq, ''Ord, ''Bounded]
+    ys <- lowerInstance keep f                            t `mapM` [''Show, ''Num, ''Fractional, ''Floating, ''RealFloat,''RealFrac, ''Real]
     return (xs ++ ys)
 
-lowerInstance :: (Name -> Bool) -> ([Q Pred] -> [Q Pred]) -> Q Type -> Q Type -> Name -> Q Dec
-lowerInstance p f t t' n = do
+lowerInstance :: (Name -> Bool) -> ([Q Pred] -> [Q Pred]) -> Q Type -> Name -> Q Dec
+lowerInstance p f t n = do
     ClassI (ClassD _ _ _ _ ds) <- reify n
-    instanceD (cxt (f [classP ''Lifted [t], classP n [varA]]))
-              (conT n `appT` (t' `appT` varA))
+    instanceD (cxt (f [classP n [varA]]))
+              (conT n `appT` (t `appT` varA))
               (concatMap lower1 ds)
     where
         lower1 :: Dec -> [Q Dec]

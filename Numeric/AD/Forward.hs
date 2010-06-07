@@ -166,8 +166,13 @@ gradWith' g f = bindWith' g (tangent . f)
 
 -- | Compute the product of a vector with the Hessian using forward-on-forward-mode AD. 
 hessianProduct :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> f a
-hessianProduct f = duF (grad (decomposeMode . f . fmap composeMode))
+hessianProduct f = duF $ grad $ decomposeMode . f . fmap composeMode
 
 -- | Compute the gradient and hessian product using forward-on-forward-mode AD. 
 hessianProduct' :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> f (a, a)
-hessianProduct' f = duF' (grad (decomposeMode . f . fmap composeMode))
+hessianProduct' f = duF' $ grad $ decomposeMode . f . fmap composeMode
+
+-- * Experimental
+
+-- data f :> a = a :< f (f :> a)
+-- gradients :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (f :> a)

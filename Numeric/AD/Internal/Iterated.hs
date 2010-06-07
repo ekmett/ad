@@ -25,6 +25,7 @@ import Data.Traversable
 -- import Data.Typeable
 import Numeric.AD.Internal
 import Numeric.AD.Internal.Comonad
+import Numeric.AD.Internal.Combinators (on)
 import Language.Haskell.TH
 
 infixl 3 :|

@@ -22,6 +22,7 @@ module Numeric.AD.Internal.Classes
     , deriveLifted
     , deriveNumeric
     , Lifted(..)
+    , Iso(..)
     ) where
 
 import Control.Applicative
@@ -32,6 +33,14 @@ infixl 8 **!
 infixl 7 *!, /!, ^*, *^, ^/
 infixl 6 +!, -!, <+>
 infix 4 ==!
+
+class Iso a b where
+    iso :: f a -> f b
+    osi :: f b -> f a
+
+instance Iso a a where
+    iso = id
+    osi = id
 
 class Lifted t where
     showsPrec1          :: Show a => Int -> t a -> ShowS

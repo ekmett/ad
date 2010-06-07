@@ -11,9 +11,13 @@ Category:     Math
 Homepage:     http://comonad.com/reader/
 Synopsis:     Automatic Differentiation
 Description:  
-    Forward, reverse, and higher-order automatic differentiation combinators with a common API.
+    Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.
     . 
-    Type-level \"branding\" is used to prevent the end user from confusing infinitesimals.
+    Type-level \"branding\" is used to both prevent the end user from confusing infinitesimals 
+    and to limit unsafe access to the implementation details of each Mode.
+    .
+    The combinators in "Numeric.AD" choose from a variety of automatic differentiation modes,
+    based on the arity of their inputs and outputs.
 
 Build-Type:   Simple
 Build-Depends:       
@@ -35,6 +39,8 @@ Exposed-Modules:
 
     Numeric.AD.Internal
     Numeric.AD.Internal.Classes
+    Numeric.AD.Internal.Types
+    Numeric.AD.Internal.Combinators
     Numeric.AD.Internal.Comonad
     Numeric.AD.Internal.Stream
     Numeric.AD.Internal.Tensors
@@ -43,7 +49,8 @@ Exposed-Modules:
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Reverse
     Numeric.AD.Internal.Tower
+    Numeric.AD.Internal.Identity
     Numeric.AD.Internal.Iterated
 
 Extra-Source-Files: TODO
-GHC-Options: -Wall
+GHC-Options: -Wall -fspec-constr -O2

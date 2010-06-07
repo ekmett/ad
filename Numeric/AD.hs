@@ -100,7 +100,8 @@ module Numeric.AD
 import Data.Traversable (Traversable)
 import Data.Foldable (Foldable, foldr')
 import Control.Applicative
-import Numeric.AD.Internal (AD(..), probed, unprobe, UU, UF, FU, FF)
+import Numeric.AD.Internal (AD(..), UU, UF, FU, FF)
+import Numeric.AD.Internal.Identity (probed, unprobe)
 import Numeric.AD.Internal.Classes  (Mode(..))
 import Numeric.AD.Forward  (diff, diff', diffF, diffF', du, du', duF, duF', diffM, diffM', jacobianT, jacobianWithT) 
 import Numeric.AD.Tower    (diffsF, diffs0F , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0, dus, dus0, dusF, dus0F)

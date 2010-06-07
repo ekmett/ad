@@ -49,6 +49,7 @@ import Data.Traversable (Traversable, mapM)
 import System.IO.Unsafe (unsafePerformIO)
 import Language.Haskell.TH
 import Numeric.AD.Internal
+import Numeric.AD.Internal.Identity
 
 -- | A @Tape@ records the information needed back propagate from the output to each input during 'Reverse' 'Mode' AD.
 data Tape a t

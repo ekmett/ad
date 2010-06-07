@@ -32,9 +32,13 @@ import Data.Monoid
 import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)
 
+-- | A scalar-to-scalar automatically-differentiable function.
 type UU a = forall s. Mode s => AD s a -> AD s a
+-- | A scalar-to-non-scalar automatically-differentiable function.
 type UF f a = forall s. Mode s => AD s a -> f (AD s a)
+-- | A non-scalar-to-scalar automatically-differentiable function.
 type FU f a = forall s. Mode s => f (AD s a) -> AD s a
+-- | A non-scalar-to-non-scalar automatically-differentiable function.
 type FF f g a = forall s. Mode s => f (AD s a) -> g (AD s a)
 
 on :: (a -> a -> b) -> (c -> a) -> c -> c -> b

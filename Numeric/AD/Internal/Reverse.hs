@@ -1,4 +1,5 @@
 {-# LANGUAGE Rank2Types, TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, FlexibleContexts, TemplateHaskell, UndecidableInstances #-}
+{-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Reverse
@@ -47,8 +48,6 @@ import qualified Data.Reify.Graph as Reified
 import Data.Traversable (Traversable, mapM)
 import System.IO.Unsafe (unsafePerformIO)
 import Language.Haskell.TH
-
-import Numeric.AD.Classes
 import Numeric.AD.Internal
 
 -- | A @Tape@ records the information needed back propagate from the output to each input during 'Reverse' 'Mode' AD.

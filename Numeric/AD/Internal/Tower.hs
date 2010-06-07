@@ -1,4 +1,5 @@
 {-# LANGUAGE Rank2Types, TypeFamilies, FlexibleContexts, UndecidableInstances, TemplateHaskell #-}
+{-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      : Numeric.AD.Tower.Internal
@@ -29,7 +30,6 @@ import Prelude hiding (all)
 import Control.Applicative
 import Data.Foldable
 import Language.Haskell.TH
-import Numeric.AD.Classes
 import Numeric.AD.Internal
 
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'

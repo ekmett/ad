@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, TemplateHaskell, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal
@@ -10,7 +11,9 @@
 --
 -----------------------------------------------------------------------------
 module Numeric.AD.Internal
-    ( zipWithT
+    ( module Numeric.AD.Internal.Classes
+    , UU, UF, FU, FF
+    , zipWithT
     , zipWithDefaultT
     , on
     , AD(..)
@@ -24,10 +27,15 @@ module Numeric.AD.Internal
 
 import Control.Applicative
 import Language.Haskell.TH
-import Numeric.AD.Classes
+import Numeric.AD.Internal.Classes
 import Data.Monoid
 import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)
+
+type UU a = forall s. Mode s => AD s a -> AD s a
+type UF f a = forall s. Mode s => AD s a -> f (AD s a)
+type FU f a = forall s. Mode s => f (AD s a) -> AD s a
+type FF f g a = forall s. Mode s => f (AD s a) -> g (AD s a)
 
 on :: (a -> a -> b) -> (c -> a) -> c -> c -> b
 on f g a b = f (g a) (g b)

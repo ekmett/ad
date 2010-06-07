@@ -30,7 +30,6 @@ module Numeric.AD.Directed
     ) where
 
 import Prelude hiding (reverse)
-import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Data.Traversable (Traversable)
 import qualified Numeric.AD.Reverse as R

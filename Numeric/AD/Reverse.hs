@@ -60,7 +60,6 @@ import Control.Monad (liftM)
 import Control.Applicative (WrappedMonad(..),(<$>))
 import Data.Traversable (Traversable)
 
-import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Reverse

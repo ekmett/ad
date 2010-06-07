@@ -46,7 +46,6 @@ module Numeric.AD.Tower
 
 import Control.Monad (liftM)
 import Control.Applicative ((<$>))
-import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Numeric.AD.Internal.Tower
 

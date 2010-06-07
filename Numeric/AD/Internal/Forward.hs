@@ -1,4 +1,5 @@
 {-# LANGUAGE Rank2Types, TypeFamilies, DeriveDataTypeable, TemplateHaskell, UndecidableInstances, BangPatterns #-}
+{-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Forward
@@ -32,7 +33,6 @@ import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)
 import Data.Data
 import Control.Applicative
-import Numeric.AD.Classes
 import Numeric.AD.Internal
 
 data Forward a = Forward a a deriving (Show, Data, Typeable)

@@ -34,7 +34,6 @@ module Numeric.AD.Newton
 import Prelude hiding (all)
 import Control.Monad (liftM)
 import Data.MList
-import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Data.Foldable (all)
 import Data.Traversable (Traversable)

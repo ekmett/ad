@@ -27,13 +27,19 @@ module Numeric.AD
     , jacobianWith
     , jacobianWith'
 
-    -- * Jacobians (Reverse Mode)
+    -- * Monadic Gradient/Jacobian (Reverse Mode)
+    , gradM
+    , gradM'
+    , gradWithM
+    , gradWithM'
+
+    -- * Functorial Gradient/Jacobian (Reverse Mode)
     , gradF
     , gradF'
     , gradWithF
     , gradWithF'
 
-    -- * Jacobians (Forward Mode)
+    -- * Transposed Jacobians (Forward Mode)
     , jacobianT
     , jacobianWithT
 
@@ -66,6 +72,8 @@ module Numeric.AD
     , du'
     , duF
     , duF'
+
+    -- * Directional Derivatives (Tower)
     , dus
     , dus0
     , dusF
@@ -83,12 +91,6 @@ module Numeric.AD
     , diffM
     , diffM'
 
-    -- * Monadic Combinators (Reverse Mode)
-    , gradM
-    , gradM'
-    , gradWithM
-    , gradWithM'
-
     -- * Exposed Types
     , AD(..)
     , Mode(..)
@@ -97,8 +99,8 @@ module Numeric.AD
 import Data.Traversable (Traversable)
 import Data.Foldable (Foldable, foldr')
 import Control.Applicative
-import Numeric.AD.Classes  (Mode(..))
 import Numeric.AD.Internal (AD(..), probed, unprobe)
+import Numeric.AD.Internal.Classes  (Mode(..))
 import Numeric.AD.Forward  (diff, diff', diffF, diffF', du, du', duF, duF', diffM, diffM', jacobianT, jacobianWithT) 
 import Numeric.AD.Tower    (diffsF, diffs0F , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0, dus, dus0, dusF, dus0F)
 import Numeric.AD.Reverse  (grad, grad', gradWith, gradWith', gradM, gradM', gradWithM, gradWithM', gradF, gradF', gradWithF, gradWithF')
@@ -164,7 +166,7 @@ jacobianWith' g f bs
 hessianProduct :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f (a, a) -> f a
 hessianProduct f = duF (grad (decomposeMode . f . fmap composeMode))
 
--- | @'hessianProduct'' f wv@ computes both the gradient of a non-scalar-to-scalar @f@ at @w = 'fst' <$> wv@ and the product of the hessian @H@ at @w@ with a vector @v = snd <$> wv@ using \"Pearlmutter\'s method\". The outputs are returned wrapped in the same functor.
+-- | @'hessianProduct'' f wv@ computes both the gradient of a non-scalar-to-scalar @f@ at @w = 'fst' <$> wv@ and the product of the hessian @H@ at @w@ with a vector @v = snd <$> wv@ using \"Pearlmutter's method\". The outputs are returned wrapped in the same functor.
 --
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
 -- 
@@ -183,9 +185,13 @@ hessian f = Forward.jacobian (grad (decomposeMode . f . fmap composeMode))
 hessianTensor :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f (f a))
 hessianTensor f = decomposeFunctor . Forward.jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))
 
--- the cofree comonad of f
--- data f :> a = (f :> a) :> a
-
--- gradients :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (f :> a) 
-
--- jacobians :: (Traversable f, Traversable g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f :> a) 
+-- data f :> a = a :< f (f :> a)
+-- data f :- a = a :- (f :- f a) | Zero
+{-
+flatten :: (f :> a) -> (f :- a)
+grads :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (f :- a) 
+grads f b = a :- da :- d2a :- Zero
+    (a, da) = grad2 f a
+    dda = Forward.jacobian (grad (decomposeMode . f . fmap composeMode)
+    ddda = Forward
+-}

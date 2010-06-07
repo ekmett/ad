@@ -51,7 +51,6 @@ module Numeric.AD.Forward
 import Data.Traversable (Traversable)
 import Control.Applicative
 import Control.Monad (liftM)
-import Numeric.AD.Classes
 import Numeric.AD.Internal
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Forward

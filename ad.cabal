@@ -1,9 +1,9 @@
 Name:         ad
-Version:      0.23
+Version:      0.24
 License:      BSD3
 License-File: LICENSE
-Copyright:    Edward Kmett 2010
-              Barak Pearlmutter and Jeffrey Mark Siskind 2008-2009
+Copyright:    (c) Edward Kmett 2010,
+              (c) Barak Pearlmutter and Jeffrey Mark Siskind 2008-2009
 Author:       Edward Kmett
 Maintainer:   ekmett@gmail.com
 Stability:    Experimental

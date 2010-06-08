@@ -1,13 +1,39 @@
-* Implement the diffMF, etc. functionality from Numeric.FAD
-
 * Allow the type to vary within our AD data type container, in the same fashion as Numeric.FAD.
 
-    Although, while Pearlmutter and Siskind provided the functionality to permit it in derivative combinator, they provided
-    no combinators to convert, for instance, a Dual tag Float to a Dual tag Double, so that extra functionality cannot
+    Although, while Pearlmutter and Siskind provided the functionality to permit 
+    it in the derivative combinators, they provided no combinators to convert, 
+    say, @Dual tag Float@ to a @Dual tag Double@, so that extra functionality cannot
     currently be leveraged.
 
-* Provide the ability to use reverse mode locally on FAD inputs, i.e.
+  One approach: GADT'd Tape. 
+    Lets us use local matrix-valued jacobians as blackboxes.
+    However, this requires a custom higher-order data-reify.
 
-    reverseCheckpoint :: (forall s. AD s a -> AD s a) -> AD t a -> AD t a 
+* Do we need some kind of Array implementation? These are easy:
 
-* Provide forward-on-reverse computation of Hessians
+    (new)?type ADArray s i e = Array i (AD s e) 
+    (new)?type ADIOArray s i e = IOArray i (AD s e)
+    (new)?type ADSTArray s i e = STArray i (AD s e)
+
+  But how to handle possibly unboxed arrays where possible?
+
+    Mode s => ADUArray s i Float
+    Mode s => ADIOUArray s i Float
+    Mode s => ADSTUArray s i Float
+
+  Forward admits fast unboxed array access, but how to avoid violating quantification over s?
+
+  This seems to require baking the array type for Float and Double directly into the Mode.
+
+  class ( IArray (ADArray s) e
+        , MArray (ADSTArray s s') e (ST s')
+        , MArray (ADIOArray s) e IO
+        , Lifted s) => LiftedArray s e where
+
+     type ADArr s e  :: * -> * -> * 
+     type ADSTArr s e :: * -> * -> * 
+     type ADIOArr s e :: * -> * -> *
+
+  newtype ADArray s i e = ADArray (ADArr s e i e)
+
+  class ( LiftedArray s Float, LiftedArray s Double, ...) => Mode s

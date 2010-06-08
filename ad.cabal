@@ -53,4 +53,5 @@ Exposed-Modules:
     Numeric.AD.Internal.Iterated
 
 Extra-Source-Files: TODO
-GHC-Options: -Wall -fspec-constr -O2
+GHC-Options: -Wall -fspec-constr 
+--           -O2

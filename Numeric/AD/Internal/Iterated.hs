@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, ScopedTypeVariables, DeriveDataTypeable, FlexibleContexts, UndecidableInstances #-}
+{-# LANGUAGE BangPatterns, TemplateHaskell, ScopedTypeVariables, DeriveDataTypeable, FlexibleContexts, UndecidableInstances #-}
 -- {-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |
@@ -15,23 +15,35 @@ module Numeric.AD.Internal.Iterated
     ( Iterated(..)
     , tailI
     , unfoldI
+    , bundle
+    , bind
     ) where
 
 import Control.Applicative
 import Data.Monoid
 import Data.Foldable
 import Data.Traversable
--- import Data.Data
--- import Data.Typeable
+import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(Infix))
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
 import Numeric.AD.Internal
 import Numeric.AD.Internal.Comonad
 import Numeric.AD.Internal.Combinators (on)
+-- import qualified Numeric.AD.Internal.Forward
+import Numeric.AD.Internal.Forward (Forward(..))
 import Language.Haskell.TH
 
 infixl 3 :|
 
 data Iterated f a = a :| f (Iterated f a)
---    deriving (Data, Typeable)
+
+bundle :: Num a => a -> a -> AD (Iterated Forward) a
+bundle a b = AD (a :| Forward (lift a) (lift b))
+
+bind :: (Traversable f, Num a) => (f (AD (Iterated Forward) a) -> b) -> f a -> f b
+bind f as = snd $ mapAccumL outer (0 :: Int) as
+    where
+        outer !i _ = (i + 1, f $ snd $ mapAccumL (inner i) 0 as)
+        inner !i !j a = (j + 1, bundle a $ if i == j then 1 else 0)
 
 instance Functor f => Functor (Iterated f) where
     fmap f (a :| as) = f a :| fmap f <$> as
@@ -140,3 +152,30 @@ instance Mode f => Lifted (Iterated f) where
 deriveNumeric
     (classP (mkName "Mode") [varT $ mkName "f"]:)
     (conT (mkName "Iterated") `appT` varT (mkName "f"))
+
+instance Typeable1 f => Typeable1 (Iterated f) where
+    typeOf1 tfa = mkTyConApp iteratedTyCon [typeOf1 (undefined `asArgsType` tfa)]
+        where asArgsType :: f a -> t f a -> f a
+              asArgsType = const
+
+instance (Typeable1 f, Typeable a) => Typeable (Iterated f a) where
+    typeOf = typeOfDefault
+    
+iteratedTyCon :: TyCon
+iteratedTyCon = mkTyCon "Numeric.AD.Internal.Iterated.Iterated"
+
+consConstr :: Constr
+consConstr = mkConstr iteratedDataType "(:|)" [] Infix
+
+iteratedDataType :: DataType
+iteratedDataType = mkDataType "Numeric.AD.Internal.Iterated.Iterated" [consConstr]
+
+instance (Typeable1 f, Data (f (Iterated f a)), Data a) => Data (Iterated f a) where
+    gfoldl f z (a :| as) = z (:|) `f` a `f` as
+    toConstr _ = consConstr
+    gunfold k z c = case constrIndex c of
+        1 -> k (k (z (:|)))
+        _ -> error "gunfold"
+    dataTypeOf _ = iteratedDataType
+    dataCast1 f = gcast1 f
+

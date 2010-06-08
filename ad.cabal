@@ -1,16 +1,16 @@
-Name:         ad
-Version:      0.32.0
-License:      BSD3
-License-File: LICENSE
-Copyright:    (c) Edward Kmett 2010,
+name:         ad
+version:      0.33.0
+license:      BSD3
+license-File: LICENSE
+copyright:    (c) Edward Kmett 2010,
               (c) Barak Pearlmutter and Jeffrey Mark Siskind 2008-2009
-Author:       Edward Kmett
-Maintainer:   ekmett@gmail.com
-Stability:    Experimental
-Category:     Math
-Homepage:     http://comonad.com/reader/
-Synopsis:     Automatic Differentiation
-Description:  
+author:       Edward Kmett
+maintainer:   ekmett@gmail.com
+stability:    Experimental
+category:     Math
+homepage:     http://comonad.com/reader/
+synopsis:     Automatic Differentiation
+description:  
     Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.
     . 
     Type-level \"branding\" is used to both prevent the end user from confusing infinitesimals 
@@ -19,8 +19,8 @@ Description:
     The combinators in "Numeric.AD" choose from a variety of automatic differentiation modes,
     based on the arity of their inputs and outputs.
 
-Build-Type:   Simple
-Build-Depends:       
+build-type:   Simple
+build-depends:       
     base >= 4 && < 5,
     data-reify >= 0.5 && < 0.6, 
     containers >= 0.2 && < 0.4,
@@ -28,7 +28,7 @@ Build-Depends:
     mlist >= 0.0.2 && <= 0.1,
     array >= 0.2 && < 0.4
 
-Exposed-Modules:
+exposed-modules:
     Numeric.AD
     Numeric.AD.Classes
     Numeric.AD.Types
@@ -41,11 +41,7 @@ Exposed-Modules:
     Numeric.AD.Mode.Directed
 
     Numeric.AD.Internal.Classes
-    Numeric.AD.Internal.Types
     Numeric.AD.Internal.Combinators
-    Numeric.AD.Internal.Comonad
-    Numeric.AD.Internal.Stream
-    Numeric.AD.Internal.Tensors
 
     Numeric.AD.Internal.Composition
     Numeric.AD.Internal.Forward
@@ -54,7 +50,12 @@ Exposed-Modules:
     Numeric.AD.Internal.Identity
     Numeric.AD.Internal.Iterated
 
+other-modules:
+    Numeric.AD.Internal.Types
+    Numeric.AD.Internal.Comonad
+    Numeric.AD.Internal.Stream
+    Numeric.AD.Internal.Tensors
+
 Extra-Source-Files: TODO
 GHC-Options: -Wall -fspec-constr 
 --           -O2
-

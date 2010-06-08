@@ -1,7 +1,7 @@
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Directed
+-- Module      :  Numeric.AD.Mode.Directed
 -- Copyright   :  (c) Edward Kmett 2010
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
@@ -12,7 +12,7 @@
 -- benchmarking or more complicated usage patterns.
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Directed
+module Numeric.AD.Mode.Directed
     (
     -- * Gradients
       grad
@@ -31,12 +31,13 @@ module Numeric.AD.Directed
     ) where
 
 import Prelude hiding (reverse)
-import Numeric.AD.Internal
+import Numeric.AD.Types
+import Numeric.AD.Classes
 import Data.Traversable (Traversable)
-import qualified Numeric.AD.Reverse as R
-import qualified Numeric.AD.Forward as F
-import qualified Numeric.AD.Tower as T
-import qualified Numeric.AD as M
+import qualified Numeric.AD.Mode.Reverse as R
+import qualified Numeric.AD.Mode.Forward as F
+import qualified Numeric.AD.Mode.Tower as T
+import qualified Numeric.AD.Mode.Mixed as M
 import Data.Ix
 
 -- TODO: use a data types a la carte approach, so we can expose more methods here

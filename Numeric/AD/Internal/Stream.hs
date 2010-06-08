@@ -1,5 +1,5 @@
 {-# LANGUAGE StandaloneDeriving, FlexibleContexts, UndecidableInstances #-}
--- {-# OPTIONS_HADDOCK hide #-}
+{-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Stream

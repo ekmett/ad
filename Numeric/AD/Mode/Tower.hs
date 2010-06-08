@@ -1,7 +1,7 @@
 {-# LANGUAGE Rank2Types, BangPatterns #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      : Numeric.AD.Tower
+-- Module      : Numeric.AD.Mode.Tower
 -- Copyright   : (c) Edward Kmett 2010
 -- License     : BSD3
 -- Maintainer  : ekmett@gmail.com
@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Tower
+module Numeric.AD.Mode.Tower
     (
     -- * Taylor Series
       taylor
@@ -47,7 +47,8 @@ module Numeric.AD.Tower
 
 import Control.Monad (liftM)
 import Control.Applicative ((<$>))
-import Numeric.AD.Internal
+import Numeric.AD.Types
+import Numeric.AD.Classes
 import Numeric.AD.Internal.Tower
 
 diffs :: Num a => UU a -> a -> [a]

@@ -25,7 +25,8 @@ import Data.Foldable
 import Data.Traversable
 import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(Infix))
 import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
-import Numeric.AD.Internal
+import Numeric.AD.Internal.Types
+import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Comonad
 import Numeric.AD.Internal.Combinators (on)
 -- import qualified Numeric.AD.Internal.Forward

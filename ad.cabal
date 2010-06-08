@@ -1,5 +1,5 @@
 Name:         ad
-Version:      0.31.0
+Version:      0.32.0
 License:      BSD3
 License-File: LICENSE
 Copyright:    (c) Edward Kmett 2010,
@@ -30,14 +30,16 @@ Build-Depends:
 
 Exposed-Modules:
     Numeric.AD
-    Numeric.AD.Forward
-    Numeric.AD.Reverse
-    Numeric.AD.Tower
-    Numeric.AD.Directed
+    Numeric.AD.Classes
+    Numeric.AD.Types
     Numeric.AD.Newton
-    Numeric.AD.Tensors
 
-    Numeric.AD.Internal
+    Numeric.AD.Mode.Mixed
+    Numeric.AD.Mode.Forward
+    Numeric.AD.Mode.Reverse
+    Numeric.AD.Mode.Tower
+    Numeric.AD.Mode.Directed
+
     Numeric.AD.Internal.Classes
     Numeric.AD.Internal.Types
     Numeric.AD.Internal.Combinators
@@ -55,3 +57,4 @@ Exposed-Modules:
 Extra-Source-Files: TODO
 GHC-Options: -Wall -fspec-constr 
 --           -O2
+

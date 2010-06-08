@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeOperators, TemplateHaskell, ScopedTypeVariables #-}
--- {-# OPTIONS_HADDOCK hide #-}
+{-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Tensors

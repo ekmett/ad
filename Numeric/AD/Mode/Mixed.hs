@@ -1,7 +1,7 @@
 {-# LANGUAGE Rank2Types, TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD
+-- Module      :  Numeric.AD.Mode.Mixed
 -- Copyright   :  (c) Edward Kmett 2010
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
@@ -13,7 +13,7 @@
 -- Each combinator exported from this module chooses an appropriate AD mode.
 -----------------------------------------------------------------------------
 
-module Numeric.AD
+module Numeric.AD.Mode.Mixed
     (
     -- * Gradients (Reverse Mode)
       grad
@@ -100,16 +100,32 @@ module Numeric.AD
 import Data.Traversable (Traversable)
 import Data.Foldable (Foldable, foldr')
 import Control.Applicative
-import Numeric.AD.Internal (AD(..), UU, UF, FU, FF)
-import Numeric.AD.Internal.Identity (probed, unprobe)
-import Numeric.AD.Internal.Classes  (Mode(..))
-import Numeric.AD.Forward  (diff, diff', diffF, diffF', du, du', duF, duF', diffM, diffM', jacobianT, jacobianWithT) 
-import Numeric.AD.Tower    (diffsF, diffs0F , diffs, diffs0, taylor, taylor0, maclaurin, maclaurin0, dus, dus0, dusF, dus0F)
-import Numeric.AD.Reverse  (grad, grad', gradWith, gradWith', gradM, gradM', gradWithM, gradWithM', gradF, gradF', gradWithF, gradWithF')
-import Numeric.AD.Internal.Composition
 
-import qualified Numeric.AD.Forward as Forward
-import qualified Numeric.AD.Reverse as Reverse
+import Numeric.AD.Types (AD(..), UU, UF, FU, FF)
+import Numeric.AD.Internal.Identity (probed, unprobe)
+import Numeric.AD.Internal.Composition
+import Numeric.AD.Classes (Mode(..))
+
+import qualified Numeric.AD.Mode.Forward as Forward
+import Numeric.AD.Mode.Forward 
+    ( diff, diff', diffF, diffF'
+    , du, du', duF, duF'
+    , diffM, diffM'
+    , jacobianT, jacobianWithT
+    ) 
+
+import Numeric.AD.Mode.Tower 
+    ( diffsF, diffs0F, diffs, diffs0
+    , taylor, taylor0, maclaurin, maclaurin0
+    , dus, dus0, dusF, dus0F
+    )
+
+import qualified Numeric.AD.Mode.Reverse as Reverse
+import Numeric.AD.Mode.Reverse 
+    ( grad, grad', gradWith, gradWith'
+    , gradM, gradM', gradWithM, gradWithM'
+    , gradF, gradF', gradWithF, gradWithF'
+    )
 
 -- | Calculate the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
 --

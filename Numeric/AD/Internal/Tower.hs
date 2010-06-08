@@ -32,7 +32,8 @@ import Data.Foldable
 import Data.Data (Data)
 import Data.Typeable (Typeable)
 import Language.Haskell.TH
-import Numeric.AD.Internal
+import Numeric.AD.Internal.Types
+import Numeric.AD.Internal.Classes
 
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'
 newtype Tower a = Tower { getTower :: [a] } deriving (Data, Typeable)

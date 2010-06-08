@@ -23,7 +23,8 @@ import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex,
 import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
 import Data.Foldable (Foldable(foldMap))
 import Data.Traversable (Traversable(traverse))
-import Numeric.AD.Internal
+import Numeric.AD.Internal.Classes
+import Numeric.AD.Internal.Types
 
 -- | Functor composition, used to nest the use of jacobian and grad
 newtype ComposeFunctor f g a = ComposeFunctor { decomposeFunctor :: f (g a) }

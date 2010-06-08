@@ -28,6 +28,7 @@ module Numeric.AD.Internal.Classes
 import Control.Applicative
 import Data.Char
 import Language.Haskell.TH
+import Numeric.AD.Internal.Combinators (on)
 
 infixl 8 **!
 infixl 7 *!, /!, ^*, *^, ^/
@@ -155,9 +156,6 @@ fromIntegral1 = fromInteger1 . fromIntegral
 square1 :: (Lifted t, Num a) => t a -> t a
 square1 x = x *! x
 {-# INLINE square1 #-}
-
-on :: (a -> a -> c) -> (b -> a) -> b -> b -> c
-on f g a b = f (g a) (g b)
 
 discrete1 :: (Primal t, Num a) => (a -> c) -> t a -> c
 discrete1 f x = f (primal x)

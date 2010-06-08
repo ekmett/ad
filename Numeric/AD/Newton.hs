@@ -35,11 +35,12 @@ module Numeric.AD.Newton
 import Prelude hiding (all)
 import Control.Monad (liftM)
 import Data.MList
-import Numeric.AD.Internal
 import Data.Foldable (all)
 import Data.Traversable (Traversable)
-import Numeric.AD.Forward (diff, diff', diffM, diffM')
-import Numeric.AD.Reverse (gradWith', gradWithM')
+import Numeric.AD.Types
+import Numeric.AD.Classes
+import Numeric.AD.Mode.Forward (diff, diff', diffM, diffM')
+import Numeric.AD.Mode.Reverse (gradWith', gradWithM')
 import Numeric.AD.Internal.Composition
 
 -- | The 'findZero' function finds a zero of a scalar function using

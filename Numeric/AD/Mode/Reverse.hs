@@ -1,7 +1,7 @@
 {-# LANGUAGE Rank2Types, TemplateHaskell, BangPatterns #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Reverse
+-- Module      :  Numeric.AD.Mode.Reverse
 -- Copyright   :  (c) Edward Kmett 2010
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
@@ -17,7 +17,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Reverse
+module Numeric.AD.Mode.Reverse
     (
     -- * Gradient
       grad
@@ -61,7 +61,8 @@ import Control.Monad (liftM)
 import Control.Applicative (WrappedMonad(..),(<$>))
 import Data.Traversable (Traversable)
 
-import Numeric.AD.Internal
+import Numeric.AD.Types
+import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Reverse
 

@@ -33,7 +33,8 @@ import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)
 import Data.Data
 import Control.Applicative
-import Numeric.AD.Internal
+import Numeric.AD.Internal.Types
+import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 
 data Forward a = Forward a a deriving (Show, Data, Typeable)

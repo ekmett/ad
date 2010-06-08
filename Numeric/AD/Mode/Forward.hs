@@ -1,7 +1,7 @@
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Forward
+-- Module      :  Numeric.AD.Mode.Forward
 -- Copyright   :  (c) Edward Kmett 2010
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Forward
+module Numeric.AD.Mode.Forward
     (
     -- * Gradient
       grad
@@ -52,7 +52,8 @@ module Numeric.AD.Forward
 import Data.Traversable (Traversable)
 import Control.Applicative
 import Control.Monad (liftM)
-import Numeric.AD.Internal
+import Numeric.AD.Types
+import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Forward
 

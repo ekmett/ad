@@ -22,8 +22,8 @@ import Control.Applicative
 import Data.Monoid
 import Data.Foldable
 import Data.Traversable
--- import Data.Data
--- import Data.Typeable
+import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(Infix))
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
 import Numeric.AD.Internal.Comonad
 
 infixl 3 :<
@@ -52,13 +52,44 @@ instance Traversable f => Traversable (Stream f) where
 
 headS :: Stream f a -> a
 headS (a :< _) = a
+{-# INLINE headS #-}
 
 -- tails of the f-branching stream comonad/cofree comonad
 tailS :: Stream f a -> f (Stream f a)
 tailS (_ :< as) = as
+{-# INLINE tailS #-}
 
 unfoldS :: Functor f => (a -> (b, f a)) -> a -> Stream f b
 unfoldS f a = h :< unfoldS f <$> t 
     where
         (h, t) = f a
+
+instance Typeable1 f => Typeable1 (Stream f) where
+    typeOf1 tfa = mkTyConApp streamTyCon [typeOf1 (undefined `asArgsType` tfa)]
+        where asArgsType :: f a -> t f a -> f a
+              asArgsType = const
+
+instance (Typeable1 f, Typeable a) => Typeable (Stream f a) where
+    typeOf = typeOfDefault
+    
+streamTyCon :: TyCon
+streamTyCon = mkTyCon "Numeric.AD.Internal.Stream.Stream"
+{-# NOINLINE streamTyCon #-}
+
+consConstr :: Constr
+consConstr = mkConstr streamDataType "(:<)" [] Infix
+{-# NOINLINE consConstr #-}
+
+streamDataType :: DataType
+streamDataType = mkDataType "Numeric.AD.Internal.Stream.Stream" [consConstr]
+{-# NOINLINE streamDataType #-}
+
+instance (Typeable1 f, Data (f (Stream f a)), Data a) => Data (Stream f a) where
+    gfoldl f z (a :< as) = z (:<) `f` a `f` as
+    toConstr _ = consConstr
+    gunfold k z c = case constrIndex c of
+        1 -> k (k (z (:<)))
+        _ -> error "gunfold"
+    dataTypeOf _ = streamDataType
+    dataCast1 f = gcast1 f
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleContexts, UndecidableInstances, TemplateHaskell #-}
+{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleContexts, UndecidableInstances, TemplateHaskell, DeriveDataTypeable #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
@@ -29,11 +29,16 @@ module Numeric.AD.Internal.Tower
 import Prelude hiding (all)
 import Control.Applicative
 import Data.Foldable
+import Data.Data (Data)
+import Data.Typeable (Typeable)
 import Language.Haskell.TH
 import Numeric.AD.Internal
 
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'
-newtype Tower a = Tower { getTower :: [a] } deriving (Show)
+newtype Tower a = Tower { getTower :: [a] } deriving (Data, Typeable)
+
+instance Show a => Show (Tower a) where
+    showsPrec n (Tower as) = showParen (n > 10) $ showString "Tower " . showList as
 
 -- Local combinators
 

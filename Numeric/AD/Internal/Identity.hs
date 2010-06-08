@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Identity
@@ -21,11 +21,13 @@ import Control.Applicative
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Types
 import Data.Monoid
+import Data.Data (Data)
+import Data.Typeable (Typeable)
 import Data.Traversable (Traversable, traverse)
 import Data.Foldable (Foldable, foldMap)
 
 newtype Id a = Id a deriving
-    (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid)
+    (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable)
 
 probe :: a -> AD Id a
 probe a = AD (Id a)

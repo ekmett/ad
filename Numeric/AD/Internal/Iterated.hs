@@ -163,12 +163,15 @@ instance (Typeable1 f, Typeable a) => Typeable (Iterated f a) where
     
 iteratedTyCon :: TyCon
 iteratedTyCon = mkTyCon "Numeric.AD.Internal.Iterated.Iterated"
+{-# NOINLINE iteratedTyCon #-}
 
 consConstr :: Constr
 consConstr = mkConstr iteratedDataType "(:|)" [] Infix
+{-# NOINLINE consConstr #-}
 
 iteratedDataType :: DataType
 iteratedDataType = mkDataType "Numeric.AD.Internal.Iterated.Iterated" [consConstr]
+{-# NOINLINE iteratedDataType #-}
 
 instance (Typeable1 f, Data (f (Iterated f a)), Data a) => Data (Iterated f a) where
     gfoldl f z (a :| as) = z (:|) `f` a `f` as

@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TemplateHaskell, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TemplateHaskell, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
@@ -15,6 +15,8 @@ module Numeric.AD.Internal.Types
     , UU, UF, FU, FF
     ) where
 
+import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
 import Language.Haskell.TH
 import Numeric.AD.Internal.Classes
 
@@ -40,3 +42,31 @@ type FU f a = forall s. Mode s => f (AD s a) -> AD s a
 -- | A non-scalar-to-non-scalar automatically-differentiable function.
 type FF f g a = forall s. Mode s => f (AD s a) -> g (AD s a)
 
+instance Typeable1 f => Typeable1 (AD f) where
+    typeOf1 tfa = mkTyConApp adTyCon [typeOf1 (undefined `asArgsType` tfa)]
+        where asArgsType :: f a -> t f a -> f a
+              asArgsType = const
+
+instance (Typeable1 f, Typeable a) => Typeable (AD f a) where
+    typeOf = typeOfDefault
+    
+adTyCon :: TyCon
+adTyCon = mkTyCon "Numeric.AD.Internal.Types.AD"
+{-# NOINLINE adTyCon #-}
+
+adConstr :: Constr
+adConstr = mkConstr adDataType "AD" [] Prefix
+{-# NOINLINE adConstr #-}
+
+adDataType :: DataType
+adDataType = mkDataType "Numeric.AD.Internal.Types.AD" [adConstr]
+{-# NOINLINE adDataType #-}
+
+instance (Typeable1 f, Typeable a, Data (f a), Data a) => Data (AD f a) where
+    gfoldl f z (AD a) = z AD `f` a
+    toConstr _ = adConstr
+    gunfold k z c = case constrIndex c of
+        1 -> k (z AD)
+        _ -> error "gunfold"
+    dataTypeOf _ = adDataType
+    dataCast1 f = gcast1 f

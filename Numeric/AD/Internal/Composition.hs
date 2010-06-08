@@ -9,7 +9,6 @@
 -- Stability   :  experimental
 -- Portability :  GHC only
 --
--- Defines the composition of two AD modes as an AD mode in its own right
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Internal.Composition
@@ -19,13 +18,14 @@ module Numeric.AD.Internal.Composition
     , decomposeMode
     ) where
 
-import Data.Traversable
 import Control.Applicative
-import Data.Foldable
+import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
+import Data.Foldable (Foldable(foldMap))
+import Data.Traversable (Traversable(traverse))
 import Numeric.AD.Internal
 
--- * Functor composition
-
+-- | Functor composition, used to nest the use of jacobian and grad
 newtype ComposeFunctor f g a = ComposeFunctor { decomposeFunctor :: f (g a) }
 
 instance (Functor f, Functor g) => Functor (ComposeFunctor f g) where
@@ -37,6 +37,38 @@ instance (Foldable f, Foldable g) => Foldable (ComposeFunctor f g) where
 instance (Traversable f, Traversable g) => Traversable (ComposeFunctor f g) where
     traverse f (ComposeFunctor a) = ComposeFunctor <$> traverse (traverse f) a
 
+instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeFunctor f g) where
+    typeOf1 tfga = mkTyConApp composeFunctorTyCon [typeOf1 (fa tfga), typeOf1 (ga tfga)]
+        where fa :: t f (g :: * -> *) a -> f a
+              fa = undefined
+              ga :: t (f :: * -> *) g a -> g a
+              ga = undefined
+
+instance (Typeable1 f, Typeable1 g, Typeable a) => Typeable (ComposeFunctor f g a) where
+    typeOf = typeOfDefault
+    
+composeFunctorTyCon :: TyCon
+composeFunctorTyCon = mkTyCon "Numeric.AD.Internal.Composition.ComposeFunctor"
+{-# NOINLINE composeFunctorTyCon #-}
+
+composeFunctorConstr :: Constr
+composeFunctorConstr = mkConstr composeFunctorDataType "ComposeFunctor" [] Prefix
+{-# NOINLINE composeFunctorConstr #-}
+
+composeFunctorDataType :: DataType
+composeFunctorDataType = mkDataType "Numeric.AD.Internal.Composition.ComposeFunctor" [composeFunctorConstr]
+{-# NOINLINE composeFunctorDataType #-}
+
+instance (Typeable1 f, Typeable1 g, Data (f (g a)), Data a) => Data (ComposeFunctor f g a) where
+    gfoldl f z (ComposeFunctor a) = z ComposeFunctor `f` a
+    toConstr _ = composeFunctorConstr
+    gunfold k z c = case constrIndex c of
+        1 -> k (z ComposeFunctor)
+        _ -> error "gunfold"
+    dataTypeOf _ = composeFunctorDataType
+    dataCast1 f = gcast1 f
+
+-- | The composition of two AD modes is an AD mode in its own right
 newtype ComposeMode f g a = ComposeMode { runComposeMode :: f (AD g a) }
 
 composeMode :: AD f (AD g a) -> AD (ComposeMode f g) a
@@ -119,4 +151,34 @@ instance (Mode f, Mode g) => Lifted (ComposeMode f g) where
     minBound1 = ComposeMode minBound1
     maxBound1 = ComposeMode maxBound1
 
--- deriveNumeric (conT `appT` varT (mkName "f") `appT` varT (mkName "g"))
+instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeMode f g) where
+    typeOf1 tfga = mkTyConApp composeModeTyCon [typeOf1 (fa tfga), typeOf1 (ga tfga)]
+        where fa :: t f (g :: * -> *) a -> f a
+              fa = undefined
+              ga :: t (f :: * -> *) g a -> g a
+              ga = undefined
+
+instance (Typeable1 f, Typeable1 g, Typeable a) => Typeable (ComposeMode f g a) where
+    typeOf = typeOfDefault
+    
+composeModeTyCon :: TyCon
+composeModeTyCon = mkTyCon "Numeric.AD.Internal.Composition.ComposeMode"
+{-# NOINLINE composeModeTyCon #-}
+
+composeModeConstr :: Constr
+composeModeConstr = mkConstr composeModeDataType "ComposeMode" [] Prefix
+{-# NOINLINE composeModeConstr #-}
+
+composeModeDataType :: DataType
+composeModeDataType = mkDataType "Numeric.AD.Internal.Composition.ComposeMode" [composeModeConstr]
+{-# NOINLINE composeModeDataType #-}
+
+instance (Typeable1 f, Typeable1 g, Data (f (AD g a)), Data a) => Data (ComposeMode f g a) where
+    gfoldl f z (ComposeMode a) = z ComposeMode `f` a
+    toConstr _ = composeModeConstr
+    gunfold k z c = case constrIndex c of
+        1 -> k (z ComposeMode)
+        _ -> error "gunfold"
+    dataTypeOf _ = composeModeDataType
+    dataCast1 f = gcast1 f
+

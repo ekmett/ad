@@ -22,15 +22,14 @@ import Control.Applicative
 import Data.Foldable
 import Data.Traversable
 import Data.Monoid
---import Data.Data
---import Data.Typeable
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
 import Numeric.AD.Internal.Comonad
 import Numeric.AD.Internal.Stream
 
 infixl 3 :-
 
 data Tensors f a = a :- Tensors f (f a)
--- TODO: deriving (Data, Typeable)
+-- Polymorphic recursion precludes Data in its current form, as no Data1 class exists
 
 instance Functor f => Functor (Tensors f) where
     fmap f (a :- as) = f a :- fmap (fmap f) as
@@ -60,3 +59,16 @@ tensors (a :< as) = a :- distribute (tensors <$> as)
     where
         distribute :: Functor f => f (Tensors f a) -> Tensors f (f a)
         distribute x = (headT <$> x) :- distribute (tailT <$> x)
+
+
+instance Typeable1 f => Typeable1 (Tensors f) where
+    typeOf1 tfa = mkTyConApp tensorsTyCon [typeOf1 (undefined `asArgsType` tfa)]
+        where asArgsType :: f a -> t f a -> f a
+              asArgsType = const
+
+instance (Typeable1 f, Typeable a) => Typeable (Tensors f a) where
+    typeOf = typeOfDefault
+    
+tensorsTyCon :: TyCon
+tensorsTyCon = mkTyCon "Numeric.AD.Internal.Tensors.Tensors"
+{-# NOINLINE tensorsTyCon #-}

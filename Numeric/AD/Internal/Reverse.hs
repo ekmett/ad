@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, FlexibleContexts, TemplateHaskell, UndecidableInstances #-}
+{-# LANGUAGE Rank2Types, TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, FlexibleContexts, TemplateHaskell, UndecidableInstances, DeriveDataTypeable #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
@@ -48,6 +48,8 @@ import qualified Data.Reify.Graph as Reified
 import Data.Traversable (Traversable, mapM)
 import System.IO.Unsafe (unsafePerformIO)
 import Language.Haskell.TH
+import Data.Data (Data)
+import Data.Typeable (Typeable)
 import Numeric.AD.Internal
 import Numeric.AD.Internal.Identity
 
@@ -57,10 +59,12 @@ data Tape a t
     | Var a {-# UNPACK #-} !Int
     | Binary a a a t t
     | Unary a a t
-    deriving (Show)
+    deriving (Show, Data, Typeable)
 
 -- | @Reverse@ is a 'Mode' using reverse-mode automatic differentiation that provides fast 'diffFU', 'diff2FU', 'grad', 'grad2' and a fast 'jacobian' when you have a significantly smaller number of outputs than inputs.
-newtype Reverse a = Reverse (Tape a (Reverse a)) deriving (Show)
+newtype Reverse a = Reverse (Tape a (Reverse a)) deriving (Show, Typeable)
+
+-- deriving instance (Data (Tape a (Reverse a)) => Data (Reverse a)
 
 instance MuRef (Reverse a) where
     type DeRef (Reverse a) = Tape a

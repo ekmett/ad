@@ -20,6 +20,7 @@ module Numeric.AD.Internal.Classes
     , Jacobian(..)
     , Primal(..)
     , deriveLifted
+    , deriveLifted'
     , deriveNumeric
     , Lifted(..)
     , Iso(..)

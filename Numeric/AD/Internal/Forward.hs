@@ -90,7 +90,7 @@ instance Lifted Forward => Jacobian Forward where
             (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
             da = dadb * db + dc * dadc
 
-deriveLifted $ conT ''Forward
+deriveLifted id $ conT ''Forward
 
 bind :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> f b
 bind f as = snd $ mapAccumL outer (0 :: Int) as

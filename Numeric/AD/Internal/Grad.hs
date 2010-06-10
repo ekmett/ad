@@ -9,7 +9,8 @@
 -- Stability   : experimental
 -- Portability : GHC only
 --
--- Bulk-Forward AD -- 
+-- Bulk-Forward AD
+--
 -- Assumes all instances of 'f' have the same number of elements.
 --
 -----------------------------------------------------------------------------
@@ -50,16 +51,12 @@ ds' _    (AD (Grad a da)) = (a, da)
 ds' zero (AD (Lift a))    = (a, zero)
 {-# INLINE ds' #-}
 
-zeroes :: (Functor f, Num a) => f b -> f a 
-zeroes as = const 0 <$> as
-{-# INLINE zeroes #-}
-
-ones :: (Functor f, Num a) => f b -> f a
-ones as = const 1 <$> as
-{-# INLINE ones #-}
-
-vars :: (Functor f, Num a) => f a -> f (AD (Grad f) a)
-vars as = fmap (\a -> AD (Grad a (ones as))) as
+-- Bind variables and count inputs
+vars :: (Traversable f, Num a) => f a -> f (AD (Grad f) a)
+vars as = snd $ mapAccumL outer (0 :: Int) as
+    where
+        outer !i a = (i + 1, Grad a $ snd $ mapAccumL (inner i) 0 as)
+        inner !i !j a = (j + 1, if i == j then 1 else 0)
 {-# INLINE vars #-}
 
 apply :: (Functor f, Num a) => (f (AD (Grad f) a) -> b) -> f a -> b
@@ -122,5 +119,5 @@ instance (Traversable f, Lifted (Grad f)) => Jacobian (Grad f) where
             (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
 
 -- we need to be able to add context here!
-deriveLifted $ conT ''Grad `appT` varT ''f
-
+let f = varT (mkName "f") in
+    deriveLifted (classP ''Traversable [f]:) (conT ''Grad `appT` f)

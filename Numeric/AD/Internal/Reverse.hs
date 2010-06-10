@@ -116,8 +116,7 @@ instance Lifted Reverse => Jacobian Reverse where
             a = f pb pc
             (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
-deriveLifted (conT ''Reverse)
--- deriveNumeric  ''Reverse
+deriveLifted id (conT ''Reverse)
 
 derivative :: Num a => AD Reverse a -> a
 derivative = sum . map snd . partials

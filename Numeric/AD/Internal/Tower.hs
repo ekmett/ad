@@ -133,4 +133,4 @@ instance Lifted Tower => Jacobian Tower where
         a = bundle a0 da
         (dadb, dadc) = df a b c
 
-deriveLifted (conT ''Tower)
+deriveLifted id (conT ''Tower)

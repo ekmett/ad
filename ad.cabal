@@ -38,11 +38,12 @@ exposed-modules:
     Numeric.AD.Internal.Combinators
 
     Numeric.AD.Internal.Forward
-    Numeric.AD.Internal.Composition
-    Numeric.AD.Internal.Identity
+    Numeric.AD.Internal.Tower
     Numeric.AD.Internal.Reverse
     Numeric.AD.Internal.Sparse
-    Numeric.AD.Internal.Tower
+    Numeric.AD.Internal.Dense
+    Numeric.AD.Internal.Composition
+    Numeric.AD.Internal.Identity
 
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward
@@ -50,7 +51,6 @@ exposed-modules:
     Numeric.AD.Mode.Reverse
     Numeric.AD.Mode.Tower
 
---  Numeric.AD.Internal.Grad
 
 other-modules:
     Numeric.AD.Internal.Types

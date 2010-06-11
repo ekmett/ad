@@ -180,12 +180,12 @@ discrete3 f x y z = f (primal x) (primal y) (primal z)
 --
 -- The seemingly redundant @'Lifted' $t@ constraints are caused by Template Haskell staging restrictions.
 deriveLifted :: ([Q Pred] -> [Q Pred]) -> Q Type -> Q [Dec]
-deriveLifted f t = do
+deriveLifted f _t = do
         [InstanceD cxt0 type0 dec0] <- lifted
         return <$> instanceD (cxt (f (return <$> cxt0))) (return type0) (return <$> dec0)
     where 
       lifted = [d| 
-       instance Lifted $t where
+       instance Lifted $_t where
         (==!)         = (==) `on` primal
         compare1      = compare `on` primal
         maxBound1     = lift maxBound

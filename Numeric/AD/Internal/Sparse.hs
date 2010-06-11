@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns, TemplateHaskell, TypeFamilies, TypeOperators, FlexibleContexts, UndecidableInstances, DeriveDataTypeable #-}
 module Numeric.AD.Internal.Sparse 
     ( Index(..)
     , emptyIndex
@@ -9,22 +10,29 @@ module Numeric.AD.Internal.Sparse
     , d'
     , ds
     , skeleton
-
-
+    , spartial
+    , partial
     ) where
 
+import Prelude hiding (lookup)
+import Control.Applicative
+import Numeric.AD.Internal.Classes
+import Numeric.AD.Internal.Stream
+import Numeric.AD.Internal.Types
+import Data.Data
+import Data.Typeable ()
 import qualified Data.IntMap as IntMap 
-import Data.IntMap (IntMap)
-import Data.Reflection
-import Data.Vector
+import Data.IntMap (IntMap, mapWithKey, unionWith, findWithDefault, toAscList, singleton, insertWith, lookup)
+import Data.Traversable
+import Language.Haskell.TH
 
 newtype Index = Index (IntMap Int)
 
 emptyIndex :: Index
-emptyIndex = Index empty
+emptyIndex = Index IntMap.empty
 
 addToIndex :: Int -> Index -> Index
-addToIndex k (Key m) = Index (insertWith (+) k 1 m)
+addToIndex k (Index m) = Index (insertWith (+) k 1 m)
 
 indices :: Index -> [Int]
 indices (Index as) = uncurry (flip replicate) `concatMap` toAscList as
@@ -34,46 +42,49 @@ indices (Index as) = uncurry (flip replicate) `concatMap` toAscList as
 -- which it was found. This should be key for efficiently computing sparse hessians.
 -- there are only (n + k - 1) choose k distinct nth partial derivatives of a 
 -- function with k inputs.
-data Sparse a = Sparse a (IntMap (Sparse a))
+data Sparse a = Sparse a (IntMap (Sparse a)) deriving (Show, Data, Typeable)
 
 -- | drop keys below a given value
 dropMap :: Int -> IntMap a -> IntMap a
 dropMap n = snd . IntMap.split (n - 1) 
 
-times :: Sparse a -> Int -> Sparse a -> Sparse a
+times :: Num a => Sparse a -> Int -> Sparse a -> Sparse a
 times (Sparse a as) n (Sparse b bs) = Sparse (a * b) $
-    IntMap.unionWith (+) 
-        (mapWithKey (times b) (dropMap n as))
-        (mapWithKey (times a) (dropMap n bs))
+    unionWith (<+>) 
+        (fmap (^* b) (dropMap n as))
+        (fmap (a *^) (dropMap n bs))
 
-vars :: Traversable f => f a -> f (AD Sparse a)
-vars = mapAccumL (\ !n a -> (n + 1, Sparse a (singleton n 1))) 0
+vars :: (Traversable f, Num a) => f a -> f (AD Sparse a)
+vars = snd . mapAccumL var 0 
+    where
+        var !n a = (n + 1, AD $ Sparse a $ singleton n $ lift 1)
 
-skeleton :: f a -> f Int
-skeleton = snd $ mapAccumL (\ !n _ -> (n + 1, n)) 0 fs
+skeleton :: Traversable f => f a -> f Int
+skeleton = snd . mapAccumL (\ !n _ -> (n + 1, n)) 0
 
 d :: (Traversable f, Num a) => f b -> AD Sparse a -> f a
-d fs (Sparse a da) = snd $ mapAccumL (\ !n a -> (n + 1, findWithDefault 0 n da))
+d fs (AD (Sparse _ da)) = snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs
 
 d' :: (Traversable f, Num a) => f a -> AD Sparse a -> (a, f a)
-d' fs (Sparse a da) = (a , snd $ mapAccumL (\ !n a -> (n + 1, findWithDefault 0 n da))
+d' fs (AD (Sparse a da)) = (a , snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs)
 
 ds :: (Traversable f, Num a) => f b -> AD Sparse a -> Stream f a
-ds fs as = go emptyIndex as <$> skeleton fs
+ds fs (AD as@(Sparse a _)) = a :< (go emptyIndex <$> fns)
     where
-        go :: Sparse a -> Index -> Int -> (f :> a) 
-        go m ix i = partial (toList ix') m :< (go m ix' <$> fns)
+        fns = skeleton fs
+        -- go :: Index -> Int -> Stream f a
+        go ix i = partial (indices ix') as :< (go ix' <$> fns)
             where ix' = addToIndex i ix
 
 -- sparse :: (Traversable f, Num a) => f b -> AD Sparse a -> Stream (ComposeFunctor f Maybe) a 
 -- sparse fs as = ...
     
 partial :: Num a => [Int] -> Sparse a -> a
-partial []     (Sparse a)    = a
+partial []     (Sparse a _)  = a
 partial (n:ns) (Sparse _ da) = partial ns $ findWithDefault (lift 0) n da
 
 spartial :: Num a => [Int] -> Sparse a -> Maybe a
-spartial [] (Partial a) = a
+spartial [] (Sparse a _) = Just a
 spartial (n:ns) (Sparse _ da) = do
     a' <- lookup n da
     spartial ns a'
@@ -81,35 +92,35 @@ spartial (n:ns) (Sparse _ da) = do
 instance Primal Sparse where
     primal (Sparse a _) = a
 
-instance Mode Sparse where
+instance Lifted Sparse => Mode Sparse where
     lift a = Sparse a (IntMap.empty)
     Sparse a as <+> Sparse b bs = Sparse (a + b) $ unionWith (<+>) as bs
     Sparse a as ^* b = Sparse (a * b) $ fmap (^* b) as
     a *^ Sparse b bs = Sparse (a * b) $ fmap (a *^) bs
     Sparse a as ^/ b = Sparse (a / b) $ fmap (^/ b) as
 
-instance Jacobian Sparse where
+instance Lifted Sparse => Jacobian Sparse where
     type D Sparse = Sparse
-    unary f b (Sparse a as) = Sparse (f a) $ mapWithKey (guardedTimes b) as
-    lift1 f df (Sparse a as) = Sparse (f a) $ mapWithKey (guardedTimes (df a)) as
-    lift1_ f df (Sparse b bs) = a where
-        a = Sparse (f a) (mapWithKey (guardedTimes (df a b) bs
+    unary f dadb (Sparse pb bs) = Sparse (f pb) $ mapWithKey (times dadb) bs
+    lift1 f df b@(Sparse pb bs) = Sparse (f pb) $ mapWithKey (times (df b)) bs
+    lift1_ f df b@(Sparse pb bs) = a where
+        a = Sparse (f pb) $ mapWithKey (times (df a b)) bs
 
-    binary f dadb dadc (Sparse b db) (Sparse c dc) = Sparse (f b c) $ 
-        IntMap.unionWith (+) 
+    binary f dadb dadc (Sparse pb db) (Sparse pc dc) = Sparse (f pb pc) $ 
+        unionWith (<+>) 
             (mapWithKey (times dadb) db)
             (mapWithKey (times dadc) dc)
 
-    lift2 f df (Sparse b db) (Sparse c dc) = Sparse (f b c) da where
+    lift2 f df b@(Sparse pb db) c@(Sparse pc dc) = Sparse (f pb pc) da where
         (dadb, dadc) = df b c
-        da = IntMap.unionWith (+) 
+        da = unionWith (<+>) 
             (mapWithKey (times dadb) db)
             (mapWithKey (times dadc) dc)
         
-    lift2_ f df (Sparse b db) (Sparse c dc) = a where
+    lift2_ f df b@(Sparse pb db) c@(Sparse pc dc) = a where
         (dadb, dadc) = df a b c
-        a = Sparse (f b c) da
-        da = IntMap.unionWith (+) 
+        a = Sparse (f pb pc) da
+        da = unionWith (<+>) 
             (mapWithKey (times dadb) db)
             (mapWithKey (times dadc) dc)
 

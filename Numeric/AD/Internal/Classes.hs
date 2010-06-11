@@ -20,7 +20,6 @@ module Numeric.AD.Internal.Classes
     , Jacobian(..)
     , Primal(..)
     , deriveLifted
-    , deriveLifted'
     , deriveNumeric
     , Lifted(..)
     , Iso(..)
@@ -181,9 +180,9 @@ discrete3 f x y z = f (primal x) (primal y) (primal z)
 --
 -- The seemingly redundant @'Lifted' $t@ constraints are caused by Template Haskell staging restrictions.
 deriveLifted :: ([Q Pred] -> [Q Pred]) -> Q Type -> Q [Dec]
-deriveLifted f t =
+deriveLifted f t = do
         [InstanceD cxt0 type0 dec0] <- lifted
-        return <$> instanceD cxt0 (return type0) dec0
+        return <$> instanceD (cxt (f (return <$> cxt0))) (return type0) (return <$> dec0)
     where 
       lifted = [d| 
        instance Lifted $t where
@@ -252,8 +251,7 @@ deriveLifted f t =
         truncate1 = discrete1 truncate
         round1    = discrete1 round
         ceiling1  = discrete1 ceiling
-        floor1    = discrete1 floor
-    |]
+        floor1    = discrete1 floor |]
 
 varA :: Q Type
 varA = varT (mkName "a")

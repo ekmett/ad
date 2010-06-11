@@ -1,5 +1,5 @@
 name:         ad
-version:      0.34
+version:      0.40
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010,
@@ -34,21 +34,23 @@ exposed-modules:
     Numeric.AD.Types
     Numeric.AD.Newton
 
-    Numeric.AD.Mode.Mixed
-    Numeric.AD.Mode.Forward
-    Numeric.AD.Mode.Reverse
-    Numeric.AD.Mode.Tower
-    Numeric.AD.Mode.Directed
-
     Numeric.AD.Internal.Classes
     Numeric.AD.Internal.Combinators
 
-    Numeric.AD.Internal.Composition
     Numeric.AD.Internal.Forward
-    Numeric.AD.Internal.Reverse
-    Numeric.AD.Internal.Tower
+    Numeric.AD.Internal.Composition
     Numeric.AD.Internal.Identity
-    Numeric.AD.Internal.Iterated
+    Numeric.AD.Internal.Reverse
+    Numeric.AD.Internal.Sparse
+    Numeric.AD.Internal.Tower
+
+    Numeric.AD.Mode.Directed
+    Numeric.AD.Mode.Forward
+    Numeric.AD.Mode.Mixed
+    Numeric.AD.Mode.Reverse
+    Numeric.AD.Mode.Tower
+
+--  Numeric.AD.Internal.Grad
 
 other-modules:
     Numeric.AD.Internal.Types

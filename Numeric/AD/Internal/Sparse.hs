@@ -30,12 +30,15 @@ newtype Index = Index (IntMap Int)
 
 emptyIndex :: Index
 emptyIndex = Index IntMap.empty
+{-# INLINE emptyIndex #-}
 
 addToIndex :: Int -> Index -> Index
 addToIndex k (Index m) = Index (insertWith (+) k 1 m)
+{-# INLINE addToIndex #-}
 
 indices :: Index -> [Int]
 indices (Index as) = uncurry (flip replicate) `concatMap` toAscList as
+{-# INLINE indices #-}
 
 -- | We only store partials in sorted order, so the map contained in a partial
 -- will only contain partials with equal or greater keys to that of the map in
@@ -47,26 +50,32 @@ data Sparse a = Sparse a (IntMap (Sparse a)) deriving (Show, Data, Typeable)
 -- | drop keys below a given value
 dropMap :: Int -> IntMap a -> IntMap a
 dropMap n = snd . IntMap.split (n - 1) 
+{-# INLINE dropMap #-}
 
 times :: Num a => Sparse a -> Int -> Sparse a -> Sparse a
 times (Sparse a as) n (Sparse b bs) = Sparse (a * b) $
     unionWith (<+>) 
         (fmap (^* b) (dropMap n as))
         (fmap (a *^) (dropMap n bs))
+{-# INLINE times #-}
 
 vars :: (Traversable f, Num a) => f a -> f (AD Sparse a)
 vars = snd . mapAccumL var 0 
     where
         var !n a = (n + 1, AD $ Sparse a $ singleton n $ lift 1)
+{-# INLINE vars #-}
 
 skeleton :: Traversable f => f a -> f Int
 skeleton = snd . mapAccumL (\ !n _ -> (n + 1, n)) 0
+{-# INLINE skeleton #-}
 
 d :: (Traversable f, Num a) => f b -> AD Sparse a -> f a
 d fs (AD (Sparse _ da)) = snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs
+{-# INLINE d #-}
 
 d' :: (Traversable f, Num a) => f a -> AD Sparse a -> (a, f a)
 d' fs (AD (Sparse a da)) = (a , snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs)
+{-# INLINE d' #-}
 
 ds :: (Traversable f, Num a) => f b -> AD Sparse a -> Stream f a
 ds fs (AD as@(Sparse a _)) = a :< (go emptyIndex <$> fns)
@@ -75,19 +84,19 @@ ds fs (AD as@(Sparse a _)) = a :< (go emptyIndex <$> fns)
         -- go :: Index -> Int -> Stream f a
         go ix i = partial (indices ix') as :< (go ix' <$> fns)
             where ix' = addToIndex i ix
+{-# INLINE ds #-}
 
--- sparse :: (Traversable f, Num a) => f b -> AD Sparse a -> Stream (ComposeFunctor f Maybe) a 
--- sparse fs as = ...
-    
 partial :: Num a => [Int] -> Sparse a -> a
 partial []     (Sparse a _)  = a
 partial (n:ns) (Sparse _ da) = partial ns $ findWithDefault (lift 0) n da
+{-# INLINE partial #-}
 
 spartial :: Num a => [Int] -> Sparse a -> Maybe a
 spartial [] (Sparse a _) = Just a
 spartial (n:ns) (Sparse _ da) = do
     a' <- lookup n da
     spartial ns a'
+{-# INLINE spartial #-}
 
 instance Primal Sparse where
     primal (Sparse a _) = a
@@ -124,4 +133,4 @@ instance Lifted Sparse => Jacobian Sparse where
             (mapWithKey (times dadb) db)
             (mapWithKey (times dadc) dc)
 
-deriveLifted id (conT ''Sparse)
+deriveLifted id $ conT ''Sparse

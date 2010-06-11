@@ -28,8 +28,10 @@ import Numeric.AD.Internal.Stream
 
 infixl 3 :-
 
+-- Polymorphic recursion precludes 'Data' in its current form, as no Data1 class exists
+-- Polymorphic recursion also breaks 'show' for 'Tensors'!
+-- factor Show1 out of Lifted?
 data Tensors f a = a :- Tensors f (f a)
--- Polymorphic recursion precludes Data in its current form, as no Data1 class exists
 
 instance Functor f => Functor (Tensors f) where
     fmap f (a :- as) = f a :- fmap (fmap f) as

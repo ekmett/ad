@@ -53,6 +53,9 @@ module Numeric.AD.Mode.Mixed
     , hessianProduct
     , hessianProduct'
 
+    -- * Higher Order Gradients/Hessians (Sparse Forward)
+    , gradients
+
     -- * Derivatives (Forward Mode)
     , diff
     , diffF
@@ -92,8 +95,7 @@ module Numeric.AD.Mode.Mixed
     , diffM'
 
     -- * Exposed Types
-    , UU, UF, FU, FF
-    , AD(..)
+    , module Numeric.AD.Types
     , Mode(..)
     ) where
 
@@ -101,7 +103,7 @@ import Data.Traversable (Traversable)
 import Data.Foldable (Foldable, foldr')
 import Control.Applicative
 
-import Numeric.AD.Types (AD(..), UU, UF, FU, FF)
+import Numeric.AD.Types
 import Numeric.AD.Internal.Identity (probed, unprobe)
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Classes (Mode(..))
@@ -126,6 +128,9 @@ import Numeric.AD.Mode.Reverse
     , gradM, gradM', gradWithM, gradWithM'
     , gradF, gradF', gradWithF, gradWithF'
     )
+
+-- temporary until we make a full sparse mode
+import qualified Numeric.AD.Internal.Sparse as Sparse
 
 -- | Calculate the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
 --
@@ -213,3 +218,7 @@ grads f b = a :- da :- d2a :- Zero
     dda = Forward.jacobian (grad (decomposeMode . f . fmap composeMode)
     ddda = Forward
 -}
+
+gradients :: (Traversable f, Num a) => FU f a -> f a -> Stream f a
+gradients f as = Sparse.ds as $ f $ Sparse.vars as
+    

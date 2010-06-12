@@ -109,9 +109,16 @@ module Numeric.AD.Mode.Mixed
     , maclaurin
     , maclaurin0
 
+    -- * Unsafe Variadic Grad
+    , vgrad
+    , vgrad'
+    , vgrads
+
     -- * Exposed Types
     , module Numeric.AD.Types
     , Mode(..)
+    , Grad
+    , Grads
     ) where
 
 import Data.Traversable (Traversable)
@@ -134,12 +141,12 @@ import Numeric.AD.Mode.Tower
 
 import qualified Numeric.AD.Mode.Reverse as Reverse
 import Numeric.AD.Mode.Reverse 
-    ( grad, grad', gradWith, gradWith' )
+    ( grad, grad', gradWith, gradWith', vgrad, vgrad', Grad)
 
 -- temporary until we make a full sparse mode
 import qualified Numeric.AD.Mode.Sparse as Sparse
 import Numeric.AD.Mode.Sparse
-    ( grads, jacobians, hessian', hessianF' )
+    ( grads, jacobians, hessian', hessianF', vgrads, Grads)
     
 -- | Calculate the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
 --

@@ -1,4 +1,5 @@
-{-# LANGUAGE Rank2Types, TemplateHaskell, BangPatterns #-}
+-- {-# LANGUAGE Rank2Types, TemplateHaskell, BangPatterns #-}
+{-# LANGUAGE Rank2Types, TemplateHaskell, BangPatterns, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, UndecidableInstances, ScopedTypeVariables #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Mode.Reverse
@@ -24,6 +25,7 @@ module Numeric.AD.Mode.Reverse
     , grad'
     , gradWith
     , gradWith'
+
     -- * Jacobian
     , jacobian
     , jacobian'
@@ -37,10 +39,13 @@ module Numeric.AD.Mode.Reverse
     , diff'
     , diffF
     , diffF'
+    -- * Unsafe Variadic Gradient
+    , vgrad, vgrad'
     -- * Exposed Types
     , UU, UF, FU, FF
     , AD(..)
     , Mode(..)
+    , Grad
     ) where
 
 import Control.Applicative ((<$>))
@@ -153,3 +158,4 @@ hessian f = jacobian (grad (decomposeMode . f . fmap composeMode))
 -- Less efficient than 'Numeric.AD.Mode.Mixed.hessianF'.
 hessianF :: (Traversable f, Functor g, Num a) => FF f g a -> f a -> g (f (f a))
 hessianF f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))
+

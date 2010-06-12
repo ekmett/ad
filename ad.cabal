@@ -66,9 +66,11 @@ description:
     .
     * Exposed 'Id', probe, and lower methods via @Numeric.AD.Types@
     .
-    * Removed Monadic combinators
+    * Removed monadic combinators
     .
     * Retuned the 'Mixed' mode jacobian calculations to only require a 'Functor'-based result.
+    .
+    * Added unsafe variadic 'vgrad', 'vgrad'', and 'vgrads' combinators
 
 build-type:   Simple
 build-depends:       

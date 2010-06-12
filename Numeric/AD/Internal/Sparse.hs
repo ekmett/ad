@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns, TemplateHaskell, TypeFamilies, TypeOperators, FlexibleContexts, UndecidableInstances, DeriveDataTypeable #-}
+{-# LANGUAGE BangPatterns, TemplateHaskell, TypeFamilies, TypeOperators, FlexibleContexts, UndecidableInstances, DeriveDataTypeable, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances #-}
 module Numeric.AD.Internal.Sparse 
     ( Index(..)
     , emptyIndex
@@ -11,6 +11,11 @@ module Numeric.AD.Internal.Sparse
     , skeleton
     , spartial
     , partial
+    , vgrad
+    , vgrad'
+    , vgrads
+    , Grad(..)
+    , Grads(..)
     ) where
 
 import Prelude hiding (lookup)
@@ -127,6 +132,8 @@ spartial (n:ns) (Sparse _ da) = do
     spartial ns a'
 {-# INLINE spartial #-}
 
+
+
 instance Primal Sparse where
     primal (Sparse a _) = a
 
@@ -163,3 +170,52 @@ instance Lifted Sparse => Jacobian Sparse where
             (mapWithKey (times dadc) dc)
 
 deriveLifted id $ conT ''Sparse
+
+
+class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
+    pack :: i -> [AD Sparse a] -> AD Sparse a
+    unpack :: ([a] -> [a]) -> o
+    unpack' :: ([a] -> (a, [a])) -> o'
+
+instance Num a => Grad (AD Sparse a) [a] (a, [a]) a where
+    pack i _ = i
+    unpack f = f []
+    unpack' f = f []
+
+instance Grad i o o' a => Grad (AD Sparse a -> i) (a -> o) (a -> o') a where
+    pack f (a:as) = pack (f a) as
+    pack _ [] = error "Grad.pack: logic error"
+    unpack f a = unpack (f . (a:))
+    unpack' f a = unpack' (f . (a:))
+
+vgrad :: Grad i o o' a => i -> o
+vgrad i = unpack (unsafeGrad (pack i))
+    where
+        unsafeGrad f as = d as $ apply f as
+{-# INLINE vgrad #-}
+
+vgrad' :: Grad i o o' a => i -> o'
+vgrad' i = unpack' (unsafeGrad' (pack i))
+    where
+        unsafeGrad' f as = d' as $ apply f as
+{-# INLINE vgrad' #-}
+
+class Num a => Grads i o a | i -> a o, o -> a i where
+    packs :: i -> [AD Sparse a] -> AD Sparse a
+    unpacks :: ([a] -> Stream [] a) -> o
+
+instance Num a => Grads (AD Sparse a) (Stream [] a) a where
+    packs i _ = i
+    unpacks f = f []
+
+instance Grads i o a => Grads (AD Sparse a -> i) (a -> o) a where
+    packs f (a:as) = packs (f a) as
+    packs _ [] = error "Grad.pack: logic error"
+    unpacks f a = unpacks (f . (a:))
+
+vgrads :: Grads i o a => i -> o
+vgrads i = unpacks (unsafeGrads (packs i))
+    where
+        unsafeGrads f as = ds as $ apply f as
+{-# INLINE vgrads #-}
+

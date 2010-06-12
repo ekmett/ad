@@ -32,6 +32,8 @@ module Numeric.AD.Internal.Reverse
     , unbindMap
     , unbindWith
     , unbindMapWithDefault
+    , vgrad, vgrad'
+    , Grad(..)
     ) where
 
 import Prelude hiding (mapM)
@@ -215,3 +217,35 @@ unbindMap xs ys = fmap (\v -> findWithDefault 0 (varId v) ys) xs
 
 unbindMapWithDefault :: (Functor f, Var v, Num a) => b -> (a -> b -> c) -> f (v a) -> IntMap b -> f c
 unbindMapWithDefault z f xs ys = fmap (\v -> f (primal v) $ findWithDefault z (varId v) ys) xs
+
+class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
+    pack :: i -> [AD Reverse a] -> AD Reverse a
+    unpack :: ([a] -> [a]) -> o
+    unpack' :: ([a] -> (a, [a])) -> o'
+
+instance Num a => Grad (AD Reverse a) [a] (a, [a]) a where
+    pack i _ = i
+    unpack f = f []
+    unpack' f = f []
+
+instance Grad i o o' a => Grad (AD Reverse a -> i) (a -> o) (a -> o') a where
+    pack f (a:as) = pack (f a) as
+    pack _ [] = error "Grad.pack: logic error"
+    unpack f a = unpack (f . (a:))
+    unpack' f a = unpack' (f . (a:))
+
+vgrad :: Grad i o o' a => i -> o
+vgrad i = unpack (unsafeGrad (pack i))
+    where
+        unsafeGrad f as = unbind vs (partialArray bds $ f vs)
+            where
+                (vs,bds) = bind as
+
+vgrad' :: Grad i o o' a => i -> o'
+vgrad' i = unpack' (unsafeGrad' (pack i))
+    where
+        unsafeGrad' f as = (primal r, unbind vs (partialArray bds r))
+            where
+                r = f vs
+                (vs,bds) = bind as
+

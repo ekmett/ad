@@ -1,5 +1,5 @@
 name:         ad
-version:      0.40.1
+version:      0.42.0
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010,
@@ -16,8 +16,57 @@ description:
     Type-level \"branding\" is used to both prevent the end user from confusing infinitesimals 
     and to limit unsafe access to the implementation details of each Mode.
     .
-    The combinators in "Numeric.AD" choose from a variety of automatic differentiation modes,
-    based on the arity of their inputs and outputs.
+    Each mode has a separate module full of combinators.
+    .
+    * @Numeric.AD.Mode.Forward@ provides basic forward-mode AD. It is good for computing simple derivatives.
+    .
+    * @Numeric.AD.Mode.Reverse@ uses benign side-effects to compute reverse-mode AD. It is good for computing gradients in one pass.
+    .
+    * @Numeric.AD.Mode.Sparse@ computes a sparse forward-mode AD tower. It is good for higher derivatives or large numbers of outputs.
+    .
+    * @Numeric.AD.Mode.Tower@ computes a dense forward-mode AD tower useful for higher derivatives of single input functions.
+    .
+    * @Numeric.AD.Mode.Mixed@ computes using whichever mode or combination thereof is suitable to each individual combinator. This mode is the default, re-exported by @Numeric.AD@
+    .
+    . 
+    While not every mode can provide all operations, the following basic operations are supported, modified as 
+    appropriate by the suffixes below:
+    .
+    * 'grad' computes the gradient (partial derivatives) of a function at a point.
+    .
+    * 'jacobian' computes the Jacobian matrix of a function at a point.
+    .
+    * 'diff' computes the derivative of a function at a point.
+    .
+    * 'du' computes a directional derivative of a function at a point.
+    .
+    * 'hessian' computes the Hessian matrix (matrix of second partial derivatives) of a function at a point.
+    .
+    The following suffixes alter the meanings of the functions above as follows:
+    .
+    * @\'@ -- also return the answer
+    .
+    * @With@ lets the user supply a function to blend the input with the output
+    .
+    * @F@ is a version of the base function lifted to return a 'Traversable' (or 'Functor') result
+    .
+    * @M@ is a version of the base function lifted to return a 'Monad'ic result
+    .
+    * @s@ means the function returns all higher derivatives in a list or f-branching 'Stream'
+    .
+    * @T@ means the result is transposed with respect to the traditional formulation.
+    .
+    * @0@ means that the resulting derivative list is padded with 0s at the end.
+    .
+    Changes since 0.40.0
+    .
+    * Bug fix in the derivative calculated for @'(/)' :: (Mode s, Fractional a) => AD s a@
+    .
+    * Improved documentation
+    .
+    * Regularized naming conventions
+    .
+    * Exposed 'Id' and probe methods via @Numeric.AD.Types@
 
 build-type:   Simple
 build-depends:       
@@ -26,7 +75,8 @@ build-depends:
     containers >= 0.2 && < 0.4,
     template-haskell >= 2.4 && < 2.5,
     mlist >= 0.0.2 && <= 0.1,
-    array >= 0.2 && < 0.4
+    array >= 0.2 && < 0.4,
+    vector >= 0.6.0.1 && < 0.7
 
 exposed-modules:
     Numeric.AD
@@ -43,20 +93,21 @@ exposed-modules:
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Composition
-    Numeric.AD.Internal.Identity
+    Numeric.AD.Internal.Vector
 
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward
     Numeric.AD.Mode.Mixed
     Numeric.AD.Mode.Reverse
     Numeric.AD.Mode.Tower
-
+    Numeric.AD.Mode.Sparse
 
 other-modules:
     Numeric.AD.Internal.Types
     Numeric.AD.Internal.Comonad
     Numeric.AD.Internal.Stream
     Numeric.AD.Internal.Tensors
+    Numeric.AD.Internal.Identity
 
 Extra-Source-Files: TODO
 GHC-Options: -Wall -fspec-constr -fdicts-cheap -O2

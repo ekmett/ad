@@ -11,6 +11,33 @@
 -- Mixed-Mode Automatic Differentiation.
 --
 -- Each combinator exported from this module chooses an appropriate AD mode.
+-- The following basic operations are supported, modified as appropriate by the suffixes below:
+-- 
+-- * 'grad' computes the gradient (partial derivatives) of a function at a point
+--
+-- * 'jacobian' computes the Jacobian matrix of a function at a point
+--
+-- * 'diff' computes the derivative of a function at a point
+--
+-- * 'du' computes a directional derivative of a function at a point
+-- 
+-- * 'hessian' compute the Hessian matrix (matrix of second partial derivatives) of a function at a point
+-- 
+-- The suffixes have the following meanings:
+-- 
+-- * @\'@ -- also return the answer
+--
+-- * @With@ lets the user supply a function to blend the input with the output
+--
+-- * @F@ is a version of the base function lifted to return a 'Traversable' (or 'Functor') result
+--
+-- * @M@ is a version of the base function lifted to return a 'Monad'ic result
+--
+-- * @s@ means the function returns all higher derivatives in a list or f-branching 'Stream'
+--
+-- * @T@ means the result is transposed with respect to the traditional formulation.
+--
+-- * @0@ means that the resulting derivative list is padded with 0s at the end.
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Mixed
@@ -21,19 +48,27 @@ module Numeric.AD.Mode.Mixed
     , gradWith
     , gradWith'
 
+    -- * Higher Order Gradients (Sparse-on-Reverse)
+    , grads
+    , gradsF
+    , gradsM
+
     -- * Jacobians (Mixed Mode)
     , jacobian
     , jacobian'
     , jacobianWith
     , jacobianWith'
 
-    -- * Monadic Gradient/Jacobian (Reverse Mode)
+    -- * Higher Order Jacobian (Sparse-on-Reverse)
+    , jacobians
+
+    -- * Monadic Gradient / Jacobian (Reverse Mode)
     , gradM
     , gradM'
     , gradWithM
     , gradWithM'
 
-    -- * Functorial Gradient/Jacobian (Reverse Mode)
+    -- * Functor Gradient / Jacobian (Reverse Mode)
     , gradF
     , gradF'
     , gradWithF
@@ -43,18 +78,21 @@ module Numeric.AD.Mode.Mixed
     , jacobianT
     , jacobianWithT
 
-    -- * Hessian (Forward-On-Reverse)
+    -- * Hessian (Sparse-On-Reverse)
     , hessian
+    , hessian'
 
-    -- * Hessian Tensors (Forward-On-Mixed)
-    , hessianTensor
+    -- * Hessian Tensors (Sparse-On-Mixed)
+    , hessianF
+
+    -- * Hessian Tensors (Sparse)
+    , hessianF'
+    , hessianM 
+    , hessianM'
 
     -- * Hessian Vector Products (Forward-On-Reverse)
     , hessianProduct
     , hessianProduct'
-
-    -- * Higher Order Gradients/Hessians (Sparse Forward)
-    , gradients
 
     -- * Derivatives (Forward Mode)
     , diff
@@ -104,7 +142,6 @@ import Data.Foldable (Foldable, foldr')
 import Control.Applicative
 
 import Numeric.AD.Types
-import Numeric.AD.Internal.Identity (probed, unprobe)
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Classes (Mode(..))
 
@@ -130,18 +167,27 @@ import Numeric.AD.Mode.Reverse
     )
 
 -- temporary until we make a full sparse mode
-import qualified Numeric.AD.Internal.Sparse as Sparse
+import qualified Numeric.AD.Mode.Sparse as Sparse
+import Numeric.AD.Mode.Sparse
+    ( grads, gradsM, gradsF
+    , jacobians
+    -- , hessian, hessianF
+    , hessian', hessianF'
+    , hessianM, hessianM' 
+    )
+    
+    
 
 -- | Calculate the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
 --
--- If you need to support functions where the output is only a 'Functor' or 'Monad', consider 'Numeric.AD.Reverse.jacobian' or 'Numeric.AD.Reverse.gradM' from "Numeric.AD.Reverse".
+-- If you know the relative number of inputs and outputs, consider 'Numeric.AD.Reverse.jacobian' or 'Nuneric.AD.Sparse.jacobian'.
 jacobian :: (Traversable f, Traversable g, Num a) => FF f g a -> f a -> g (f a)
 jacobian f bs = snd <$> jacobian' f bs
 {-# INLINE jacobian #-}
 
 -- | Calculate both the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward- and reverse- mode AD based on the relative, number of inputs and outputs.
 --
--- If you need to support functions where the output is only a 'Functor' or 'Monad', consider 'Numeric.AD.Reverse.jacobian'' or 'Numeric.AD.Reverse.gradM'' from "Numeric.AD.Reverse".
+-- If you know the relative number of inputs and outputs, consider 'Numeric.AD.Reverse.jacobian'' or 'Nuneric.AD.Sparse.jacobian''.
 jacobian' :: (Traversable f, Traversable g, Num a) => FF f g a -> f a -> g (a, f a)
 jacobian' f bs | n == 0    = fmap (\x -> (unprobe x, bs)) as
                | n > m     = Reverse.jacobian' f bs
@@ -158,21 +204,21 @@ jacobian' f bs | n == 0    = fmap (\x -> (unprobe x, bs)) as
 --
 -- The resulting Jacobian matrix is then recombined element-wise with the input using @g@.
 --
--- If you need to support functions where the output is only a 'Functor' or 'Monad', consider 'Numeric.AD.Reverse.jacobianWith' or 'Numeric.AD.Reverse.gradWithM' from "Numeric.AD.Reverse".
+-- If you know the relative number of inputs and outputs, consider 'Numeric.AD.Reverse.jacobianWith' or 'Nuneric.AD.Sparse.jacobianWith'.
 jacobianWith :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> FF f g a -> f a -> g (f b)
 jacobianWith g f bs = snd <$> jacobianWith' g f bs
 {-# INLINE jacobianWith #-}
 
--- | @'jacobianWith'' g f@ calculates the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
+-- | @'jacobianWith'' g f@ calculates the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between sparse and reverse mode AD based on the number of inputs and outputs.
 --
 -- The resulting Jacobian matrix is then recombined element-wise with the input using @g@.
 --
--- If you need to support functions where the output is only a 'Functor' or 'Monad', consider 'Numeric.AD.Reverse.jacobianWith'' or 'Numeric.AD.Reverse.gradWithM'' from "Numeric.AD.Reverse".
+-- If you know the relative number of inputs and outputs, consider 'Numeric.AD.Reverse.jacobianWith'' or 'Nuneric.AD.Sparse.jacobianWith''.
 jacobianWith' :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> FF f g a -> f a -> g (a, f b)
 jacobianWith' g f bs
     | n == 0    = fmap (\x -> (unprobe x, undefined <$> bs)) as
     | n > m     = Reverse.jacobianWith' g f bs
-    | otherwise = Forward.jacobianWith' g f bs
+    | otherwise = Sparse.jacobianWith' g f bs
     where
         as = f (probed bs)
         n = size bs
@@ -185,7 +231,8 @@ jacobianWith' g f bs
 --
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
 -- 
--- Or in other words, we take the directional derivative of the gradient.
+-- Or in other words, we take the directional derivative of the gradient. The gradient is calculated in reverse mode, then the directional derivative is calculated in forward mode.
+--
 hessianProduct :: (Traversable f, Num a) => FU f a -> f (a, a) -> f a
 hessianProduct f = duF (grad (decomposeMode . f . fmap composeMode))
 
@@ -193,32 +240,14 @@ hessianProduct f = duF (grad (decomposeMode . f . fmap composeMode))
 --
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
 -- 
--- Or in other words, we take the directional derivative of the gradient.
--- 
+-- Or in other words, we return the gradient and the directional derivative of the gradient. The gradient is calculated in reverse mode, then the directional derivative is calculated in forward mode.
 hessianProduct' :: (Traversable f, Num a) => FU f a -> f (a, a) -> f (a, a)
 hessianProduct' f = duF' (grad (decomposeMode . f . fmap composeMode))
 
--- hessianProductWith' :: (Traversable f, Num a) => (a -> a -> a -> a -> b) -> (forall s. Mode s. f (AD s a) -> AD s a) -> f (a, a) -> f b
-
--- | Compute the hessian via the jacobian of the gradient. gradient is computed in reverse mode and then the jacobian is computed in forward mode.
+-- | Compute the Hessian via the Jacobian of the gradient. gradient is computed in reverse mode and then the Jacobian is computed in sparse (forward) mode.
 hessian :: (Traversable f, Num a) => FU f a -> f a -> f (f a)
-hessian f = Forward.jacobian (grad (decomposeMode . f . fmap composeMode))
+hessian f = Sparse.jacobian (grad (decomposeMode . f . fmap composeMode))
 
--- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the forward-mode Jacobian of the mixed-mode Jacobian of the function.
-hessianTensor :: (Traversable f, Traversable g, Num a) => FF f g a -> f a -> g (f (f a))
-hessianTensor f = decomposeFunctor . Forward.jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))
-
--- data f :> a = a :< f (f :> a)
--- data f :- a = a :- (f :- f a) | Zero
-{-
-flatten :: (f :> a) -> (f :- a)
-grads :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (f :- a) 
-grads f b = a :- da :- d2a :- Zero
-    (a, da) = grad2 f a
-    dda = Forward.jacobian (grad (decomposeMode . f . fmap composeMode)
-    ddda = Forward
--}
-
-gradients :: (Traversable f, Num a) => FU f a -> f a -> Stream f a
-gradients f as = Sparse.ds as $ f $ Sparse.vars as
-    
+-- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the Sparse Jacobian of the (sparse-or-reverse)-mode Jacobian of the function.
+hessianF :: (Traversable f, Traversable g, Num a) => FF f g a -> f a -> g (f (f a))
+hessianF f = decomposeFunctor . Sparse.jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))

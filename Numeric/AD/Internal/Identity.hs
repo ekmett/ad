@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, DeriveDataTypeable #-}
+{-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Identity

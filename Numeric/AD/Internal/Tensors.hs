@@ -16,6 +16,7 @@ module Numeric.AD.Internal.Tensors
     , headT
     , tailT
     , tensors
+    , vtensors
     ) where
 
 import Control.Applicative
@@ -62,6 +63,11 @@ tensors (a :< as) = a :- distribute (tensors <$> as)
         distribute :: Functor f => f (Tensors f a) -> Tensors f (f a)
         distribute x = (headT <$> x) :- distribute (tailT <$> x)
 
+vtensors :: Stream Vector a -> Tensors Vector a
+vtensors (a :< as) = a :- distribute (Vector.map tensors as)
+    where
+        distribute :: Vector (Tensors Vector a) -> Tensors Vector (Vector a)
+        distribute x = (Vector.map headT x) :- distribute (Vector.map tailT x)
 
 instance Typeable1 f => Typeable1 (Tensors f) where
     typeOf1 tfa = mkTyConApp tensorsTyCon [typeOf1 (undefined `asArgsType` tfa)]

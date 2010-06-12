@@ -13,7 +13,7 @@
 
 module Numeric.AD.Internal.Stream 
     ( Stream(..)
-    , unfoldS
+    , unfoldS, vunfoldS
     , headS
     , tailS
     ) where
@@ -59,8 +59,14 @@ tailS :: Stream f a -> f (Stream f a)
 tailS (_ :< as) = as
 {-# INLINE tailS #-}
 
+
 unfoldS :: Functor f => (a -> (b, f a)) -> a -> Stream f b
 unfoldS f a = h :< unfoldS f <$> t 
+    where
+        (h, t) = f a
+
+vunfoldS :: (a -> (b, Vector a)) -> a -> Stream Vector b
+vunfoldS f a = h :< Vector.map (unfoldS f) t 
     where
         (h, t) = f a
 

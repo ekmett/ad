@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Types
@@ -19,13 +20,44 @@ module Numeric.AD.Types
     , headT
     , tailT
     , tensors
+    , vtensors
     -- * f-Branching Streams
     , Stream(..)
     , headS
     , tailS
     , unfoldS
+    , vunfoldS
+    -- * Vectors
+    , WrappedVector(..)
+    , wrap
+    , unwrap 
+    -- * An Identity Mode. 
+    , Id(..)
+    , probe, unprobe
+    , probed, unprobed
+    -- * Apply functions that use 'lift'
+    , lowerUU, lowerUF, lowerFU, lowerFF
     ) where
 
+import Numeric.AD.Internal.Identity
 import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Stream
 import Numeric.AD.Internal.Tensors
+
+-- these exploit the 'magic' that is probed to avoid the need for Functor, etc.
+
+lowerUU :: UU a -> a -> a
+lowerUU f = unprobe . f . probe
+{-# INLINE lowerUU #-}
+
+lowerUF :: UF f a -> a -> f a
+lowerUF f = unprobed . f . probe
+{-# INLINE lowerUF #-}
+
+lowerFU :: FU f a -> f a -> a
+lowerFU f = unprobe . f . probed
+{-# INLINE lowerFU #-}
+
+lowerFF :: FF f g a -> f a -> g a
+lowerFF f = unprobed . f . probed
+{-# INLINE lowerFF #-}

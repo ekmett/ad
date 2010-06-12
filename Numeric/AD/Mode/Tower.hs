@@ -36,16 +36,12 @@ module Numeric.AD.Mode.Tower
     , duF'    -- answer and directional derivative of (a -> f a)
     , dusF    -- answer and all directional derivatives of (a -> f a)
     , dus0F   -- answer and all zero padded directional derivatives of (a -> a)
-    -- * Monadic Combinators
-    , diffsM  -- answer and all derivatives of the monadic action (a -> m a)
-    , diffs0M -- answer and all zero padded derivatives of (a -> m a)
     -- * Exposed Types
     , UU, UF, FU, FF
     , Mode(..)
     , AD(..)
     ) where
 
-import Control.Monad (liftM)
 import Control.Applicative ((<$>))
 import Numeric.AD.Types
 import Numeric.AD.Classes
@@ -66,14 +62,6 @@ diffsF f a = getADTower <$> apply f a
 diffs0F :: (Functor f, Num a) => UF f a -> a -> f [a]
 diffs0F f a = (zeroPad . getADTower) <$> apply f a
 {-# INLINE diffs0F #-}
-
-diffsM :: (Monad m, Num a) => UF m a -> a -> m [a]
-diffsM f a = getADTower `liftM` apply f a
-{-# INLINE diffsM #-}
-
-diffs0M :: (Monad m, Num a) => UF m a -> a -> m [a]
-diffs0M f a = (zeroPad . getADTower) `liftM` apply f a
-{-# INLINE diffs0M #-}
 
 taylor :: Fractional a => UU a -> a -> a -> [a]
 taylor f x dx = go 1 1 (diffs f x)

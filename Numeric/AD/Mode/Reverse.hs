@@ -31,34 +31,19 @@ module Numeric.AD.Mode.Reverse
     , jacobianWith'
     -- * Hessian
     , hessian
-    , hessianM
-    , hessianTensor
-    
+    , hessianF
     -- * Derivatives
     , diff
     , diff'
     , diffF
     , diffF'
-    -- * Monadic Combinators
-    , diffM
-    , diffM'
-    , gradM
-    , gradM'
-    , gradWithM
-    , gradWithM'
-    -- * Synonyms
-    , gradF
-    , gradF'
-    , gradWithF
-    , gradWithF'
     -- * Exposed Types
     , UU, UF, FU, FF
     , AD(..)
     , Mode(..)
     ) where
 
-import Control.Monad (liftM)
-import Control.Applicative (WrappedMonad(..),(<$>))
+import Control.Applicative ((<$>))
 import Data.Traversable (Traversable)
 
 import Numeric.AD.Types
@@ -99,23 +84,14 @@ gradWith' g f as = (primal r, unbindWith g vs $ partialArray bds r)
           r = f vs
 {-# INLINE gradWith' #-}
 
--- | The 'gradF' function calculates the jacobian of a non-scalar-to-non-scalar function with reverse AD lazily in @m@ passes for @m@ outputs.
-gradF :: (Traversable f, Functor g, Num a) => FF f g a -> f a -> g (f a)
-gradF = jacobian
-{-# INLINE gradF #-}
-
--- | An alias for 'gradF'
+-- | The 'jacobian' function calculates the jacobian of a non-scalar-to-non-scalar function with reverse AD lazily in @m@ passes for @m@ outputs.
 jacobian :: (Traversable f, Functor g, Num a) => FF f g a -> f a -> g (f a)
 jacobian f as = unbind vs . partialArray bds <$> f vs where
     (vs, bds) = bind as
 {-# INLINE jacobian #-}
 
--- | The 'gradF'' function calculates both the result and the Jacobian of a nonscalar-to-nonscalar function, using @m@ invocations of reverse AD,
--- where @m@ is the output dimensionality. Applying @fmap snd@ to the result will recover the result of 'gradF'
-gradF' :: (Traversable f, Functor g, Num a) => FF f g a -> f a -> g (a, f a)
-gradF' = jacobian' 
-{-# INLINE gradF' #-}
-
+-- | The 'jacobian'' function calculates both the result and the Jacobian of a nonscalar-to-nonscalar function, using @m@ invocations of reverse AD,
+-- where @m@ is the output dimensionality. Applying @fmap snd@ to the result will recover the result of 'jacobian'
 -- | An alias for 'gradF''
 jacobian' :: (Traversable f, Functor g, Num a) => FF f g a -> f a -> g (a, f a)
 jacobian' f as = row <$> f vs where
@@ -123,39 +99,29 @@ jacobian' f as = row <$> f vs where
     row a = (primal a, unbind vs (partialArray bds a))
 {-# INLINE jacobian' #-}
 
--- | 'gradWithF g f' calculates the Jacobian of a non-scalar-to-non-scalar function @f@ with reverse AD lazily in @m@ passes for @m@ outputs.
+-- | 'jacobianWith g f' calculates the Jacobian of a non-scalar-to-non-scalar function @f@ with reverse AD lazily in @m@ passes for @m@ outputs.
 --
 -- Instead of returning the Jacobian matrix, the elements of the matrix are combined with the input using the @g@.
 --
--- > gradF == gradWithF (\_ dx -> dx)
--- > gradWithF const == (\f x -> const x <$> f x)
+-- > jacobian == jacobianWith (\_ dx -> dx)
+-- > jacobianWith const == (\f x -> const x <$> f x)
 --
-gradWithF :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> FF f g a -> f a -> g (f b)
-gradWithF g f as = unbindWith g vs . partialArray bds <$> f vs where
-    (vs, bds) = bind as
-{-# INLINE gradWithF #-}
-
--- | An alias for 'gradWithF'.
 jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> FF f g a -> f a -> g (f b)
-jacobianWith = gradWithF 
+jacobianWith g f as = unbindWith g vs . partialArray bds <$> f vs where
+    (vs, bds) = bind as
 {-# INLINE jacobianWith #-}
 
--- | 'gradWithF' g f' calculates both the result and the Jacobian of a nonscalar-to-nonscalar function @f@, using @m@ invocations of reverse AD,
--- where @m@ is the output dimensionality. Applying @fmap snd@ to the result will recover the result of 'gradWithF'
+-- | 'jacobianWith' g f' calculates both the result and the Jacobian of a nonscalar-to-nonscalar function @f@, using @m@ invocations of reverse AD,
+-- where @m@ is the output dimensionality. Applying @fmap snd@ to the result will recover the result of 'jacobianWith'
 --
 -- Instead of returning the Jacobian matrix, the elements of the matrix are combined with the input using the @g@.
 --
--- > jacobian' == gradWithF' (\_ dx -> dx)
+-- > jacobian' == jacobianWith' (\_ dx -> dx)
 --
-gradWithF' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> FF f g a -> f a -> g (a, f b)
-gradWithF' g f as = row <$> f vs where
+jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> FF f g a -> f a -> g (a, f b)
+jacobianWith' g f as = row <$> f vs where
     (vs, bds) = bind as
     row a = (primal a, unbindWith g vs (partialArray bds a))
-{-# INLINE gradWithF' #-}
-
--- | An alias for 'gradWithF''
-jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> FF f g a -> f a -> g (a, f b)
-jacobianWith' = gradWithF'
 {-# INLINE jacobianWith' #-}
 
 diff :: Num a => UU a -> a -> a
@@ -176,44 +142,14 @@ diffF' :: (Functor f, Num a) => UF f a -> a -> f (a, a)
 diffF' f a = derivative' <$> f (var a 0)
 {-# INLINE diffF' #-}
 
--- * Monadic Combinators
-
-diffM :: (Monad m, Num a) => UF m a -> a -> m a
-diffM f a = liftM derivative $ f (var a 0)
-{-# INLINE diffM #-}
-
-diffM' :: (Monad m, Num a) => UF m a -> a -> m (a, a)
-diffM' f a = liftM derivative' $ f (var a 0)
-{-# INLINE diffM' #-}
-
-gradM :: (Traversable f, Monad m, Num a) => FF f m a -> f a -> m (f a)
-gradM f = unwrapMonad . jacobian (WrapMonad . f)
-{-# INLINE gradM #-}
-
-gradM' :: (Traversable f, Monad m, Num a) => FF f m a -> f a -> m (a, f a)
-gradM' f = unwrapMonad . jacobian' (WrapMonad . f)
-{-# INLINE gradM' #-}
-
-gradWithM :: (Traversable f, Monad m, Num a) => (a -> a -> b) -> FF f m a -> f a -> m (f b)
-gradWithM g f = unwrapMonad . jacobianWith g (WrapMonad . f)
-
-gradWithM' :: (Traversable f, Monad m, Num a) => (a -> a -> b) -> FF f m a -> f a -> m (a, f b)
-gradWithM' g f = unwrapMonad . jacobianWith' g (WrapMonad . f)
-
 -- | Compute the hessian via the jacobian of the gradient. gradient is computed in reverse mode and then the jacobian is computed in reverse mode.
 --
--- However, since the @'grad f :: f a -> f a'@ is square this is not as fast as using the forward-mode Jacobian of a reverse mode gradient provided by 'Numeric.AD.hessian' in "Numeric.AD".
+-- However, since the @'grad f :: f a -> f a'@ is square this is not as fast as using the forward-mode Jacobian of a reverse mode gradient provided by 'Numeric.AD.hessian'.
 hessian :: (Traversable f, Num a) => FU f a -> f a -> f (f a)
 hessian f = jacobian (grad (decomposeMode . f . fmap composeMode))
 
--- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the forward-mode Jacobian of the mixed-mode Jacobian of the function.
+-- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the reverse-mode Jacobian of the reverse-mode Jacobian of the function.
 --
--- While this is less efficient than 'Numeric.AD.hessianTensor' from "Numeric.AD" or 'Numeric.AD.Forward.hessianTensor' from "Numeric.AD.Forward", the type signature is more permissive with regards to the output non-scalar, and it may be more efficient if only a few coefficients of the result are consumed.
-hessianTensor :: (Traversable f, Functor g, Num a) => FF f g a -> f a -> g (f (f a))
-hessianTensor f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))
-
--- | Compute the hessian via the reverse-mode jacobian of the reverse-mode gradient of a non-scalar-to-scalar monadic action. 
---
--- While this is less efficient than 'Numeric.AD.hessianTensor' from "Numeric.AD" or 'Numeric.AD.Forward.hessianTensor' from "Numeric.AD.Forward", the type signature is more permissive with regards to the output non-scalar, and it may be more efficient if only a few coefficients of the result are consumed.
-hessianM :: (Traversable f, Monad m, Num a) => FF f m a -> f a -> m (f (f a))
-hessianM f = unwrapMonad . hessianTensor (WrapMonad . f)
+-- Less efficient than 'Numeric.AD.Mode.Mixed.hessianF'.
+hessianF :: (Traversable f, Functor g, Num a) => FF f g a -> f a -> g (f (f a))
+hessianF f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))

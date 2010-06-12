@@ -40,9 +40,6 @@ module Numeric.AD.Mode.Forward
     , du'
     , duF
     , duF'
-    -- * Monadic Combinators
-    , diffM
-    , diffM'
     -- * Exposed Types
     , UU, UF, FU, FF
     , AD(..)
@@ -51,7 +48,6 @@ module Numeric.AD.Mode.Forward
 
 import Data.Traversable (Traversable)
 import Control.Applicative
-import Control.Monad (liftM)
 import Numeric.AD.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Composition
@@ -97,16 +93,6 @@ diffF f a = tangent <$> apply f a
 diffF' :: (Functor f, Num a) => UF f a -> a -> f (a, a)
 diffF' f a = unbundle <$> apply f a
 {-# INLINE diffF' #-}
-
--- | The 'dUM' function calculates the first derivative of scalar-to-scalar monadic function by F'orward' 'AD'
-diffM :: (Monad m, Num a) => UF m a -> a -> m a
-diffM f a = tangent `liftM` apply f a
-{-# INLINE diffM #-}
-
--- | The 'd'UM' function calculates the result and first derivative of a scalar-to-scalar monadic function by F'orward' 'AD'
-diffM' :: (Monad m, Num a) => UF m a -> a -> m (a, a)
-diffM' f a = unbundle `liftM` apply f a
-{-# INLINE diffM' #-}
 
 -- | A fast, simple transposed Jacobian computed with forward-mode AD.
 jacobianT :: (Traversable f, Functor g, Num a) => FF f g a -> f a -> f (g a)

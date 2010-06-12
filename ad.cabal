@@ -1,5 +1,5 @@
 name:         ad
-version:      0.42.0
+version:      0.44.0
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010,
@@ -50,8 +50,6 @@ description:
     .
     * @F@ is a version of the base function lifted to return a 'Traversable' (or 'Functor') result
     .
-    * @M@ is a version of the base function lifted to return a 'Monad'ic result
-    .
     * @s@ means the function returns all higher derivatives in a list or f-branching 'Stream'
     .
     * @T@ means the result is transposed with respect to the traditional formulation.
@@ -66,7 +64,11 @@ description:
     .
     * Regularized naming conventions
     .
-    * Exposed 'Id' and probe methods via @Numeric.AD.Types@
+    * Exposed 'Id', probe, and lower methods via @Numeric.AD.Types@
+    .
+    * Removed Monadic combinators
+    .
+    * Retuned the 'Mixed' mode jacobian calculations to only require a 'Functor'-based result.
 
 build-type:   Simple
 build-depends:       
@@ -74,10 +76,7 @@ build-depends:
     data-reify >= 0.5 && < 0.6, 
     containers >= 0.2 && < 0.4,
     template-haskell >= 2.4 && < 2.5,
-    mlist >= 0.0.2 && <= 0.1,
-    array >= 0.2 && < 0.4,
-    vector >= 0.6.0.1 && < 0.7,
-    vector-instances >= 0.0.1 && < 0.1
+    array >= 0.2 && < 0.4
 
 exposed-modules:
     Numeric.AD

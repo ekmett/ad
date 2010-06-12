@@ -76,7 +76,8 @@ build-depends:
     template-haskell >= 2.4 && < 2.5,
     mlist >= 0.0.2 && <= 0.1,
     array >= 0.2 && < 0.4,
-    vector >= 0.6.0.1 && < 0.7
+    vector >= 0.6.0.1 && < 0.7,
+    vector-instances >= 0.0.1 && < 0.1
 
 exposed-modules:
     Numeric.AD
@@ -93,7 +94,6 @@ exposed-modules:
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Composition
-    Numeric.AD.Internal.Vector
 
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward

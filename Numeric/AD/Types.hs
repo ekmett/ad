@@ -20,17 +20,11 @@ module Numeric.AD.Types
     , headT
     , tailT
     , tensors
-    , vtensors
     -- * f-Branching Streams
     , Stream(..)
     , headS
     , tailS
     , unfoldS
-    , vunfoldS
-    -- * Vectors
-    , WrappedVector(..)
-    , wrap
-    , unwrap 
     -- * An Identity Mode. 
     , Id(..)
     , probe, unprobe

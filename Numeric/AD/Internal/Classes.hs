@@ -29,6 +29,7 @@ import Control.Applicative
 import Data.Char
 import Language.Haskell.TH
 import Numeric.AD.Internal.Combinators (on)
+import Data.Vector.Instances ()
 
 infixl 8 **!
 infixl 7 *!, /!, ^*, *^, ^/

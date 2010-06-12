@@ -8,6 +8,8 @@ module Numeric.AD.Internal.Sparse
     , apply
     , vars
     , d, d', ds
+    , vapply
+    , vvars
     , vd, vd', vds
     , skeleton
     , spartial
@@ -19,8 +21,9 @@ import Control.Applicative
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Stream
 import Numeric.AD.Internal.Types
-import Numeric.AD.Internal.Vector
 import Data.Data
+import Data.Vector (Vector)
+import qualified Data.Vector as Vector
 import Data.Typeable ()
 import qualified Data.IntMap as IntMap 
 import Data.IntMap (IntMap, mapWithKey, unionWith, findWithDefault, toAscList, singleton, insertWith, lookup)
@@ -67,7 +70,7 @@ vars = snd . mapAccumL var 0
 {-# INLINE vars #-}
 
 vvars :: Num a => Vector a -> Vector (AD Sparse a)
-vvars = imap (\n a -> AD $ Sparse a $ singleton n $ lift 1))
+vvars = Vector.imap (\n a -> AD $ Sparse a $ singleton n $ lift 1)
 {-# INLINE vvars #-}
 
 apply :: (Traversable f, Num a) => (f (AD Sparse a) -> b) -> f a -> b
@@ -76,7 +79,7 @@ apply f = f . vars
 
 vapply :: Num a => (Vector (AD Sparse a) -> b) -> Vector a -> b
 vapply f = f . vvars 
-{-# INLINE apply #-}
+{-# INLINE vapply #-}
 
 skeleton :: Traversable f => f a -> f Int
 skeleton = snd . mapAccumL (\ !n _ -> (n + 1, n)) 0
@@ -100,17 +103,17 @@ ds fs (AD as@(Sparse a _)) = a :< (go emptyIndex <$> fns)
 {-# INLINE ds #-}
 
 vd :: Num a => Int -> AD Sparse a -> Vector a
-vd n (AD (Sparse _ da)) = Vector.generate n $ \n -> maybe 0 primal $ lookup n da
+vd n (AD (Sparse _ da)) = Vector.generate n $ \i -> maybe 0 primal $ lookup i da
 {-# INLINE vd #-}
 
 vd' :: Num a => Int -> AD Sparse a -> (a, Vector a)
-vd' n (AD (Sparse a da)) = (a , Vector.generate n $ \n -> maybe 0 primal $ lookup n da)
+vd' n (AD (Sparse a da)) = (a , Vector.generate n $ \i -> maybe 0 primal $ lookup i da)
 {-# INLINE vd' #-}
 
 vds :: Num a => Int -> AD Sparse a -> Stream Vector a
-vds n (AD as@(Sparse a _)) = a :< generate n (go emptyIndex)
+vds n (AD as@(Sparse a _)) = a :< Vector.generate n (go emptyIndex)
     where
-        go ix i = partial (indices ix') as :< generate n (go ix')
+        go ix i = partial (indices ix') as :< Vector.generate n (go ix')
             where ix' = addToIndex i ix
 {-# INLINE vds #-}
 

@@ -22,7 +22,7 @@ import Control.Applicative
 import Data.Foldable
 import Data.Traversable
 import Data.Monoid
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault)
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp)
 import Numeric.AD.Internal.Comonad
 import Numeric.AD.Internal.Stream
 
@@ -67,9 +67,6 @@ instance Typeable1 f => Typeable1 (Tensors f) where
         where asArgsType :: f a -> t f a -> f a
               asArgsType = const
 
-instance (Typeable1 f, Typeable a) => Typeable (Tensors f a) where
-    typeOf = typeOfDefault
-    
 tensorsTyCon :: TyCon
 tensorsTyCon = mkTyCon "Numeric.AD.Internal.Tensors.Tensors"
 {-# NOINLINE tensorsTyCon #-}

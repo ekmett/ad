@@ -47,9 +47,6 @@ instance Typeable1 f => Typeable1 (AD f) where
         where asArgsType :: f a -> t f a -> f a
               asArgsType = const
 
-instance (Typeable1 f, Typeable a) => Typeable (AD f a) where
-    typeOf = typeOfDefault
-    
 adTyCon :: TyCon
 adTyCon = mkTyCon "Numeric.AD.Internal.Types.AD"
 {-# NOINLINE adTyCon #-}

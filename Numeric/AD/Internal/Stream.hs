@@ -23,7 +23,7 @@ import Data.Monoid
 import Data.Foldable
 import Data.Traversable
 import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(Infix))
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, gcast1)
 import Numeric.AD.Internal.Comonad
 
 infixl 3 :<
@@ -70,9 +70,6 @@ instance Typeable1 f => Typeable1 (Stream f) where
         where asArgsType :: f a -> t f a -> f a
               asArgsType = const
 
-instance (Typeable1 f, Typeable a) => Typeable (Stream f a) where
-    typeOf = typeOfDefault
-    
 streamTyCon :: TyCon
 streamTyCon = mkTyCon "Numeric.AD.Internal.Stream.Stream"
 {-# NOINLINE streamTyCon #-}

@@ -45,9 +45,6 @@ instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeFunctor f g) where
               ga :: t (f :: * -> *) g a -> g a
               ga = undefined
 
-instance (Typeable1 f, Typeable1 g, Typeable a) => Typeable (ComposeFunctor f g a) where
-    typeOf = typeOfDefault
-    
 composeFunctorTyCon :: TyCon
 composeFunctorTyCon = mkTyCon "Numeric.AD.Internal.Composition.ComposeFunctor"
 {-# NOINLINE composeFunctorTyCon #-}

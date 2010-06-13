@@ -16,7 +16,7 @@ module Numeric.AD.Internal.Types
     ) where
 
 import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, gcast1)
 import Language.Haskell.TH
 import Numeric.AD.Internal.Classes
 

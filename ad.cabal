@@ -1,5 +1,5 @@
 name:         ad
-version:      0.44.2
+version:      0.44.3
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010,
@@ -58,7 +58,7 @@ description:
     .
     Changes since 0.40.0
     .
-    * Bug fix in the derivative calculated for @'(/)' :: (Mode s, Fractional a) => AD s a@
+    * Fixed bug fix for @'(/)' :: (Mode s, Fractional a) => AD s a@
     .
     * Improved documentation
     .

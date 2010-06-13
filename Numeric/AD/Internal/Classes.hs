@@ -199,8 +199,8 @@ deriveLifted f _t = do
         abs1          = lift1 abs signum1
         signum1       = lift1 signum (const zero)
         fromRational1 = lift . fromRational
-        (/!)          = lift2 (/) $ \x y -> (recip1 y, x *! negate1 (square1 y))
-        recip1        = lift1 recip (negate1 . square1)
+        (/!)          = lift2_ (/) $ \a x y -> (recip1 y, x *! negate1 (square1 a))
+        recip1        = lift1_ recip (const . negate1 . square1)
 
         pi1       = lift pi
         exp1      = lift1_ exp const

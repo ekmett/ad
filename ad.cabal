@@ -1,5 +1,5 @@
 name:         ad
-version:      0.44.4
+version:      0.44.5
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010,
@@ -8,7 +8,7 @@ author:       Edward Kmett
 maintainer:   ekmett@gmail.com
 stability:    Experimental
 category:     Math
-homepage:     http://patch-tag.com/r/ekmett/ad
+homepage:     http://github.com/ekmett/ad
 synopsis:     Automatic Differentiation
 description:  
     Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.

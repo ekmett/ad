@@ -35,7 +35,6 @@ infixl 7 *!, /!, ^*, *^, ^/
 infixl 6 +!, -!, <+>
 infix 4 ==!
 
-
 class Iso a b where
     iso :: f a -> f b
     osi :: f b -> f a

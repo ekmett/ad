@@ -99,7 +99,8 @@ While not every mode can provide all operations, the following basic operations 
 ### Combinator Sufes
 
 The following suffixes alter the meanings of the functions above as follows:
- * `\'` -- also return the answer
+
+ * `'` also return the answer
  * `With` lets the user supply a function to blend the input with the output
  * `F` is a version of the base function lifted to return a `Traversable` (or `Functor`) result
  * `s` means the function returns all higher derivatives in a list or f-branching `Stream`

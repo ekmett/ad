@@ -35,6 +35,7 @@ infixl 7 *!, /!, ^*, *^, ^/
 infixl 6 +!, -!, <+>
 infix 4 ==!
 
+
 class Iso a b where
     iso :: f a -> f b
     osi :: f b -> f a
@@ -199,7 +200,7 @@ deriveLifted f _t = do
         abs1          = lift1 abs signum1
         signum1       = lift1 signum (const zero)
         fromRational1 = lift . fromRational
-        (/!)          = lift2_ (/) $ \a x y -> (recip1 y, x *! negate1 (square1 a))
+        x /! y        = x *! recip1 y
         recip1        = lift1_ recip (const . negate1 . square1)
 
         pi1       = lift pi
@@ -209,7 +210,7 @@ deriveLifted f _t = do
         sqrt1     = lift1_ sqrt (\z _ -> recip1 (lift 2 *! z))
         (**!)     = lift2_ (**) (\z x y -> (y *! z /! x, z *! log1 x)) -- error at 0 ** n
         sin1      = lift1 sin cos1
-        cos1      = lift1 cos $ \x -> negate1 (sin1 x)
+        cos1      = lift1 cos $ negate1 . sin1
         tan1 x    = sin1 x /! cos1 x
         asin1     = lift1 asin $ \x -> recip1 (sqrt1 (one -! square1 x))
         acos1     = lift1 acos $ \x -> negate1 (recip1 (sqrt1 (one -! square1 x)))

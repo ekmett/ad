@@ -23,7 +23,7 @@ import Data.Monoid
 import Data.Foldable
 import Data.Traversable
 import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(Infix))
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, gcast1)
+import Data.Typeable (Typeable1(..), TyCon, mkTyCon, mkTyConApp, gcast1)
 import Numeric.AD.Internal.Comonad
 
 infixl 3 :<
@@ -31,8 +31,6 @@ infixl 3 :<
 data Stream f a = a :< f (Stream f a)
 
 deriving instance (Show a, Show (f (Stream f a))) => Show (Stream f a)
-
--- TODO: Data, Typeable
 
 instance Functor f => Functor (Stream f) where
     fmap f (a :< as) = f a :< fmap f <$> as

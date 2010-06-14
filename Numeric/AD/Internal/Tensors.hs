@@ -22,7 +22,7 @@ import Control.Applicative
 import Data.Foldable
 import Data.Traversable
 import Data.Monoid
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp)
+import Data.Typeable (Typeable1(..), TyCon, mkTyCon, mkTyConApp)
 import Numeric.AD.Internal.Comonad
 import Numeric.AD.Internal.Stream
 

@@ -96,7 +96,7 @@ While not every mode can provide all operations, the following basic operations 
  * `du` computes a directional derivative of a function at a point.
  * `hessian` computes the Hessian matrix (matrix of second partial derivatives) of a function at a point.
 
-### Combinator Sufes
+### Combinator Suffixes
 
 The following suffixes alter the meanings of the functions above as follows:
 

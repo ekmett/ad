@@ -52,7 +52,7 @@ import Numeric.AD.Internal.Composition
 findZero :: Fractional a => UU a -> a -> [a]
 findZero f = go
     where
-        go x = x : go (x - 2*y*y'/(2*y'*y'-y*y''))
+        go x = x : if y == 0 then [] else go (x - 2*y*y'/(2*y'*y'-y*y''))
             where
                 (y:y':y'':_) = diffs0 f x
 {-# INLINE findZero #-}

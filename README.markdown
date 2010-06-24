@@ -85,6 +85,8 @@ Overview
  * `Numeric.AD.Mode.Sparse` computes a sparse forward-mode AD tower. It is good for higher derivatives or large numbers of outputs.
  * `Numeric.AD.Mode.Tower` computes a dense forward-mode AD tower useful for higher derivatives of single input functions.
  * `Numeric.AD.Mode.Mixed` computes using whichever mode or combination thereof is suitable to each individual combinator. This mode is the default, re-exported by `Numeric.AD`
+ * `Numeric.AD.Newton` provides a number of combinators for root finding using Newton's method with quadratic convergence.
+ * `Numeric.AD.Halley` provides a number of combinators for root finding using Halley's method with cubic convergence.
 
 ### Combinators
 

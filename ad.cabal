@@ -1,5 +1,5 @@
 name:         ad
-version:      0.44.5
+version:      0.45.0
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010,
@@ -56,6 +56,10 @@ description:
     .
     * @0@ means that the resulting derivative list is padded with 0s at the end.
     .
+    Changes since 0.44.5
+    .
+    * Added Halley's method
+    .
     Changes since 0.40.0
     .
     * Fixed bug fix for @'(/)' :: (Mode s, Fractional a) => AD s a@
@@ -85,6 +89,7 @@ exposed-modules:
     Numeric.AD.Classes
     Numeric.AD.Types
     Numeric.AD.Newton
+    Numeric.AD.Halley
 
     Numeric.AD.Internal.Classes
     Numeric.AD.Internal.Combinators

@@ -1,8 +1,8 @@
 name:         ad
-version:      0.45.1
+version:      0.46.0
 license:      BSD3
 license-File: LICENSE
-copyright:    (c) Edward Kmett 2010,
+copyright:    (c) Edward Kmett 2010-2011,
               (c) Barak Pearlmutter and Jeffrey Mark Siskind 2008-2009
 author:       Edward Kmett
 maintainer:   ekmett@gmail.com
@@ -56,6 +56,10 @@ description:
     .
     * @0@ means that the resulting derivative list is padded with 0s at the end.
     .
+    Changes since 0.45.0
+    .
+    * Converted 'Stream' to use the external 'comonad' package
+    .
     Changes since 0.44.5
     .
     * Added Halley's method
@@ -82,7 +86,8 @@ build-depends:
     data-reify >= 0.5 && < 0.6, 
     containers >= 0.2 && < 0.4,
     template-haskell >= 2.4 && < 2.5,
-    array >= 0.2 && < 0.4
+    array >= 0.2 && < 0.4,
+    comonad >= 0.6 && < 0.7
 
 exposed-modules:
     Numeric.AD
@@ -110,7 +115,6 @@ exposed-modules:
 
 other-modules:
     Numeric.AD.Internal.Types
-    Numeric.AD.Internal.Comonad
     Numeric.AD.Internal.Stream
     Numeric.AD.Internal.Tensors
     Numeric.AD.Internal.Identity

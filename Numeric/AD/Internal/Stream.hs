@@ -19,12 +19,12 @@ module Numeric.AD.Internal.Stream
     ) where
 
 import Control.Applicative
+import Control.Comonad
 import Data.Monoid
 import Data.Foldable
 import Data.Traversable
 import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(Infix))
 import Data.Typeable (Typeable1(..), TyCon, mkTyCon, mkTyConApp, gcast1)
-import Numeric.AD.Internal.Comonad
 
 infixl 3 :<
 
@@ -35,10 +35,8 @@ deriving instance (Show a, Show (f (Stream f a))) => Show (Stream f a)
 instance Functor f => Functor (Stream f) where
     fmap f (a :< as) = f a :< fmap f <$> as
 
-instance Functor f => Copointed (Stream f) where
-    extract (a :< _) = a
-
 instance Functor f => Comonad (Stream f) where
+    extract (a :< _) = a
     duplicate aas@(_ :< as) = aas :< duplicate <$> as
     extend f aas@(_ :< as) = f aas :< extend f <$> as
 

@@ -10,13 +10,7 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Classes
-    ( 
-    -- * AD Modes
-      Mode(..)
-    -- * Comonads
-    , Copointed(..)
-    , Comonad(..)
+    ( Mode(..)
     ) where
 
 import Numeric.AD.Internal.Classes
-import Numeric.AD.Internal.Comonad

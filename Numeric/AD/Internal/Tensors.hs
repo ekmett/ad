@@ -23,7 +23,6 @@ import Data.Foldable
 import Data.Traversable
 import Data.Monoid
 import Data.Typeable (Typeable1(..), TyCon, mkTyCon, mkTyConApp)
-import Numeric.AD.Internal.Comonad
 import Numeric.AD.Internal.Stream
 
 infixl 3 :-
@@ -41,12 +40,6 @@ instance Foldable f => Foldable (Tensors f) where
 
 instance Traversable f => Traversable (Tensors f) where
     traverse f (a :- as) = (:-) <$> f a <*> traverse (traverse f) as
-
--- | While we can not be a 'Comonad' without a 'fzip'-like operation, you can use the
--- comonad for @'Stream' f a@ to manipulate a structure comonadically that you can turn 
--- into 'Tensors'.
-instance Functor f => Copointed (Tensors f) where
-    extract (a :- _) = a
 
 tailT :: Tensors f a -> Tensors f (f a)
 tailT (_ :- as) = as

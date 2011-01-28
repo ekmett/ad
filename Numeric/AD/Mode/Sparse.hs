@@ -46,8 +46,10 @@ module Numeric.AD.Mode.Sparse
     , Grads
     ) where
 
+import Control.Comonad
 import Control.Applicative ((<$>))
 import Data.Traversable
+import Data.Stream.Branching
 import Numeric.AD.Types
 import Numeric.AD.Classes
 import Numeric.AD.Internal.Sparse
@@ -102,7 +104,7 @@ d2 = headT . tailT . tailT . tensors
 {-# INLINE d2 #-}
 
 d2' :: Functor f => Stream f a -> (a, f (a, f a))
-d2' (a :< as) = (a, fmap (\(da :< das) -> (da, fmap headS das)) as)
+d2' (a :< as) = (a, fmap (\(da :< das) -> (da, extract <$> das)) as)
 {-# INLINE d2' #-}
 
 hessian :: (Traversable f, Num a) => FU f a -> f a -> f (f a)

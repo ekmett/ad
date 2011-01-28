@@ -21,7 +21,7 @@ module Numeric.AD.Internal.Sparse
 import Prelude hiding (lookup)
 import Control.Applicative
 import Numeric.AD.Internal.Classes
-import Numeric.AD.Internal.Stream
+import Data.Stream.Branching
 import Numeric.AD.Internal.Types
 import Data.Data
 import Data.Typeable ()

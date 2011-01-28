@@ -20,11 +20,6 @@ module Numeric.AD.Types
     , headT
     , tailT
     , tensors
-    -- * f-Branching Streams
-    , Stream(..)
-    , headS
-    , tailS
-    , unfoldS
     -- * An Identity Mode. 
     , Id(..)
     , probe, unprobe
@@ -35,7 +30,6 @@ module Numeric.AD.Types
 
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Internal.Types
-import Numeric.AD.Internal.Stream
 import Numeric.AD.Internal.Tensors
 
 -- these exploit the 'magic' that is probed to avoid the need for Functor, etc.

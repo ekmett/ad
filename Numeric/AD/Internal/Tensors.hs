@@ -23,7 +23,7 @@ import Data.Foldable
 import Data.Traversable
 import Data.Monoid
 import Data.Typeable (Typeable1(..), TyCon, mkTyCon, mkTyConApp)
-import Numeric.AD.Internal.Stream
+import Data.Stream.Branching as Branching
 
 infixl 3 :-
 
@@ -50,10 +50,10 @@ headT (a :- _) = a
 {-# INLINE headT #-}
 
 tensors :: Functor f => Stream f a -> Tensors f a
-tensors (a :< as) = a :- distribute (tensors <$> as)
+tensors (a :< as) = a :- dist (tensors <$> as)
     where
-        distribute :: Functor f => f (Tensors f a) -> Tensors f (f a)
-        distribute x = (headT <$> x) :- distribute (tailT <$> x)
+        dist :: Functor f => f (Tensors f a) -> Tensors f (f a)
+        dist x = (headT <$> x) :- dist (tailT <$> x)
 
 instance Typeable1 f => Typeable1 (Tensors f) where
     typeOf1 tfa = mkTyConApp tensorsTyCon [typeOf1 (undefined `asArgsType` tfa)]

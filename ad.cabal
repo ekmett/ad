@@ -1,5 +1,5 @@
 name:         ad
-version:      0.47.0
+version:      1.0.0
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2011,
@@ -87,8 +87,8 @@ build-depends:
     containers >= 0.2 && < 0.5,
     template-haskell >= 2.4 && < 2.5,
     array >= 0.2 && < 0.4,
-    comonad >= 0.9 && < 0.10, 
-    streams >= 0.5 && < 0.6
+    comonad >= 1.0 && < 1.1,
+    streams >= 0.6 && < 0.7
 
 exposed-modules:
     Numeric.AD

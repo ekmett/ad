@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, FunctionalDependencies, UndecidableInstances, GeneralizedNewtypeDeriving, TemplateHaskell #-}
+{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, FunctionalDependencies, UndecidableInstances, GeneralizedNewtypeDeriving, TemplateHaskell, CPP #-}
 -- {-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |
@@ -259,7 +259,11 @@ varA = varT (mkName "a")
 -- | Find all the members defined in the 'Lifted' data type
 liftedMembers :: Q [String]
 liftedMembers = do
+#ifdef OldClassI
     ClassI (ClassD _ _ _ _ ds) <- reify ''Lifted
+#else
+    ClassI (ClassD _ _ _ _ ds) _ <- reify ''Lifted
+#endif
     return [ nameBase n | SigD n _ <- ds]
 
 -- | @'deriveNumeric' f g@ provides the following instances:
@@ -286,7 +290,11 @@ deriveNumeric f t = do
 
 lowerInstance :: (Name -> Bool) -> ([Q Pred] -> [Q Pred]) -> Q Type -> Name -> Q Dec
 lowerInstance p f t n = do
+#ifdef OldClassI
     ClassI (ClassD _ _ _ _ ds) <- reify n
+#else
+    ClassI (ClassD _ _ _ _ ds) _ <- reify n
+#endif
     instanceD (cxt (f [classP n [varA]]))
               (conT n `appT` (t `appT` varA))
               (concatMap lower1 ds)

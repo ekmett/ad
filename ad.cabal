@@ -1,5 +1,5 @@
 name:         ad
-version:      1.0.1
+version:      1.0.2
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2011,
@@ -9,7 +9,11 @@ maintainer:   ekmett@gmail.com
 stability:    Experimental
 category:     Math
 homepage:     http://github.com/ekmett/ad
+build-type:   Simple
+cabal-version: >= 1.6
+extra-source-files: TODO
 synopsis:     Automatic Differentiation
+
 description:  
     Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.
     . 
@@ -80,44 +84,62 @@ description:
     .
     * Added unsafe variadic 'vgrad', 'vgrad'', and 'vgrads' combinators
 
-build-type:   Simple
-build-depends:       
+
+source-repository head
+  type: git
+  location: git://github.com/ekmett/ad.git
+
+
+
+
+flag TemplateHaskell24
+  manual: False
+  default: False
+
+library 
+  
+  if flag(TemplateHaskell24)
+    build-depends: template-haskell >= 2.4 && < 2.5
+    extensions: CPP
+    cpp-options: -DOldClassI
+  else 
+    build-depends: template-haskell >= 2.5 && < 2.6
+  
+  build-depends:       
     base >= 4 && < 5,
     data-reify >= 0.6 && < 0.7, 
     containers >= 0.2 && < 0.5,
-    template-haskell >= 2.4 && < 2.6,
     array >= 0.2 && < 0.4,
     comonad >= 1.0 && < 1.1,
     streams >= 0.6 && < 0.7
-
-exposed-modules:
+  
+  exposed-modules:
     Numeric.AD
     Numeric.AD.Classes
     Numeric.AD.Types
     Numeric.AD.Newton
     Numeric.AD.Halley
-
+  
     Numeric.AD.Internal.Classes
     Numeric.AD.Internal.Combinators
-
+  
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Tower
     Numeric.AD.Internal.Reverse
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Composition
-
+  
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward
     Numeric.AD.Mode.Mixed
     Numeric.AD.Mode.Reverse
     Numeric.AD.Mode.Tower
     Numeric.AD.Mode.Sparse
-
-other-modules:
+  
+  other-modules:
     Numeric.AD.Internal.Types
     Numeric.AD.Internal.Tensors
     Numeric.AD.Internal.Identity
-
-Extra-Source-Files: TODO
-GHC-Options: -Wall -fspec-constr -fdicts-cheap -O2
+  
+  ghc-options: -Wall -fspec-constr -fdicts-cheap -O2

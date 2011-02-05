@@ -1,5 +1,5 @@
 name:         ad
-version:      1.0.2
+version:      1.0.3
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2011,
@@ -60,6 +60,10 @@ description:
     .
     * @0@ means that the resulting derivative list is padded with 0s at the end.
     .
+    Changes since 1.0.0
+    .
+    * Changed the way 'Show' was derived to comply with changes in instance resolution in ghc >= 7.0 && <= 7.1
+    . 
     Changes since 0.45.0
     .
     * Converted 'Stream' to use the external 'comonad' package

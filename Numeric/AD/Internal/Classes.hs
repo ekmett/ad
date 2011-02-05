@@ -44,7 +44,7 @@ instance Iso a a where
     osi = id
 
 class Lifted t where
-    showsPrec1          :: Show a => Int -> t a -> ShowS
+    showsPrec1          :: Num a => Int -> t a -> ShowS
     (==!)               :: (Num a, Eq a) => t a -> t a -> Bool
     compare1            :: (Num a, Ord a) => t a -> t a -> Ordering
     fromInteger1        :: Num a => Integer -> t a
@@ -190,7 +190,7 @@ deriveLifted f _t = do
         compare1      = compare `on` primal
         maxBound1     = lift maxBound
         minBound1     = lift minBound
-        showsPrec1    = showsPrec
+        showsPrec1 d  = showsPrec d . primal 
         fromInteger1  = lift . fromInteger
         (+!)          = (<+>) -- binary (+) one one
         (-!)          = binary (-) one negOne -- TODO: <-> ? as it is, this might be pretty bad for Tower
@@ -284,8 +284,8 @@ deriveNumeric :: ([Q Pred] -> [Q Pred]) -> Q Type -> Q [Dec]
 deriveNumeric f t = do
     members <- liftedMembers
     let keep n = nameBase n `elem` members
-    xs <- lowerInstance keep ((classP ''Num [varA]:) . f) t `mapM` [''Enum, ''Eq, ''Ord, ''Bounded]
-    ys <- lowerInstance keep f                            t `mapM` [''Show, ''Num, ''Fractional, ''Floating, ''RealFloat,''RealFrac, ''Real]
+    xs <- lowerInstance keep ((classP ''Num [varA]:) . f) t `mapM` [''Enum, ''Eq, ''Ord, ''Bounded, ''Show]
+    ys <- lowerInstance keep f                            t `mapM` [''Num, ''Fractional, ''Floating, ''RealFloat,''RealFrac, ''Real]
     return (xs ++ ys)
 
 lowerInstance :: (Name -> Bool) -> ([Q Pred] -> [Q Pred]) -> Q Type -> Name -> Q Dec

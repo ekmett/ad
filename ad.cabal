@@ -1,5 +1,5 @@
 name:         ad
-version:      1.0.3
+version:      1.0.4
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2011,
@@ -93,15 +93,11 @@ source-repository head
   type: git
   location: git://github.com/ekmett/ad.git
 
-
-
-
 flag TemplateHaskell24
   manual: False
   default: False
 
 library 
-  
   if flag(TemplateHaskell24)
     build-depends: template-haskell >= 2.4 && < 2.5
     extensions: CPP
@@ -114,8 +110,8 @@ library
     data-reify >= 0.6 && < 0.7, 
     containers >= 0.2 && < 0.5,
     array >= 0.2 && < 0.4,
-    comonad >= 1.0 && < 1.1,
-    streams >= 0.6 && < 0.7
+    comonad >= 1.0.3 && < 1.1,
+    streams >= 0.6.2 && < 0.7
   
   exposed-modules:
     Numeric.AD

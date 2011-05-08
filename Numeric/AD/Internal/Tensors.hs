@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, TemplateHaskell, ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators, TemplateHaskell, ScopedTypeVariables, FlexibleContexts #-}
 {-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |
@@ -27,10 +27,24 @@ import Data.Stream.Branching as Branching
 
 infixl 3 :-
 
+-- private, unexported type, so any instances for it will be polymorphic
+
+newtype Showable = Showable (Int -> String -> String)
+
+instance Show Showable where
+  showsPrec d (Showable f) = f d
+
+showable :: Show a => a -> Showable
+showable a = Showable (\d -> showsPrec d a)
+
 -- Polymorphic recursion precludes 'Data' in its current form, as no Data1 class exists
 -- Polymorphic recursion also breaks 'show' for 'Tensors'!
--- factor Show1 out of Lifted?
+
 data Tensors f a = a :- Tensors f (f a)
+
+instance (Functor f, Show (f Showable), Show a) => Show (Tensors f a) where
+  showsPrec d (a :- as) = showParen (d > 3) $ 
+    showsPrec 4 a . showString " :- " . showsPrec 3 (fmap showable <$> as)
 
 instance Functor f => Functor (Tensors f) where
     fmap f (a :- as) = f a :- fmap (fmap f) as

@@ -23,11 +23,11 @@ import Data.Foldable
 import Data.Traversable
 import Data.Monoid
 import Data.Typeable (Typeable1(..), TyCon, mkTyCon, mkTyConApp)
-import Data.Stream.Branching as Branching
+import Control.Comonad.Cofree
 
 infixl 3 :-
 
--- private, unexported type, so any instances for it will be polymorphic
+data Tensors f a = a :- Tensors f (f a)
 
 newtype Showable = Showable (Int -> String -> String)
 
@@ -39,9 +39,7 @@ showable a = Showable (\d -> showsPrec d a)
 
 -- Polymorphic recursion precludes 'Data' in its current form, as no Data1 class exists
 -- Polymorphic recursion also breaks 'show' for 'Tensors'!
-
-data Tensors f a = a :- Tensors f (f a)
-
+-- factor Show1 out of Lifted?
 instance (Functor f, Show (f Showable), Show a) => Show (Tensors f a) where
   showsPrec d (a :- as) = showParen (d > 3) $ 
     showsPrec 4 a . showString " :- " . showsPrec 3 (fmap showable <$> as)
@@ -63,7 +61,7 @@ headT :: Tensors f a -> a
 headT (a :- _) = a
 {-# INLINE headT #-}
 
-tensors :: Functor f => Stream f a -> Tensors f a
+tensors :: Functor f => Cofree f a -> Tensors f a
 tensors (a :< as) = a :- dist (tensors <$> as)
     where
         dist :: Functor f => f (Tensors f a) -> Tensors f (f a)

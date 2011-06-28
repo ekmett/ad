@@ -49,7 +49,7 @@ module Numeric.AD.Mode.Sparse
 import Control.Comonad
 import Control.Applicative ((<$>))
 import Data.Traversable
-import Data.Stream.Branching
+import Control.Comonad.Cofree
 import Numeric.AD.Types
 import Numeric.AD.Classes
 import Numeric.AD.Internal.Sparse
@@ -91,19 +91,19 @@ jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> FF f g a 
 jacobianWith' g f as = second (zipWithT g as) <$> jacobian' f as
 {-# INLINE jacobianWith' #-}
 
-grads :: (Traversable f, Num a) => FU f a -> f a -> Stream f a
+grads :: (Traversable f, Num a) => FU f a -> f a -> Cofree f a
 grads f as = ds as $ apply f as
 {-# INLINE grads #-}
 
-jacobians :: (Traversable f, Functor g, Num a) => FF f g a -> f a -> g (Stream f a)
+jacobians :: (Traversable f, Functor g, Num a) => FF f g a -> f a -> g (Cofree f a)
 jacobians f as = ds as <$> apply f as
 {-# INLINE jacobians #-}
 
-d2 :: Functor f => Stream f a -> f (f a)
+d2 :: Functor f => Cofree f a -> f (f a)
 d2 = headT . tailT . tailT . tensors 
 {-# INLINE d2 #-}
 
-d2' :: Functor f => Stream f a -> (a, f (a, f a))
+d2' :: Functor f => Cofree f a -> (a, f (a, f a))
 d2' (a :< as) = (a, fmap (\(da :< das) -> (da, extract <$> das)) as)
 {-# INLINE d2' #-}
 

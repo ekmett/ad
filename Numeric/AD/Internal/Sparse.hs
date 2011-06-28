@@ -21,7 +21,7 @@ module Numeric.AD.Internal.Sparse
 import Prelude hiding (lookup)
 import Control.Applicative
 import Numeric.AD.Internal.Classes
-import Data.Stream.Branching
+import Control.Comonad.Cofree
 import Numeric.AD.Internal.Types
 import Data.Data
 import Data.Typeable ()
@@ -85,11 +85,11 @@ d' :: (Traversable f, Num a) => f a -> AD Sparse a -> (a, f a)
 d' fs (AD (Sparse a da)) = (a , snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs)
 {-# INLINE d' #-}
 
-ds :: (Traversable f, Num a) => f b -> AD Sparse a -> Stream f a
+ds :: (Traversable f, Num a) => f b -> AD Sparse a -> Cofree f a
 ds fs (AD as@(Sparse a _)) = a :< (go emptyIndex <$> fns)
     where
         fns = skeleton fs
-        -- go :: Index -> Int -> Stream f a
+        -- go :: Index -> Int -> Cofree f a
         go ix i = partial (indices ix') as :< (go ix' <$> fns)
             where ix' = addToIndex i ix
 {-# INLINE ds #-}
@@ -112,7 +112,7 @@ vd' :: Num a => Int -> AD Sparse a -> (a, Vector a)
 vd' n (AD (Sparse a da)) = (a , Vector.generate n $ \i -> maybe 0 primal $ lookup i da)
 {-# INLINE vd' #-}
 
-vds :: Num a => Int -> AD Sparse a -> Stream Vector a
+vds :: Num a => Int -> AD Sparse a -> Cofree Vector a
 vds n (AD as@(Sparse a _)) = a :< Vector.generate n (go emptyIndex)
     where
         go ix i = partial (indices ix') as :< Vector.generate n (go ix')
@@ -202,9 +202,9 @@ vgrad' i = unpack' (unsafeGrad' (pack i))
 
 class Num a => Grads i o a | i -> a o, o -> a i where
     packs :: i -> [AD Sparse a] -> AD Sparse a
-    unpacks :: ([a] -> Stream [] a) -> o
+    unpacks :: ([a] -> Cofree [] a) -> o
 
-instance Num a => Grads (AD Sparse a) (Stream [] a) a where
+instance Num a => Grads (AD Sparse a) (Cofree [] a) a where
     packs i _ = i
     unpacks f = f []
 

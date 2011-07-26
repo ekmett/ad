@@ -1,5 +1,5 @@
 name:         ad
-version:      1.1.0
+version:      1.1.0.1
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2011,
@@ -93,18 +93,31 @@ source-repository head
   type: git
   location: git://github.com/ekmett/ad.git
 
-
-
-
 flag TemplateHaskell24
   manual: False
   default: False
 
 library 
-  
+  extensions: CPP
+
+  other-extensions:
+    BangPatterns
+    DeriveDataTypeable
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GeneralizedNewtypeDeriving
+    MultiParamTypeClasses
+    PatternGuards
+    Rank2Types
+    ScopedTypeVariables
+    TemplateHaskell
+    TypeFamilies
+    TypeOperators
+    UndecidableInstances
+
   if flag(TemplateHaskell24)
     build-depends: template-haskell >= 2.4 && < 2.5
-    extensions: CPP
     cpp-options: -DOldClassI
   else 
     build-depends: template-haskell >= 2.5 && < 2.6

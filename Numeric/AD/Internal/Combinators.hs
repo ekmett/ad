@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Combinators

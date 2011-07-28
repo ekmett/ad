@@ -161,7 +161,7 @@ partials (AD tape) = [ (ident, sensitivities ! ix) | (ix, Var _ ident) <- xs ]
             forM_ (topSort g) $
                 backPropagate vmap ss
             return ss
-        sbounds ((a,_):as) = foldl' (\(lo,hi) (b,_) -> (min lo b, max hi b)) (a,a) as
+        sbounds ((a,_):as) = foldl' (\(lo,hi) (b,_) -> let lo' = min lo b; hi' = max hi b in lo' `seq` hi' `seq` (lo', hi')) (a,a) as
         sbounds _ = undefined -- the graph can't be empty, it contains the output node!
         edgeSet (i, t) = (t, i, successors t)
         nonConst (_, Lift{}) = False

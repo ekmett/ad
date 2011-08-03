@@ -40,11 +40,13 @@ import Prelude hiding (mapM)
 import Control.Applicative (Applicative(..),(<$>))
 import Control.Monad.ST
 import Control.Monad (forM_)
-import Data.List (foldl')
+import Data.List (foldl', delete)
 import Data.Array.ST
 import Data.Array
-import Data.IntMap (IntMap, fromListWith, findWithDefault)
-import Data.Graph (graphFromEdges', topSort, Vertex)
+import Data.IntMap (IntMap, fromListWith, findWithDefault, fromAscList, 
+                    updateLookupWithKey)
+import qualified Data.IntSet as IS
+import Data.Graph (graphFromEdges', Vertex, vertices, edges, transposeG, Graph)
 import Data.Reify (reifyGraph, MuRef(..))
 import qualified Data.Reify.Graph as Reified
 import Data.Traversable (Traversable, mapM)
@@ -148,6 +150,19 @@ backPropagate vmap ss v = do
 
         -- this isn't _quite_ right, as it should allow negative zeros to multiply through
 
+topSortAcyclic :: Graph -> [Vertex]
+topSortAcyclic g = go (fromAscList . assocs $ transposeG g) starters
+  where starters = IS.toList $ foldl' (flip IS.delete)
+                                      (IS.fromList $ vertices g)
+                                      (map snd $ edges g)
+        go _ [] = []
+        go g' (n:ns) = let (g'',ns') = foldl' (uncurry (prune n)) (g',[]) (g!n)
+                       in n : go g'' (ns'++ns)
+        prune n g' acc m = let f _ = Just . delete n
+                               (Just ns, g'') = updateLookupWithKey f m g'
+                           in g'' `seq` (g'', if null (tail ns) then m:acc else acc)
+
+
 -- | This returns a list of contributions to the partials.
 -- The variable ids returned in the list are likely /not/ unique!
 partials :: Num a => AD Reverse a -> [(Int, a)]
@@ -158,7 +173,7 @@ partials (AD tape) = [ (ident, sensitivities ! ix) | (ix, Var _ ident) <- xs ]
         sensitivities = runSTArray $ do
             ss <- newArray (sbounds xs) 0
             writeArray ss start 1
-            forM_ (topSort g) $
+            forM_ (topSortAcyclic g) $
                 backPropagate vmap ss
             return ss
         sbounds ((a,_):as) = foldl' (\(lo,hi) (b,_) -> let lo' = min lo b; hi' = max hi b in lo' `seq` hi' `seq` (lo', hi')) (a,a) as

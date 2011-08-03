@@ -42,8 +42,8 @@ import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 
 data Dense f a
-    = Lift a
-    | Dense a (f a)
+    = Lift !a
+    | Dense !a (f a)
 
 instance Show a => Show (Dense f a) where
     showsPrec n (Lift a) = showsPrec n a

@@ -49,7 +49,7 @@ indices (Index as) = uncurry (flip replicate) `concatMap` toAscList as
 -- which it was found. This should be key for efficiently computing sparse hessians.
 -- there are only (n + k - 1) choose k distinct nth partial derivatives of a 
 -- function with k inputs.
-data Sparse a = Sparse a (IntMap (Sparse a)) deriving (Show, Data, Typeable)
+data Sparse a = Sparse !a (IntMap (Sparse a)) deriving (Show, Data, Typeable)
 
 -- | drop keys below a given value
 dropMap :: Int -> IntMap a -> IntMap a

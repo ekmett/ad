@@ -37,7 +37,7 @@ import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 
-data Forward a = Forward a a deriving (Show, Data, Typeable)
+data Forward a = Forward !a a deriving (Show, Data, Typeable)
 
 tangent :: AD Forward a -> a
 tangent (AD (Forward _ da)) = da

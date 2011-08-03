@@ -60,10 +60,10 @@ import Numeric.AD.Internal.Identity
 
 -- | A @Tape@ records the information needed back propagate from the output to each input during 'Reverse' 'Mode' AD.
 data Tape a t
-    = Lift a
-    | Var a {-# UNPACK #-} !Int
-    | Binary a a a t t
-    | Unary a a t
+    = Lift !a
+    | Var !a {-# UNPACK #-} !Int
+    | Binary !a a a t t
+    | Unary !a a t
     deriving (Show, Data, Typeable)
 
 -- | @Reverse@ is a 'Mode' using reverse-mode automatic differentiation that provides fast 'diffFU', 'diff2FU', 'grad', 'grad2' and a fast 'jacobian' when you have a significantly smaller number of outputs than inputs.

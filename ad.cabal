@@ -1,5 +1,5 @@
 name:         ad
-version:      1.2.0.1
+version:      1.2.0.2
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2011,
@@ -133,12 +133,12 @@ library
     build-depends: template-haskell >= 2.5 && < 2.6
   
   build-depends:       
-    base >= 4 && < 5,
-    data-reify >= 0.6 && < 0.7, 
-    containers >= 0.2 && < 0.5,
-    array >= 0.2 && < 0.4,
-    comonad >= 1.1 && < 1.2,
-    free >= 1.8 && < 1.9
+    base       >= 4     && < 5,
+    data-reify >= 0.6   && < 0.7, 
+    containers >= 0.2   && < 0.5,
+    array      >= 0.2   && < 0.4,
+    comonad    >= 1.1.1 && < 1.2,
+    free       >= 2.0   && < 2.1
   
   exposed-modules:
     Numeric.AD

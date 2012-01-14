@@ -50,7 +50,7 @@ import Numeric.AD.Internal.Composition
 findZero :: (Fractional a, Eq a) => UU a -> a -> [a]
 findZero f = go
     where
-        go x = x : if y == 0 || x == xn then [] else go xn 
+        go x = x : if x == xn then [] else go xn 
             where
                 (y,y') = diff' f x
                 xn = x - y/y'

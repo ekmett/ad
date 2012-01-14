@@ -40,7 +40,8 @@ import Numeric.AD.Internal.Composition
 
 -- | The 'findZero' function finds a zero of a scalar function using
 -- Halley's method; its output is a stream of increasingly accurate
--- results.  (Modulo the usual caveats.) 
+-- results.  (Modulo the usual caveats.) If the stream becomes constant
+-- ("it converges"), no further elements are returned.
 --
 -- Examples:
 --
@@ -60,7 +61,8 @@ findZero f = go
 
 -- | The 'inverse' function inverts a scalar function using
 -- Halley's method; its output is a stream of increasingly accurate
--- results.  (Modulo the usual caveats.)
+-- results.  (Modulo the usual caveats.) If the stream becomes constant
+-- ("it converges"), no further elements are returned.
 --
 -- Note: the @take 10 $ inverse sqrt 1 (sqrt 10)@ example that works for Newton's method
 -- fails with Halley's method because the preconditions do not hold.
@@ -72,6 +74,8 @@ inverse f x0 y = findZero (\x -> f x - lift y) x0
 -- | The 'fixedPoint' function find a fixedpoint of a scalar
 -- function using Halley's method; its output is a stream of
 -- increasingly accurate results.  (Modulo the usual caveats.)
+-- If the stream becomes constant ("it converges"), no further
+-- elements are returned.
 -- 
 -- > take 10 $ fixedPoint cos 1 -- converges to 0.7390851332151607
 fixedPoint :: (Fractional a, Eq a) => UU a -> a -> [a]
@@ -80,7 +84,8 @@ fixedPoint f = findZero (\x -> f x - x)
 
 -- | The 'extremum' function finds an extremum of a scalar
 -- function using Halley's method; produces a stream of increasingly
--- accurate results.  (Modulo the usual caveats.)
+-- accurate results.  (Modulo the usual caveats.) If the stream becomes
+-- constant ("it converges"), no further elements are returned.
 --
 -- > take 10 $ extremum cos 1 -- convert to 0 
 extremum :: (Fractional a, Eq a) => UU a -> a -> [a]

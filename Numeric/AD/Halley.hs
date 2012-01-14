@@ -52,9 +52,10 @@ import Numeric.AD.Internal.Composition
 findZero :: (Fractional a, Eq a) => UU a -> a -> [a]
 findZero f = go
     where
-        go x = x : if y == 0 then [] else go (x - 2*y*y'/(2*y'*y'-y*y''))
+        go x = x : if y == 0 || x == xn then [] else go xn
             where
                 (y:y':y'':_) = diffs0 f x
+		xn = x - 2*y*y'/(2*y'*y'-y*y'')
 {-# INLINE findZero #-}
 
 -- | The 'inverse' function inverts a scalar function using

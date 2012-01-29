@@ -1,5 +1,5 @@
 name:         ad
-version:      1.2.0.2
+version:      1.3
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2011,
@@ -14,10 +14,10 @@ cabal-version: >= 1.6
 extra-source-files: TODO
 synopsis:     Automatic Differentiation
 
-description:  
+description:
     Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.
-    . 
-    Type-level \"branding\" is used to both prevent the end user from confusing infinitesimals 
+    .
+    Type-level \"branding\" is used to both prevent the end user from confusing infinitesimals
     and to limit unsafe access to the implementation details of each Mode.
     .
     Each mode has a separate module full of combinators.
@@ -32,8 +32,8 @@ description:
     .
     * @Numeric.AD.Mode.Mixed@ computes using whichever mode or combination thereof is suitable to each individual combinator. This mode is the default, re-exported by @Numeric.AD@
     .
-    . 
-    While not every mode can provide all operations, the following basic operations are supported, modified as 
+    .
+    While not every mode can provide all operations, the following basic operations are supported, modified as
     appropriate by the suffixes below:
     .
     * 'grad' computes the gradient (partial derivatives) of a function at a point.
@@ -60,6 +60,10 @@ description:
     .
     * @0@ means that the resulting derivative list is padded with 0s at the end.
     .
+    Changes since 1.2
+    .
+    * Compiles with template haskell 2.6, changed interface to comply with the lack of Eq and Show as superclasses of Num in the new GHC.
+    .
     Changes since 1.1.3
     .
     * Made primal calculations strict where possible.
@@ -73,7 +77,7 @@ description:
     Changes since 1.0.0
     .
     * Changed the way 'Show' was derived to comply with changes in instance resolution in ghc >= 7.0 && <= 7.1
-    . 
+    .
     Changes since 0.45.0
     .
     * Converted 'Stream' to use the external 'comonad' package
@@ -103,11 +107,7 @@ source-repository head
   type: git
   location: git://github.com/ekmett/ad.git
 
-flag TemplateHaskell24
-  manual: False
-  default: False
-
-library 
+library
   extensions: CPP
 
   other-extensions:
@@ -126,47 +126,42 @@ library
     TypeOperators
     UndecidableInstances
 
-  if flag(TemplateHaskell24)
-    build-depends: template-haskell >= 2.4 && < 2.5
-    cpp-options: -DOldClassI
-  else 
-    build-depends: template-haskell >= 2.5 && < 2.6
-  
-  build-depends:       
+  build-depends:
     base       >= 4     && < 5,
-    data-reify >= 0.6   && < 0.7, 
+    data-reify >= 0.6   && < 0.7,
     containers >= 0.2   && < 0.5,
     array      >= 0.2   && < 0.4,
     comonad    >= 1.1.1 && < 1.2,
-    free       >= 2.0   && < 2.1
-  
+    free       >= 2.0   && < 2.1,
+    template-haskell >= 2.6 && < 2.7
+
   exposed-modules:
     Numeric.AD
     Numeric.AD.Classes
     Numeric.AD.Types
     Numeric.AD.Newton
     Numeric.AD.Halley
-  
+
     Numeric.AD.Internal.Classes
     Numeric.AD.Internal.Combinators
-  
+
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Tower
     Numeric.AD.Internal.Reverse
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Composition
-  
+
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward
     Numeric.AD.Mode.Mixed
     Numeric.AD.Mode.Reverse
     Numeric.AD.Mode.Tower
     Numeric.AD.Mode.Sparse
-  
+
   other-modules:
     Numeric.AD.Internal.Types
     Numeric.AD.Internal.Tensors
     Numeric.AD.Internal.Identity
-  
+
   ghc-options: -Wall -fspec-constr -fdicts-cheap -O2

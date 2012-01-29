@@ -20,7 +20,7 @@ module Numeric.AD.Internal.Composition
 
 import Control.Applicative
 import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon3, mkTyConApp, typeOfDefault, gcast1)
 import Data.Foldable (Foldable(foldMap))
 import Data.Traversable (Traversable(traverse))
 import Numeric.AD.Internal.Classes
@@ -46,7 +46,7 @@ instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeFunctor f g) where
               ga = undefined
 
 composeFunctorTyCon :: TyCon
-composeFunctorTyCon = mkTyCon "Numeric.AD.Internal.Composition.ComposeFunctor"
+composeFunctorTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Composition" "ComposeFunctor"
 {-# NOINLINE composeFunctorTyCon #-}
 
 composeFunctorConstr :: Constr
@@ -160,7 +160,7 @@ instance (Typeable1 f, Typeable1 g, Typeable a) => Typeable (ComposeMode f g a) 
     typeOf = typeOfDefault
     
 composeModeTyCon :: TyCon
-composeModeTyCon = mkTyCon "Numeric.AD.Internal.Composition.ComposeMode"
+composeModeTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Composition" "ComposeMode"
 {-# NOINLINE composeModeTyCon #-}
 
 composeModeConstr :: Constr

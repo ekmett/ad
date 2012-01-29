@@ -16,7 +16,7 @@ module Numeric.AD.Internal.Types
     ) where
 
 import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, gcast1)
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon3, mkTyConApp, gcast1)
 import Language.Haskell.TH
 import Numeric.AD.Internal.Classes
 
@@ -48,7 +48,7 @@ instance Typeable1 f => Typeable1 (AD f) where
               asArgsType = const
 
 adTyCon :: TyCon
-adTyCon = mkTyCon "Numeric.AD.Internal.Types.AD"
+adTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Types" "AD"
 {-# NOINLINE adTyCon #-}
 
 adConstr :: Constr

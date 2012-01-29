@@ -44,7 +44,7 @@ instance Iso a a where
     osi = id
 
 class Lifted t where
-    showsPrec1          :: Num a => Int -> t a -> ShowS
+    showsPrec1          :: (Num a, Show a) => Int -> t a -> ShowS
     (==!)               :: (Num a, Eq a) => t a -> t a -> Bool
     compare1            :: (Num a, Ord a) => t a -> t a -> Ordering
     fromInteger1        :: Num a => Integer -> t a

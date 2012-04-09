@@ -1,4 +1,5 @@
 {-# LANGUAGE Rank2Types, TypeFamilies, FlexibleContexts, UndecidableInstances, TemplateHaskell, DeriveDataTypeable #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |

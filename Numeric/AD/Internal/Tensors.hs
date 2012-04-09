@@ -22,7 +22,11 @@ import Control.Applicative
 import Data.Foldable
 import Data.Traversable
 import Data.Monoid
+#if __GLASGOW_HASKELL__ < 704
 import Data.Typeable (Typeable1(..), TyCon, mkTyCon, mkTyConApp)
+#else
+import Data.Typeable (Typeable1(..), TyCon, mkTyCon3, mkTyConApp)
+#endif
 import Control.Comonad.Cofree
 
 infixl 3 :-
@@ -73,5 +77,9 @@ instance Typeable1 f => Typeable1 (Tensors f) where
               asArgsType = const
 
 tensorsTyCon :: TyCon
+#if __GLASGOW_HASKELL__ < 704
 tensorsTyCon = mkTyCon "Numeric.AD.Internal.Tensors.Tensors"
+#else
+tensorsTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Tensors" "Tensors"
+#endif
 {-# NOINLINE tensorsTyCon #-}

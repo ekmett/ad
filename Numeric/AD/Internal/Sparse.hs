@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns, TemplateHaskell, TypeFamilies, TypeOperators, FlexibleContexts, UndecidableInstances, DeriveDataTypeable, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 module Numeric.AD.Internal.Sparse 
     ( Index(..)
     , emptyIndex

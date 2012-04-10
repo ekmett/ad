@@ -65,6 +65,10 @@ description:
     .
     * Removed the @UU@, @FU@, @UF@, and @FF@ type aliases.
     .
+    * Stopped exporting the types for @Mode@ and @AD@ from almost every module. Import @Numeric.AD.Types@ if necessary.
+    .
+    * Renamed @Tensors@ to @Jet@
+    .
     * Dependency bump to be compatible with ghc 7.4.1 and mtl 2.1
     .
     * More aggressive zero tracking.
@@ -107,24 +111,28 @@ library
   exposed-modules:
     Numeric.AD
     Numeric.AD.Types
+
     Numeric.AD.Newton
     Numeric.AD.Halley
-
-    Numeric.AD.Internal.Classes
-    Numeric.AD.Internal.Combinators
-
-    Numeric.AD.Internal.Forward
-    Numeric.AD.Internal.Tower
-    Numeric.AD.Internal.Reverse
-    Numeric.AD.Internal.Sparse
-    Numeric.AD.Internal.Dense
-    Numeric.AD.Internal.Composition
 
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward
     Numeric.AD.Mode.Reverse
     Numeric.AD.Mode.Tower
     Numeric.AD.Mode.Sparse
+
+    Numeric.AD.Variadic
+    Numeric.AD.Variadic.Reverse
+    Numeric.AD.Variadic.Sparse
+
+    Numeric.AD.Internal.Classes
+    Numeric.AD.Internal.Combinators
+    Numeric.AD.Internal.Forward
+    Numeric.AD.Internal.Tower
+    Numeric.AD.Internal.Reverse
+    Numeric.AD.Internal.Sparse
+    Numeric.AD.Internal.Dense
+    Numeric.AD.Internal.Composition
 
   other-modules:
     Numeric.AD.Internal.Types

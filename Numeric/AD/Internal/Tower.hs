@@ -28,7 +28,7 @@ module Numeric.AD.Internal.Tower
     ) where
 
 import Prelude hiding (all)
-import Control.Applicative
+import Control.Applicative hiding ((<**>))
 import Data.Foldable
 import Data.Data (Data)
 import Data.Typeable (Typeable)
@@ -105,6 +105,9 @@ instance Primal Tower where
 instance Lifted Tower => Mode Tower where
     lift a = Tower [a]
     zero = Tower []
+    _ <**> Tower []  = lift 1
+    x <**> Tower [y] = lift1 (**y) (\z -> (y *^ z <**> Tower [y-1])) x
+    x <**> y         = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
     Tower [] <+> bs = bs
     as <+> Tower [] = as
@@ -115,7 +118,6 @@ instance Lifted Tower => Mode Tower where
 
     a *^ Tower bs = Tower (map (a*) bs)
     Tower as ^* b = Tower (map (*b) as)
-
     Tower as ^/ b = Tower (map (/b) as)
 
 instance Lifted Tower => Jacobian Tower where

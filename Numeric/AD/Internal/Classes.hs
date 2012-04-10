@@ -1,4 +1,5 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, FunctionalDependencies, UndecidableInstances, GeneralizedNewtypeDeriving, TemplateHaskell, CPP #-}
+{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, PatternGuards, CPP #-}
+{-# LANGUAGE FlexibleContexts, FunctionalDependencies, UndecidableInstances, GeneralizedNewtypeDeriving, TemplateHaskell #-}
 -- {-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |
@@ -25,12 +26,12 @@ module Numeric.AD.Internal.Classes
     , Iso(..)
     ) where
 
-import Control.Applicative
+import Control.Applicative hiding ((<**>))
 import Data.Char
 import Language.Haskell.TH
 import Numeric.AD.Internal.Combinators (on)
 
-infixl 8 **!
+infixr 8 **!, <**>
 infixl 7 *!, /!, ^*, *^, ^/
 infixl 6 +!, -!, <+>
 infix 4 ==!
@@ -82,6 +83,13 @@ class Lifted t where
     maxBound1       :: (Num a, Bounded a) => t a
 
 class Lifted t => Mode t where
+    -- | allowed to return False for items with a zero derivative, but we'll give more NaNs than strictly necessary
+    isKnownConstant :: t a -> Bool
+    isKnownConstant _ = False
+
+    -- | allowed to return False for zero, but we give more NaN's than strictly necessary then
+    isKnownZero :: Num a => t a -> Bool
+    isKnownZero _ = False
 
     -- | Embed a constant
     lift  :: Num a => a -> t a
@@ -97,6 +105,10 @@ class Lifted t => Mode t where
 
     -- | Scalar division
     (^/) :: Fractional a => t a -> a -> t a
+
+    -- | Exponentiation, this should be overloaded if you can figure out anything about what is constant!
+    (<**>) :: Floating a => t a -> t a -> t a
+--  x <**> y = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
     -- | > 'zero' = 'lift' 0
     zero :: Num a => t a
@@ -183,14 +195,14 @@ deriveLifted :: ([Q Pred] -> [Q Pred]) -> Q Type -> Q [Dec]
 deriveLifted f _t = do
         [InstanceD cxt0 type0 dec0] <- lifted
         return <$> instanceD (cxt (f (return <$> cxt0))) (return type0) (return <$> dec0)
-    where 
-      lifted = [d| 
+    where
+      lifted = [d|
        instance Lifted $_t where
         (==!)         = (==) `on` primal
         compare1      = compare `on` primal
         maxBound1     = lift maxBound
         minBound1     = lift minBound
-        showsPrec1 d  = showsPrec d . primal 
+        showsPrec1 d  = showsPrec d . primal
         fromInteger1  = lift . fromInteger
         (+!)          = (<+>) -- binary (+) one one
         (-!)          = binary (-) one negOne -- TODO: <-> ? as it is, this might be pretty bad for Tower
@@ -201,13 +213,16 @@ deriveLifted f _t = do
         fromRational1 = lift . fromRational
         x /! y        = x *! recip1 y
         recip1        = lift1_ recip (const . negate1 . square1)
-
         pi1       = lift pi
         exp1      = lift1_ exp const
         log1      = lift1 log recip1
         logBase1 x y = log1 y /! log1 x
         sqrt1     = lift1_ sqrt (\z _ -> recip1 (lift 2 *! z))
-        (**!)     = lift2_ (**) (\z x y -> (y *! z /! x, z *! log1 x)) -- error at 0 ** n
+        (**!)     = (<**>)
+        --x **! y
+        --   | isKnownZero y     = 1
+        --   | isKnownConstant y, y' <- primal y = lift1 (** y') ((y'*) . (**(y'-1))) x
+        --   | otherwise         = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
         sin1      = lift1 sin cos1
         cos1      = lift1 cos $ negate1 . sin1
         tan1 x    = sin1 x /! cos1 x

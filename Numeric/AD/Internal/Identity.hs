@@ -27,7 +27,7 @@ import Data.Typeable (Typeable)
 import Data.Traversable (Traversable, traverse)
 import Data.Foldable (Foldable, foldMap)
 
-newtype Id a = Id a deriving
+newtype Id a = Id { runId :: a } deriving
     (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable)
 
 probe :: a -> AD Id a
@@ -133,6 +133,7 @@ instance Mode Id where
     Id a ^* b = Id (a * b)
     a *^ Id b = Id (a * b)
     Id a <+> Id b = Id (a + b)
+    Id a <**> Id b = Id (a ** b)
 
 instance Primal Id where
     primal (Id a) = a

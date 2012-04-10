@@ -44,19 +44,22 @@ import Numeric.AD.Internal.Identity
 data Dense f a
     = Lift !a
     | Dense !a (f a)
+    | Zero
 
 instance Show a => Show (Dense f a) where
-    showsPrec n (Lift a) = showsPrec n a
-    showsPrec n (Dense a _) = showsPrec n a
+    showsPrec d (Lift a)    = showsPrec d a
+    showsPrec d (Dense a _) = showsPrec d a
+    showsPrec _ Zero        = showString "0"
 
 ds :: f a -> AD (Dense f) a -> f a
-ds _    (AD (Dense _ da)) = da
-ds z _                = z
+ds _ (AD (Dense _ da)) = da
+ds z _ = z
 {-# INLINE ds #-}
 
-ds' :: f a -> AD (Dense f) a -> (a, f a)
-ds' _    (AD (Dense a da)) = (a, da)
-ds' z (AD (Lift a))    = (a, z)
+ds' :: Num a => f a -> AD (Dense f) a -> (a, f a)
+ds' _ (AD (Dense a da)) = (a, da)
+ds' z (AD (Lift a)) = (a, z)
+ds' z (AD Zero) = (0, z)
 {-# INLINE ds' #-}
 
 -- Bind variables and count inputs
@@ -72,75 +75,102 @@ apply f as = f (vars as)
 {-# INLINE apply #-}
 
 instance Primal (Dense f) where
+    primal Zero = 0
     primal (Lift a) = a
     primal (Dense a _) = a
 
 instance (Traversable f, Lifted (Dense f)) => Mode (Dense f) where
     lift = Lift
-    Lift a <+> Lift b = Lift (a + b)
-    Lift a <+> Dense b db = Dense (a + b) db
-    Dense a da <+> Lift b = Dense (a + b) da
+    zero = Zero
+
+    Zero <+> a = a
+    a <+> Zero = a
+    Lift a     <+> Lift b     = Lift (a + b)
+    Lift a     <+> Dense b db = Dense (a + b) db
+    Dense a da <+> Lift b     = Dense (a + b) da
     Dense a da <+> Dense b db = Dense (a + b) $ zipWithT (+) da db
-    a *^ Lift b    = Lift (a * b)
+
+    _ <**> Zero   = lift 1
+    x <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
+    x <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
+
+    _ *^ Zero       = Zero
+    a *^ Lift b     = Lift (a * b)
     a *^ Dense b db = Dense (a * b) $ fmap (a*) db
-    Lift a    ^* b = Lift (a * b)
+    Zero       ^* _ = Zero
+    Lift a     ^* b = Lift (a * b)
     Dense a da ^* b = Dense (a * b) $ fmap (*b) da
-    Lift a    ^/ b = Lift (a / b)
+    Zero       ^/ _ = Zero
+    Lift a     ^/ b = Lift (a / b)
     Dense a da ^/ b = Dense (a / b) $ fmap (/b) da
 
 instance (Traversable f, Lifted (Dense f)) => Jacobian (Dense f) where
     type D (Dense f) = Id
+    unary f _         Zero        = Lift (f 0)
     unary f _         (Lift b)    = Lift (f b)
     unary f (Id dadb) (Dense b db) = Dense (f b) (fmap (dadb *) db)
 
+    lift1 f _  Zero        = Lift (f 0)
     lift1 f _  (Lift b)    = Lift (f b)
     lift1 f df (Dense b db) = Dense (f b) (fmap (dadb *) db)
         where
             Id dadb = df (Id b)
 
+    lift1_ f _  Zero         = Lift (f 0)
     lift1_ f _  (Lift b)     = Lift (f b)
     lift1_ f df (Dense b db) = Dense a (fmap (dadb *) db)
         where
             a = f b
             Id dadb = df (Id a) (Id b)
 
-    binary f _ _ (Lift b) (Lift c)
-        = Lift (f b c)
-    binary f _ (Id dadc) (Lift b) (Dense c dc)
-        = Dense (f b c) $ fmap (* dadc) dc
-    binary f (Id dadb) _ (Dense b db) (Lift c)
-        = Dense (f b c) $ fmap (dadb *) db
-    binary f (Id dadb) (Id dadc) (Dense b db) (Dense c dc)
-        = Dense (f b c) $ zipWithT productRule db dc
-        where
-            productRule dbi dci = dadb * dbi + dci * dadc
+    binary f _          _        Zero         Zero         = Lift (f 0 0)
+    binary f _          _        Zero         (Lift c)     = Lift (f 0 c)
+    binary f _          _        (Lift b)     Zero         = Lift (f b 0)
+    binary f _          _        (Lift b)     (Lift c)     = Lift (f b c)
+    binary f _         (Id dadc) Zero         (Dense c dc) = Dense (f 0 c) $ fmap (* dadc) dc
+    binary f _         (Id dadc) (Lift b)     (Dense c dc) = Dense (f b c) $ fmap (* dadc) dc
+    binary f (Id dadb) _         (Dense b db) Zero         = Dense (f b 0) $ fmap (dadb *) db
+    binary f (Id dadb) _         (Dense b db) (Lift c)     = Dense (f b c) $ fmap (dadb *) db
+    binary f (Id dadb) (Id dadc) (Dense b db) (Dense c dc) = Dense (f b c) $ zipWithT productRule db dc
+        where productRule dbi dci = dadb * dbi + dci * dadc
 
-    lift2 f _  (Lift b) (Lift c)
-        = Lift (f b c)
-    lift2 f df (Lift b) (Dense c dc)
-        = Dense (f b c) $ fmap (*dadc) dc
-        where
-            (_, Id dadc) = df (Id b) (Id c)
-    lift2 f df (Dense b db) (Lift c)
-        = Dense (f b c) $ fmap (dadb*) db
-        where
-            (Id dadb, _) = df (Id b) (Id c)
+    lift2 f _  Zero         Zero         = Lift (f 0 0)
+    lift2 f _  Zero         (Lift c)     = Lift (f 0 c)
+    lift2 f _  (Lift b)     Zero         = Lift (f b 0)
+    lift2 f _  (Lift b)     (Lift c)     = Lift (f b c)
+    lift2 f df Zero         (Dense c dc) = Dense (f 0 c) $ fmap (*dadc) dc where dadc = runId (snd (df (Id 0) (Id c)))
+    lift2 f df (Lift b)     (Dense c dc) = Dense (f b c) $ fmap (*dadc) dc where dadc = runId (snd (df (Id b) (Id c)))
+    lift2 f df (Dense b db) Zero         = Dense (f b 0) $ fmap (dadb*) db where dadb = runId (fst (df (Id b) (Id 0)))
+    lift2 f df (Dense b db) (Lift c)     = Dense (f b c) $ fmap (dadb*) db where dadb = runId (fst (df (Id b) (Id c)))
     lift2 f df (Dense b db) (Dense c dc) = Dense (f b c) da
         where
             (Id dadb, Id dadc) = df (Id b) (Id c)
             da = zipWithT productRule db dc
             productRule dbi dci = dadb * dbi + dci * dadc
 
+    lift2_ f _  Zero     Zero     = Lift (f 0 0)
+    lift2_ f _  Zero     (Lift c) = Lift (f 0 c)
+    lift2_ f _  (Lift b) Zero     = Lift (f b 0)
     lift2_ f _  (Lift b) (Lift c) = Lift (f b c)
+    lift2_ f df Zero     (Dense c dc)
+        = Dense a $ fmap (*dadc) dc
+        where
+            a = f 0 c
+            (_, Id dadc) = df (Id a) (Id 0) (Id c)
     lift2_ f df (Lift b) (Dense c dc)
         = Dense a $ fmap (*dadc) dc
         where
-            a = (f b c)
+            a = f b c
             (_, Id dadc) = df (Id a) (Id b) (Id c)
+    lift2_ f df (Dense b db) Zero
+        = Dense a $ fmap (dadb*) db
+        where
+            a = f b 0
+            (Id dadb, _) = df (Id a) (Id b) (Id 0)
     lift2_ f df (Dense b db) (Lift c)
         = Dense a $ fmap (dadb*) db
         where
-            a = (f b c)
+            a = f b c
             (Id dadb, _) = df (Id a) (Id b) (Id c)
     lift2_ f df (Dense b db) (Dense c dc)
         = Dense a $ zipWithT productRule db dc

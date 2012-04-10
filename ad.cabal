@@ -1,5 +1,5 @@
 name:         ad
-version:      1.3.1
+version:      1.4
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2011,
@@ -62,7 +62,9 @@ description:
     .
     Changes since 1.3
     .
-    * Dependency bump to be compatible with ghc 7.4.1
+    * Dependency bump to be compatible with ghc 7.4.1 and mtl 2.1
+    .
+    * Work on diff (**2) 0
     .
     Changes since 1.2
     .

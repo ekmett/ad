@@ -18,7 +18,7 @@ module Numeric.AD.Internal.Composition
     , decomposeMode
     ) where
 
-import Control.Applicative
+import Control.Applicative hiding ((<**>))
 import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
 import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon3, mkTyConApp, typeOfDefault, gcast1)
 import Data.Foldable (Foldable(foldMap))
@@ -84,6 +84,7 @@ instance (Mode f, Mode g) => Mode (ComposeMode f g) where
     a *^ ComposeMode b = ComposeMode (lift a *^ b)
     ComposeMode a ^* b = ComposeMode (a ^* lift b)
     ComposeMode a ^/ b = ComposeMode (a ^/ lift b)
+    ComposeMode a <**> ComposeMode b = ComposeMode (a <**> b)
 
 instance (Mode f, Mode g) => Lifted (ComposeMode f g) where
     showsPrec1 n (ComposeMode a) = showsPrec1 n a

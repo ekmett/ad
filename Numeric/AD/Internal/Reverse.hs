@@ -60,7 +60,8 @@ import Numeric.AD.Internal.Identity
 
 -- | A @Tape@ records the information needed back propagate from the output to each input during 'Reverse' 'Mode' AD.
 data Tape a t
-    = Lift !a
+    = Zero
+    | Lift !a
     | Var !a {-# UNPACK #-} !Int
     | Binary !a a a t t
     | Unary !a a t
@@ -74,6 +75,7 @@ newtype Reverse a = Reverse (Tape a (Reverse a)) deriving (Show, Typeable)
 instance MuRef (Reverse a) where
     type DeRef (Reverse a) = Tape a
 
+    mapDeRef _ (Reverse Zero) = pure Zero
     mapDeRef _ (Reverse (Lift a)) = pure (Lift a)
     mapDeRef _ (Reverse (Var a v)) = pure (Var a v)
     mapDeRef f (Reverse (Binary a dadb dadc b c)) = Binary a dadb dadc <$> f b <*> f c
@@ -81,12 +83,18 @@ instance MuRef (Reverse a) where
 
 instance Lifted Reverse => Mode Reverse where
     lift a = Reverse (Lift a)
+    zero   = Reverse Zero
     (<+>)  = binary (+) one one
     a *^ b = lift1 (a *) (\_ -> lift a) b
     a ^* b = lift1 (* b) (\_ -> lift b) a
     a ^/ b = lift1 (/ b) (\_ -> lift (recip b)) a
 
+    _ <**> Reverse Zero     = lift 1
+    x <**> Reverse (Lift y) = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
+    x <**> y                = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
+
 instance Primal Reverse where
+    primal (Reverse Zero) = 0
     primal (Reverse (Lift a)) = a
     primal (Reverse (Var a _)) = a
     primal (Reverse (Binary a _ _ _ _)) = a
@@ -95,6 +103,7 @@ instance Primal Reverse where
 instance Lifted Reverse => Jacobian Reverse where
     type D Reverse = Id
 
+    unary f _         (Reverse Zero)     = Reverse (Lift (f 0))
     unary f _         (Reverse (Lift a)) = Reverse (Lift (f a))
     unary f (Id dadb) b                  = Reverse (Unary (f (primal b)) dadb b)
 
@@ -105,8 +114,13 @@ instance Lifted Reverse => Jacobian Reverse where
         where pb = primal b
               a = f pb
 
+    binary f _         _         (Reverse Zero)     (Reverse Zero)     = Reverse (Lift (f 0 0))
+    binary f _         _         (Reverse Zero)     (Reverse (Lift c)) = Reverse (Lift (f 0 c))
+    binary f _         _         (Reverse (Lift b)) (Reverse Zero)     = Reverse (Lift (f b 0))
     binary f _         _         (Reverse (Lift b)) (Reverse (Lift c)) = Reverse (Lift (f b c))
+    binary f _         (Id dadc) (Reverse Zero)     c                  = Reverse (Unary (f 0 (primal c)) dadc c)
     binary f _         (Id dadc) (Reverse (Lift b)) c                  = Reverse (Unary (f b (primal c)) dadc c)
+    binary f (Id dadb) _         b                  (Reverse Zero)     = Reverse (Unary (f (primal b) 0) dadb b)
     binary f (Id dadb) _         b                  (Reverse (Lift c)) = Reverse (Unary (f (primal b) c) dadb b)
     binary f (Id dadb) (Id dadc) b                  c                  = Reverse (Binary (f (primal b) (primal c)) dadb dadc b c)
 

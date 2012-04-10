@@ -63,6 +63,8 @@ description:
     .
     * Moved the contents of @Numeric.AD.Mode.Mixed@ into @Numeric.AD@
     .
+    * Split off @Numeric.AD.Variadic@ for the variadic combinators
+    .
     * Removed the @UU@, @FU@, @UF@, and @FF@ type aliases.
     .
     * Stopped exporting the types for @Mode@ and @AD@ from almost every module. Import @Numeric.AD.Types@ if necessary.

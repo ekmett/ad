@@ -2,7 +2,7 @@
 {-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Internal.Tensors
+-- Module      :  Numeric.AD.Internal.Jet
 -- Copyright   :  (c) Edward Kmett 2010
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
@@ -11,11 +11,11 @@
 --
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Internal.Tensors
-    ( Tensors(..)
-    , headT
-    , tailT
-    , tensors
+module Numeric.AD.Internal.Jet
+    ( Jet(..)
+    , headJet
+    , tailJet
+    , jet
     ) where
 
 import Control.Applicative
@@ -31,7 +31,8 @@ import Control.Comonad.Cofree
 
 infixl 3 :-
 
-data Tensors f a = a :- Tensors f (f a)
+-- | A jet is a tower of all (higher order) partial derivatives of a function
+data Jet f a = a :- Jet f (f a)
 
 newtype Showable = Showable (Int -> String -> String)
 
@@ -42,44 +43,44 @@ showable :: Show a => a -> Showable
 showable a = Showable (\d -> showsPrec d a)
 
 -- Polymorphic recursion precludes 'Data' in its current form, as no Data1 class exists
--- Polymorphic recursion also breaks 'show' for 'Tensors'!
+-- Polymorphic recursion also breaks 'show' for 'Jet'!
 -- factor Show1 out of Lifted?
-instance (Functor f, Show (f Showable), Show a) => Show (Tensors f a) where
-  showsPrec d (a :- as) = showParen (d > 3) $ 
+instance (Functor f, Show (f Showable), Show a) => Show (Jet f a) where
+  showsPrec d (a :- as) = showParen (d > 3) $
     showsPrec 4 a . showString " :- " . showsPrec 3 (fmap showable <$> as)
 
-instance Functor f => Functor (Tensors f) where
+instance Functor f => Functor (Jet f) where
     fmap f (a :- as) = f a :- fmap (fmap f) as
 
-instance Foldable f => Foldable (Tensors f) where
+instance Foldable f => Foldable (Jet f) where
     foldMap f (a :- as) = f a `mappend` foldMap (foldMap f) as
 
-instance Traversable f => Traversable (Tensors f) where
+instance Traversable f => Traversable (Jet f) where
     traverse f (a :- as) = (:-) <$> f a <*> traverse (traverse f) as
 
-tailT :: Tensors f a -> Tensors f (f a)
-tailT (_ :- as) = as
-{-# INLINE tailT #-}
+tailJet :: Jet f a -> Jet f (f a)
+tailJet (_ :- as) = as
+{-# INLINE tailJet #-}
 
-headT :: Tensors f a -> a
-headT (a :- _) = a
-{-# INLINE headT #-}
+headJet :: Jet f a -> a
+headJet (a :- _) = a
+{-# INLINE headJet #-}
 
-tensors :: Functor f => Cofree f a -> Tensors f a
-tensors (a :< as) = a :- dist (tensors <$> as)
+jet :: Functor f => Cofree f a -> Jet f a
+jet (a :< as) = a :- dist (jet <$> as)
     where
-        dist :: Functor f => f (Tensors f a) -> Tensors f (f a)
-        dist x = (headT <$> x) :- dist (tailT <$> x)
+        dist :: Functor f => f (Jet f a) -> Jet f (f a)
+        dist x = (headJet <$> x) :- dist (tailJet <$> x)
 
-instance Typeable1 f => Typeable1 (Tensors f) where
-    typeOf1 tfa = mkTyConApp tensorsTyCon [typeOf1 (undefined `asArgsType` tfa)]
+instance Typeable1 f => Typeable1 (Jet f) where
+    typeOf1 tfa = mkTyConApp jetTyCon [typeOf1 (undefined `asArgsType` tfa)]
         where asArgsType :: f a -> t f a -> f a
               asArgsType = const
 
-tensorsTyCon :: TyCon
+jetTyCon :: TyCon
 #if __GLASGOW_HASKELL__ < 704
-tensorsTyCon = mkTyCon "Numeric.AD.Internal.Tensors.Tensors"
+jetTyCon = mkTyCon "Numeric.AD.Internal.Jet.Jet"
 #else
-tensorsTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Tensors" "Tensors"
+jetTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Jet" "Jet"
 #endif
-{-# NOINLINE tensorsTyCon #-}
+{-# NOINLINE jetTyCon #-}

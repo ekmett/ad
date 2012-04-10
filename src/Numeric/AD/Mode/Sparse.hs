@@ -97,7 +97,7 @@ jacobians f as = ds as <$> apply f as
 {-# INLINE jacobians #-}
 
 d2 :: Functor f => Cofree f a -> f (f a)
-d2 = headT . tailT . tailT . tensors
+d2 = headJet . tailJet . tailJet . jet
 {-# INLINE d2 #-}
 
 d2' :: Functor f => Cofree f a -> (a, f (a, f a))

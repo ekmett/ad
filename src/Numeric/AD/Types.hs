@@ -16,18 +16,18 @@ module Numeric.AD.Types
       Mode(..)
     -- * AD variables
     , AD(..)
-    -- * Tensors
-    , Tensors(..)
-    , headT
-    , tailT
-    , tensors
+    -- * Jets
+    , Jet(..)
+    , headJet
+    , tailJet
+    , jet
     -- * Apply functions that use 'lift'
     , lowerUU, lowerUF, lowerFU, lowerFF
     ) where
 
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Internal.Types
-import Numeric.AD.Internal.Tensors
+import Numeric.AD.Internal.Jet
 import Numeric.AD.Internal.Classes
 
 -- these exploit the 'magic' that is probed to avoid the need for Functor, etc.

@@ -128,7 +128,7 @@ library
 
   other-modules:
     Numeric.AD.Internal.Types
-    Numeric.AD.Internal.Tensors
+    Numeric.AD.Internal.Jet
     Numeric.AD.Internal.Identity
 
   ghc-options: -Wall -fspec-constr -fdicts-cheap -O2

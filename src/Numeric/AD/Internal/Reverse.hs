@@ -89,9 +89,10 @@ instance Lifted Reverse => Mode Reverse where
     a ^* b = lift1 (* b) (\_ -> lift b) a
     a ^/ b = lift1 (/ b) (\_ -> lift (recip b)) a
 
-    _ <**> Reverse Zero     = lift 1
-    x <**> Reverse (Lift y) = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
-    x <**> y                = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
+    Reverse Zero <**> y                = lift (0 ** primal y)
+    _            <**> Reverse Zero     = lift 1
+    x            <**> Reverse (Lift y) = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
+    x            <**> y                = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
 instance Primal Reverse where
     primal (Reverse Zero) = 0

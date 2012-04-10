@@ -84,9 +84,10 @@ instance Lifted Forward => Mode Forward where
     Lift a <+> Forward b db = Forward (a + b) db
     Lift a <+> Lift b = Lift (a + b)
 
-    _ <**> Zero = lift 1
-    x <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
-    x <**> y = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
+    Zero <**> y      = lift (0 ** primal y)
+    _    <**> Zero   = lift 1
+    x    <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
+    x    <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
     a *^ Forward b db = Forward (a * b) (a * db)
     a *^ Lift b = Lift (a * b)

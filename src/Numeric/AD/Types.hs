@@ -11,19 +11,16 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Types
-    ( 
-      AD(..)
-    -- * Differentiable Functions
-    , UU, UF, FU, FF
+    (
+    -- * AD modes
+      Mode(..)
+    -- * AD variables
+    , AD(..)
     -- * Tensors
     , Tensors(..)
     , headT
     , tailT
     , tensors
-    -- * An Identity Mode. 
-    , Id(..)
-    , probe, unprobe
-    , probed, unprobed
     -- * Apply functions that use 'lift'
     , lowerUU, lowerUF, lowerFU, lowerFF
     ) where
@@ -31,21 +28,22 @@ module Numeric.AD.Types
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Tensors
+import Numeric.AD.Internal.Classes
 
 -- these exploit the 'magic' that is probed to avoid the need for Functor, etc.
 
-lowerUU :: UU a -> a -> a
+lowerUU :: (forall s. Mode s => AD s a -> AD s a) -> a -> a
 lowerUU f = unprobe . f . probe
 {-# INLINE lowerUU #-}
 
-lowerUF :: UF f a -> a -> f a
+lowerUF :: (forall s. Mode s => AD s a -> f (AD s a)) -> a -> f a
 lowerUF f = unprobed . f . probe
 {-# INLINE lowerUF #-}
 
-lowerFU :: FU f a -> f a -> a
+lowerFU :: (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> a
 lowerFU f = unprobe . f . probed
 {-# INLINE lowerFU #-}
 
-lowerFF :: FF f g a -> f a -> g a
+lowerFF :: (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g a
 lowerFF f = unprobed . f . probed
 {-# INLINE lowerFF #-}

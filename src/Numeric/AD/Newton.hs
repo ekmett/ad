@@ -20,17 +20,12 @@ module Numeric.AD.Newton
     -- * Gradient Ascent/Descent (Reverse AD)
     , gradientDescent
     , gradientAscent
-    -- * Exposed Types
-    , UU, UF, FU, FF
-    , AD(..)
-    , Mode(..)
     ) where
 
 import Prelude hiding (all)
 import Data.Foldable (all)
 import Data.Traversable (Traversable)
 import Numeric.AD.Types
-import Numeric.AD.Classes
 import Numeric.AD.Mode.Forward (diff, diff')
 import Numeric.AD.Mode.Reverse (gradWith')
 import Numeric.AD.Internal.Composition
@@ -46,10 +41,10 @@ import Numeric.AD.Internal.Composition
 --  > module Data.Complex
 --  > take 10 $ findZero ((+1).(^2)) (1 :+ 1)  -- converge to (0 :+ 1)@
 --
-findZero :: (Fractional a, Eq a) => UU a -> a -> [a]
+findZero :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 findZero f = go
     where
-        go x = x : if y == 0 then [] else go (x - y/y') 
+        go x = x : if y == 0 then [] else go (x - y/y')
             where
                 (y,y') = diff' f x
 {-# INLINE findZero #-}
@@ -62,16 +57,16 @@ findZero f = go
 --
 -- > take 10 $ inverseNewton sqrt 1 (sqrt 10)  -- converges to 10
 --
-inverse :: (Fractional a, Eq a) => UU a -> a -> a -> [a]
+inverse :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
 inverse f x0 y = findZero (\x -> f x - lift y) x0
 {-# INLINE inverse  #-}
 
 -- | The 'fixedPoint' function find a fixedpoint of a scalar
 -- function using Newton's method; its output is a stream of
 -- increasingly accurate results.  (Modulo the usual caveats.)
--- 
+--
 -- > take 10 $ fixedPoint cos 1 -- converges to 0.7390851332151607
-fixedPoint :: (Fractional a, Eq a) => UU a -> a -> [a]
+fixedPoint :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
 
@@ -79,8 +74,8 @@ fixedPoint f = findZero (\x -> f x - x)
 -- function using Newton's method; produces a stream of increasingly
 -- accurate results.  (Modulo the usual caveats.)
 --
--- > take 10 $ extremum cos 1 -- convert to 0 
-extremum :: (Fractional a, Eq a) => UU a -> a -> [a]
+-- > take 10 $ extremum cos 1 -- convert to 0
+extremum :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}
 
@@ -91,7 +86,7 @@ extremum f = findZero (diff (decomposeMode . f . composeMode))
 -- increasingly accurate results.  (Modulo the usual caveats.)
 --
 -- It uses reverse mode automatic differentiation to compute the gradient.
-gradientDescent :: (Traversable f, Fractional a, Ord a) => FU f a -> f a -> [f a]
+gradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
 gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
     where
         (fx0, xgx0) = gradWith' (,) f x0
@@ -108,6 +103,6 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
                 (fx1, xgx1) = gradWith' (,) f x1
 {-# INLINE gradientDescent #-}
 
-gradientAscent :: (Traversable f, Fractional a, Ord a) => FU f a -> f a -> [f a]
+gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
 gradientAscent f = gradientDescent (negate . f)
 {-# INLINE gradientAscent #-}

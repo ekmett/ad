@@ -1,8 +1,8 @@
 name:         ad
-version:      1.4
+version:      1.5
 license:      BSD3
 license-File: LICENSE
-copyright:    (c) Edward Kmett 2010-2011,
+copyright:    (c) Edward Kmett 2010-2012,
               (c) Barak Pearlmutter and Jeffrey Mark Siskind 2008-2009
 author:       Edward Kmett
 maintainer:   ekmett@gmail.com
@@ -30,8 +30,7 @@ description:
     .
     * @Numeric.AD.Mode.Tower@ computes a dense forward-mode AD tower useful for higher derivatives of single input functions.
     .
-    * @Numeric.AD.Mode.Mixed@ computes using whichever mode or combination thereof is suitable to each individual combinator. This mode is the default, re-exported by @Numeric.AD@
-    .
+    * @Numeric.AD@ computes using whichever mode or combination thereof is suitable to each individual combinator.
     .
     While not every mode can provide all operations, the following basic operations are supported, modified as
     appropriate by the suffixes below:
@@ -60,54 +59,17 @@ description:
     .
     * @0@ means that the resulting derivative list is padded with 0s at the end.
     .
-    Changes since 1.3
+    /Changes since 1.3/:
+    .
+    * Moved the contents of @Numeric.AD.Mode.Mixed@ into @Numeric.AD@
+    .
+    * Removed the @UU@, @FU@, @UF@, and @FF@ type aliases.
     .
     * Dependency bump to be compatible with ghc 7.4.1 and mtl 2.1
     .
-    * Work on diff (**2) 0
+    * More aggressive zero tracking.
     .
-    Changes since 1.2
-    .
-    * Compiles with template haskell 2.6, changed interface to comply with the lack of Eq and Show as superclasses of Num in the new GHC.
-    .
-    Changes since 1.1.3
-    .
-    * Made primal calculations strict where possible.
-    .
-    Changes since 1.1.0
-    .
-    * Introduced a much faster topological sort into the reverse mode AD implementation by Anthony Cowley. This fixes a space leak and a stack overflow problem on very large (>2000 variable) problem sets.
-    .
-    * Made bound calculations in reverse mode more strict.
-    .
-    Changes since 1.0.0
-    .
-    * Changed the way 'Show' was derived to comply with changes in instance resolution in ghc >= 7.0 && <= 7.1
-    .
-    Changes since 0.45.0
-    .
-    * Converted 'Stream' to use the external 'comonad' package
-    .
-    Changes since 0.44.5
-    .
-    * Added Halley's method
-    .
-    Changes since 0.40.0
-    .
-    * Fixed bug fix for @'(/)' :: (Mode s, Fractional a) => AD s a@
-    .
-    * Improved documentation
-    .
-    * Regularized naming conventions
-    .
-    * Exposed 'Id', probe, and lower methods via @Numeric.AD.Types@
-    .
-    * Removed monadic combinators
-    .
-    * Retuned the 'Mixed' mode jacobian calculations to only require a 'Functor'-based result.
-    .
-    * Added unsafe variadic 'vgrad', 'vgrad'', and 'vgrads' combinators
-
+    * @diff (**n) 0@ for constant n and @diff (0**)@ both now yield the correct answer for all modes.
 
 source-repository head
   type: git
@@ -115,6 +77,7 @@ source-repository head
 
 library
   extensions: CPP
+  hs-source-dirs: src
 
   other-extensions:
     BangPatterns
@@ -143,7 +106,6 @@ library
 
   exposed-modules:
     Numeric.AD
-    Numeric.AD.Classes
     Numeric.AD.Types
     Numeric.AD.Newton
     Numeric.AD.Halley
@@ -160,7 +122,6 @@ library
 
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward
-    Numeric.AD.Mode.Mixed
     Numeric.AD.Mode.Reverse
     Numeric.AD.Mode.Tower
     Numeric.AD.Mode.Sparse

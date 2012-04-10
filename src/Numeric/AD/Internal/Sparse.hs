@@ -150,8 +150,9 @@ instance Primal Sparse where
 instance Lifted Sparse => Mode Sparse where
     lift a = Sparse a IntMap.empty
     zero = Zero
-    _ <**> Zero = lift 1
-    x <**> y@(Sparse b bs)
+    Zero <**> y    = lift (0 ** primal y)
+    _    <**> Zero = lift 1
+    x    <**> y@(Sparse b bs)
       | IntMap.null bs = lift1 (**b) (\z -> (b *^ z <**> Sparse (b-1) IntMap.empty)) x
       | otherwise      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
     Zero <+> a = a

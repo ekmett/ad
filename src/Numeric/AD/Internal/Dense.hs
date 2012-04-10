@@ -90,9 +90,10 @@ instance (Traversable f, Lifted (Dense f)) => Mode (Dense f) where
     Dense a da <+> Lift b     = Dense (a + b) da
     Dense a da <+> Dense b db = Dense (a + b) $ zipWithT (+) da db
 
-    _ <**> Zero   = lift 1
-    x <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
-    x <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
+    Zero <**> y      = lift (0 ** primal y)
+    _    <**> Zero   = lift 1
+    x    <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
+    x    <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
     _ *^ Zero       = Zero
     a *^ Lift b     = Lift (a * b)

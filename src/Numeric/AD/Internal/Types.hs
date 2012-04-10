@@ -12,7 +12,6 @@
 -----------------------------------------------------------------------------
 module Numeric.AD.Internal.Types
     ( AD(..)
-    , UU, UF, FU, FF
     ) where
 
 import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
@@ -28,19 +27,10 @@ newtype AD f a = AD { runAD :: f a } deriving (Iso (f a), Lifted, Mode, Primal)
 
 -- > instance (Lifted f, Num a) => Num (AD f a)
 -- etc.
-let f = varT (mkName "f") in 
-    deriveNumeric 
-        (classP ''Lifted [f]:) 
+let f = varT (mkName "f") in
+    deriveNumeric
+        (classP ''Lifted [f]:)
         (conT ''AD `appT` f)
-
--- | A scalar-to-scalar automatically-differentiable function.
-type UU a = forall s. Mode s => AD s a -> AD s a
--- | A scalar-to-non-scalar automatically-differentiable function.
-type UF f a = forall s. Mode s => AD s a -> f (AD s a)
--- | A non-scalar-to-scalar automatically-differentiable function.
-type FU f a = forall s. Mode s => f (AD s a) -> AD s a
--- | A non-scalar-to-non-scalar automatically-differentiable function.
-type FF f g a = forall s. Mode s => f (AD s a) -> g (AD s a)
 
 instance Typeable1 f => Typeable1 (AD f) where
     typeOf1 tfa = mkTyConApp adTyCon [typeOf1 (undefined `asArgsType` tfa)]

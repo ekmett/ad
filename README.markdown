@@ -19,7 +19,7 @@ Features
 Examples
 ---------
 
-You can compute derivatives of functions 
+You can compute derivatives of functions
 
     Prelude Numeric.AD> diff sin 0 {-# cos 0 #-}
     1.0
@@ -39,7 +39,7 @@ You can compute gradients for functions that take non-scalar values in the form 
     Prelude Numeric.AD Debug.SimpleReflect> grad (\[x,y,z] -> x * sin (x + log y)) [x,y,z]
     [ 0 + (0 + sin (x + log y) * 1 + 1 * (0 + cos (x + log y) * (0 + x * 1)))
     , 0 + (0 + recip y * (0 + 1 * (0 + cos (x + log y) * (0 + x * 1))))
-    , 0 
+    , 0
     ]
 
 which one can simplify to:
@@ -51,27 +51,27 @@ If you need multiple derivatives you can calculate them with `diffs`:
     Prelude Numeric.AD> take 10 $ diffs sin 1
     [0.8414709848078965,0.5403023058681398,-0.8414709848078965,-0.5403023058681398,0.8414709848078965,0.5403023058681398,-0.8414709848078965,-0.5403023058681398,0.8414709848078965,0.5403023058681398]
 
-or if your function takes multiple inputs, you can use grads, which returns an 'f-branching stream' of derivatives. Somewhat more intuitive answers can be obtained by converting the stream into the 
+or if your function takes multiple inputs, you can use grads, which returns an 'f-branching stream' of derivatives. Somewhat more intuitive answers can be obtained by converting the stream into the
 polymorphically recursive `Tensors` data type. With that we can look at a single 'layer' of the answer at a time:
 
 The answer:
-   
-    Prelude Numeric.AD> headT $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
+
+    Prelude Numeric.AD> headJet $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
     7.38905609893065
 
 The gradient:
 
-    Prelude Numeric.AD> headT $ tailT $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
+    Prelude Numeric.AD> headJet $ tailJet $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
     [14.7781121978613,7.38905609893065]
 
 The hessian (n * n matrix of 2nd derivatives)
 
-    Prelude Numeric.AD> headT $ tailT $ tailT $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
+    Prelude Numeric.AD> headJet $ tailJet $ tailJet $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
     [[29.5562243957226,22.16716829679195],[22.16716829679195,7.38905609893065]]
 
 Or even higher order tensors of derivatives.
 
-    Prelude Numeric.AD> headT $ tailT $ tailT $ tailT $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
+    Prelude Numeric.AD> headJet $ tailJet $ tailJet $ tailJet $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
     [[[59.1124487914452,44.3343365935839],[44.3343365935839,14.7781121978613]],[[44.3343365935839,14.7781121978613],[14.7781121978613,7.38905609893065]]]
 
 Note the redundant values caused by the various symmetries in the tensors. The 'ad' library is careful to compute each distinct derivative only once and to share the resulting thunks.
@@ -81,10 +81,11 @@ Overview
 
 ### Modules
 
+ * `Numeric.AD` computes using whichever mode or combination thereof is suitable to each individual combinator. This mode is the default, re-exported by `Numeric.AD`
  * `Numeric.AD.Mode.Forward` provides basic forward-mode AD. It is good for computing simple derivatives.
  * `Numeric.AD.Mode.Sparse` computes a sparse forward-mode AD tower. It is good for higher derivatives or large numbers of outputs.
  * `Numeric.AD.Mode.Tower` computes a dense forward-mode AD tower useful for higher derivatives of single input functions.
- * `Numeric.AD.Mode.Mixed` computes using whichever mode or combination thereof is suitable to each individual combinator. This mode is the default, re-exported by `Numeric.AD`
+
  * `Numeric.AD.Newton` provides a number of combinators for root finding using Newton's method with quadratic convergence.
  * `Numeric.AD.Halley` provides a number of combinators for root finding using Halley's method with cubic convergence.
 
@@ -106,7 +107,7 @@ The following suffixes alter the meanings of the functions above as follows:
  * `With` lets the user supply a function to blend the input with the output
  * `F` is a version of the base function lifted to return a `Traversable` (or `Functor`) result
  * `s` means the function returns all higher derivatives in a list or f-branching `Stream`
- * `T` means the result is transposed with respect to the traditional formulation.
+ * `T` means the result is transposed with respect to the traditional formulation (usually to avoid paying for transposing back)
  * `0` means that the resulting derivative list is padded with 0s at the end.
 
 Contact Information

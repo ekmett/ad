@@ -108,7 +108,7 @@ library
     array            >= 0.2     && < 0.5,
     comonad          >= 1.1.1.5 && < 1.2,
     free             >= 2.1.1   && < 2.2,
-    template-haskell >= 2.6     && < 2.8
+    template-haskell >= 2.5     && < 2.8
 
   exposed-modules:
     Numeric.AD

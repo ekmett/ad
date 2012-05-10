@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TemplateHaskell, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 {-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
@@ -14,8 +15,16 @@ module Numeric.AD.Internal.Types
     ( AD(..)
     ) where
 
+#ifndef MIN_VERSION_base
+#define MIN_VERSION_base (x,y,z) 1
+#endif
+
 import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
+#if MIN_VERSION_base(4,4,0)
 import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon3, mkTyConApp, gcast1)
+#else
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, gcast1)
+#endif
 import Language.Haskell.TH
 import Numeric.AD.Internal.Classes
 
@@ -38,7 +47,11 @@ instance Typeable1 f => Typeable1 (AD f) where
               asArgsType = const
 
 adTyCon :: TyCon
+#if MIN_VERSION_base(4,4,0)
 adTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Types" "AD"
+#else
+adTyCon = mkTyCon "Numeric.AD.Internal.Types.AD"
+#endif
 {-# NOINLINE adTyCon #-}
 
 adConstr :: Constr

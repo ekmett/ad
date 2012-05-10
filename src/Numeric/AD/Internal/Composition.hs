@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types, TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, FlexibleContexts, TemplateHaskell, UndecidableInstances, TypeOperators #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
@@ -18,9 +19,17 @@ module Numeric.AD.Internal.Composition
     , decomposeMode
     ) where
 
+#ifndef MIN_VERSION_base
+#define MIN_VERSION_base(x,y,z) 1
+#endif
+
 import Control.Applicative hiding ((<**>))
 import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
+#if MIN_VERSION_base(4,4,0)
 import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon3, mkTyConApp, typeOfDefault, gcast1)
+#else
+import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
+#endif
 import Data.Foldable (Foldable(foldMap))
 import Data.Traversable (Traversable(traverse))
 import Numeric.AD.Internal.Classes
@@ -46,7 +55,12 @@ instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeFunctor f g) where
               ga = undefined
 
 composeFunctorTyCon :: TyCon
+#if MIN_VERSION_base(4,4,0)
 composeFunctorTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Composition" "ComposeFunctor"
+#else
+composeFunctorTyCon = mkTyCon "Numeric.AD.Internal.Composition.ComposeFunctor"
+#endif
+
 {-# NOINLINE composeFunctorTyCon #-}
 
 composeFunctorConstr :: Constr
@@ -161,7 +175,11 @@ instance (Typeable1 f, Typeable1 g, Typeable a) => Typeable (ComposeMode f g a) 
     typeOf = typeOfDefault
     
 composeModeTyCon :: TyCon
+#if MIN_VERSION_base(4,4,0)
 composeModeTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Composition" "ComposeMode"
+#else
+composeModeTyCon = mkTyCon "Numeric.AD.Internal.Composition.ComposeMode"
+#endif
 {-# NOINLINE composeModeTyCon #-}
 
 composeModeConstr :: Constr

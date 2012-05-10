@@ -18,14 +18,18 @@ module Numeric.AD.Internal.Jet
     , jet
     ) where
 
+#ifndef MIN_VERSION_base
+#define MIN_VERSION_base(x,y,z) 1
+#endif
+
 import Control.Applicative
 import Data.Foldable
 import Data.Traversable
 import Data.Monoid
-#if __GLASGOW_HASKELL__ < 704
-import Data.Typeable (Typeable1(..), TyCon, mkTyCon, mkTyConApp)
-#else
+#if MIN_VERSION_base(4,4,0)
 import Data.Typeable (Typeable1(..), TyCon, mkTyCon3, mkTyConApp)
+#else
+import Data.Typeable (Typeable1(..), TyCon, mkTyCon, mkTyConApp)
 #endif
 import Control.Comonad.Cofree
 
@@ -78,9 +82,9 @@ instance Typeable1 f => Typeable1 (Jet f) where
               asArgsType = const
 
 jetTyCon :: TyCon
-#if __GLASGOW_HASKELL__ < 704
-jetTyCon = mkTyCon "Numeric.AD.Internal.Jet.Jet"
-#else
+#if MIN_VERSION_base(4,4,0)
 jetTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Jet" "Jet"
+#else
+jetTyCon = mkTyCon "Numeric.AD.Internal.Jet.Jet"
 #endif
 {-# NOINLINE jetTyCon #-}

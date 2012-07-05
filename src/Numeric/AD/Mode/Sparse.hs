@@ -45,7 +45,6 @@ module Numeric.AD.Mode.Sparse
     ) where
 
 import Control.Comonad
-import Control.Applicative ((<$>))
 import Data.Traversable
 import Control.Comonad.Cofree
 import Numeric.AD.Types

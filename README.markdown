@@ -1,6 +1,8 @@
 ad
 ==
 
+[![Build Status](https://secure.travis-ci.org/ekmett/ad.png?branch=master)](http://travis-ci.org/ekmett/ad)
+
 A package that provides an intuitive API for [Automatic Differentiation](http://en.wikipedia.org/wiki/Automatic_differentiation) (AD) in Haskell. Automatic differentiation provides a means to calculate the derivatives of a function while evaluating it. Unlike numerical methods based on running the program with multiple inputs or symbolic approaches, automatic differentiation typically only decreases performance by a small multiplier.
 
 AD employs the fact that any program `y = F(x)` that computes one or more value does so by composing multiple primitive operations. If the (partial) derivatives of each of those operations is known, then they can be composed to derive the answer for the derivative of the entire program at a point.

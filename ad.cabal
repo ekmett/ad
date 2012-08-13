@@ -108,7 +108,7 @@ library
     containers       >= 0.2 && < 0.6,
     data-reify       >= 0.6 && < 0.7,
     free             == 3.0.*,
-    template-haskell >= 2.5 && < 2.8
+    template-haskell >= 2.5 && < 2.9
 
   exposed-modules:
     Numeric.AD

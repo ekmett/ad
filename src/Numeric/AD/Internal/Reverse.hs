@@ -40,13 +40,11 @@ import Prelude hiding (mapM)
 import Control.Applicative (Applicative(..),(<$>))
 import Control.Monad.ST
 import Control.Monad (forM_)
-import Data.List (foldl', delete)
+import Data.List (foldl')
 import Data.Array.ST
 import Data.Array
-import Data.IntMap (IntMap, fromListWith, findWithDefault, fromAscList, 
-                    updateLookupWithKey)
-import qualified Data.IntSet as IS
-import Data.Graph (graphFromEdges', Vertex, vertices, edges, transposeG, Graph)
+import Data.IntMap (IntMap, fromListWith, findWithDefault)
+import Data.Graph (Vertex, transposeG, Graph)
 import Data.Reify (reifyGraph, MuRef(..))
 import qualified Data.Reify.Graph as Reified
 import Data.Traversable (Traversable, mapM)
@@ -162,40 +160,50 @@ backPropagate vmap ss v = do
             _ -> return ()
     where
         (node, i, _) = vmap v
-
         -- this isn't _quite_ right, as it should allow negative zeros to multiply through
 
 topSortAcyclic :: Graph -> [Vertex]
-topSortAcyclic g = go (fromAscList . assocs $ transposeG g) starters
-  where starters = IS.toList $ foldl' (flip IS.delete)
-                                      (IS.fromList $ vertices g)
-                                      (map snd $ edges g)
-        go _ [] = []
-        go g' (n:ns) = let (g'',ns') = foldl' (uncurry (prune n)) (g',[]) (g!n)
-                       in n : go g'' (ns'++ns)
-        prune n g' acc m = let f _ = Just . delete n
-                               (Just ns, g'') = updateLookupWithKey f m g'
-                           in g'' `seq` (g'', if null (tail ns) then m:acc else acc)
-
+topSortAcyclic g = reverse $ runST $ do
+    del <- newArray (bounds g) False :: ST s (STUArray s Int Bool)
+    let tg = transposeG g
+        starters = [ n | (n, []) <- assocs tg ]
+        loop [] rs = return rs
+        loop (n:ns) rs = do
+            writeArray del n True
+            let add [] = return ns
+                add (m:ms) = do
+                    b <- ok (tg!m)
+                    ms' <- add ms
+                    if b then return (m:ms') else return ms'
+                ok [] = return True
+                ok (x:xs) = do b <- readArray del x; if b then ok xs else return False
+            ns' <- add (g!n)
+            loop ns' (n : rs)
+    loop starters []
 
 -- | This returns a list of contributions to the partials.
 -- The variable ids returned in the list are likely /not/ unique!
-partials :: Num a => AD Reverse a -> [(Int, a)]
-partials (AD tape) = [ (ident, sensitivities ! ix) | (ix, Var _ ident) <- xs ]
+{-# SPECIALIZE partials :: AD Reverse Double -> [(Int, Double)] #-}
+partials :: forall a . Num a => AD Reverse a -> [(Int, a)]
+partials (AD tape) = [ let v = sensitivities ! ix in seq v (ident, v) | (ix, Var _ ident) <- xs ]
     where
         Reified.Graph xs start = unsafePerformIO $ reifyGraph tape
-        (g, vmap) = graphFromEdges' (edgeSet <$> filter nonConst xs)
+        g = array xsBounds [ (i, successors t) | (i, t) <- xs ]
+        vertexMap = array xsBounds xs
+        vmap i = (vertexMap ! i, i, [])
+        xsBounds = sbounds xs
+
         sensitivities = runSTArray $ do
-            ss <- newArray (sbounds xs) 0
+            ss <- newArray xsBounds 0
             writeArray ss start 1
             forM_ (topSortAcyclic g) $
                 backPropagate vmap ss
             return ss
+
         sbounds ((a,_):as) = foldl' (\(lo,hi) (b,_) -> let lo' = min lo b; hi' = max hi b in lo' `seq` hi' `seq` (lo', hi')) (a,a) as
         sbounds _ = undefined -- the graph can't be empty, it contains the output node!
-        edgeSet (i, t) = (t, i, successors t)
-        nonConst (_, Lift{}) = False
-        nonConst _ = True
+
+        successors :: Tape a t -> [t]
         successors (Unary _ _ b) = [b]
         successors (Binary _ _ _ b c) = [b,c]
         successors _ = []

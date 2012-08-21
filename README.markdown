@@ -86,6 +86,8 @@ Overview
  * `Numeric.AD` computes using whichever mode or combination thereof is suitable to each individual combinator. This mode is the default, re-exported by `Numeric.AD`
  * `Numeric.AD.Mode.Forward` provides basic forward-mode AD. It is good for computing simple derivatives.
  * `Numeric.AD.Mode.Sparse` computes a sparse forward-mode AD tower. It is good for higher derivatives or large numbers of outputs.
+ * `Numeric.AD.Mode.Reverse` computes with reverse-mode AD. It is good for computing a few outputs given many inputs.
+ * `Numeric.AD.Mode.Chain` computes with reverse-mode AD. It is good for computing a few outputs given many inputs, when not using sparks.
  * `Numeric.AD.Mode.Tower` computes a dense forward-mode AD tower useful for higher derivatives of single input functions.
 
  * `Numeric.AD.Newton` provides a number of combinators for root finding using Newton's method with quadratic convergence.

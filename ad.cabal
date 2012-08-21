@@ -1,5 +1,5 @@
 name:         ad
-version:      3.0.2
+version:      3.1
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2012,
@@ -108,6 +108,8 @@ library
     containers       >= 0.2 && < 0.6,
     data-reify       >= 0.6 && < 0.7,
     free             == 3.0.*,
+    reflection       >= 1.1.6 && < 1.2,
+    tagged           >= 0.4.2.1 && < 0.5,
     template-haskell >= 2.5 && < 2.9
 
   exposed-modules:
@@ -132,6 +134,8 @@ library
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Tower
     Numeric.AD.Internal.Reverse
+    Numeric.AD.Internal.Var
+    Numeric.AD.Internal.Chain
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Composition

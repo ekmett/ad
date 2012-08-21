@@ -24,6 +24,8 @@ module Numeric.AD.Internal.Var
     , unbindMap
     , unbindWith
     , unbindMapWithDefault
+    , Variable(..)
+    , vary
     ) where
 
 import Prelude hiding (mapM)
@@ -49,10 +51,9 @@ instance Monad S where
     S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
 
 bind :: (Traversable f, Var v) => f a -> (f (v a), (Int,Int))
-bind xs = (r,(0,hi))
-    where
-        (r,hi) = runS (mapM freshVar xs) 0
-        freshVar a = S (\s -> let s' = s + 1 in s' `seq` (var a s, s'))
+bind xs = (r,(0,hi)) where
+  (r,hi) = runS (mapM freshVar xs) 0
+  freshVar a = S (\s -> let s' = s + 1 in s' `seq` (var a s, s'))
 
 unbind :: (Functor f, Var v)  => f (v a) -> Array Int a -> f a
 unbind xs ys = fmap (\v -> ys ! varId v) xs
@@ -65,3 +66,15 @@ unbindMap xs ys = fmap (\v -> findWithDefault 0 (varId v) ys) xs
 
 unbindMapWithDefault :: (Functor f, Var v, Num a) => b -> (a -> b -> c) -> f (v a) -> IntMap b -> f c
 unbindMapWithDefault z f xs ys = fmap (\v -> f (primal v) $ findWithDefault z (varId v) ys) xs
+
+data Variable a = Variable a {-# UNPACK #-} !Int
+
+instance Var Variable where
+  var = Variable
+  varId (Variable _ i) = i
+
+instance Primal Variable where
+  primal (Variable a _) = a
+
+vary :: Var f => Variable a -> f a
+vary (Variable a i) = var a i

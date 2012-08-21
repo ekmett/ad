@@ -26,10 +26,10 @@ module Numeric.AD.Internal.Chain
     , Cells(..)
     , reifyTape
     , partials
-    , partialArray
-    , partialMap
-    , derivative
-    , derivative'
+    , partialArrayOf
+    , partialMapOf
+    , derivativeOf
+    , derivativeOf'
     ) where
 
 import Control.Monad.ST
@@ -67,14 +67,18 @@ data Head = Head {-# UNPACK #-} !Int Cells
 newtype Tape = Tape { getTape :: IORef Head }
 
 un :: Int -> a -> Head -> (Head, Int)
-un i di (Head r t) = (Head (r + 1) (Unary i di t), r)
+un i di (Head r t) = h `seq` r' `seq` (h, r') where
+  r' = r + 1
+  h = Head r' (Unary i di t)
 {-# INLINE un #-}
 
 bin :: Int -> Int -> a -> a -> Head -> (Head, Int)
-bin i j di dj (Head r t) = (Head (r + 1) (Binary i j di dj t), r)
+bin i j di dj (Head r t) = h `seq` r' `seq` (h, r') where
+  r' = r + 1
+  h = Head r' (Binary i j di dj t)
 {-# INLINE bin #-}
 
-modifyTape :: Reifies s Tape => proxy s -> (Head -> (Head, r)) -> IO r
+modifyTape :: Reifies s Tape => p s -> (Head -> (Head, r)) -> IO r
 modifyTape p = atomicModifyIORef (getTape (reflect p))
 {-# INLINE modifyTape #-}
 
@@ -146,15 +150,15 @@ instance (Reifies s Tape, Lifted (Chain s)) => Jacobian (Chain s) where
             (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
 let s = varT (mkName "s") in
-  deriveLifted (classP ''Reifies [s,conT ''Tape] :) (conT ''Chain `appT` s)
+  deriveLifted (classP ''Reifies [s, conT ''Tape] :) (conT ''Chain `appT` s)
 
-derivative :: (Reifies s Tape, Num a) => AD (Chain s) a -> a
-derivative = sum . partials
-{-# INLINE derivative #-}
+derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Chain s) a -> a
+derivativeOf _ = sum . partials
+{-# INLINE derivativeOf #-}
 
-derivative' :: (Reifies s Tape, Num a) => AD (Chain s) a -> (a, a)
-derivative' r = (primal r, derivative r)
-{-# INLINE derivative' #-}
+derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> AD (Chain s) a -> (a, a)
+derivativeOf' p r = (primal r, derivativeOf p r)
+{-# INLINE derivativeOf' #-}
 
 backPropagate :: Num a => Int -> Cells -> STArray s Int a -> ST s Int
 backPropagate k Nil _ = return k
@@ -186,19 +190,20 @@ partials (AD (Chain k _)) = map (sensitivities !) [0..vs] where
      return (v, as)
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.
-partialArray :: (Reifies s Tape, Num a) => (Int, Int) -> AD (Chain s) a -> Array Int a
-partialArray vbounds = accumArray (+) 0 vbounds . zip [0..] . partials
-{-# INLINE partialArray #-}
+partialArrayOf :: (Reifies s Tape, Num a) => Proxy s -> (Int, Int) -> AD (Chain s) a -> Array Int a
+partialArrayOf _ vbounds = accumArray (+) 0 vbounds . zip [0..] . partials
+{-# INLINE partialArrayOf #-}
 
 -- | Return an 'IntMap' of sparse partials
-partialMap :: (Reifies s Tape, Num a) => AD (Chain s) a -> IntMap a
-partialMap = fromDistinctAscList . zip [0..] . partials
-{-# INLINE partialMap #-}
+partialMapOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Chain s) a -> IntMap a
+partialMapOf _ = fromDistinctAscList . zip [0..] . partials
+{-# INLINE partialMapOf #-}
 
-reifyTape :: Int -> (forall s. Reifies s Tape => Proxy s -> r) -> IO r
-reifyTape vs k = do
+reifyTape :: Int -> (forall s. Reifies s Tape => Proxy s -> r) -> r
+reifyTape vs k = unsafePerformIO $ do
   h <- newIORef (Head vs Nil)
   return (reify (Tape h) k)
+{-# NOINLINE reifyTape #-}
 
 instance Var (Chain s) where
     var a v = Chain v a

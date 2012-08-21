@@ -119,6 +119,7 @@ library
     Numeric.AD.Newton
     Numeric.AD.Halley
 
+    Numeric.AD.Mode.Chain
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward
     Numeric.AD.Mode.Reverse

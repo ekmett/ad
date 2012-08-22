@@ -168,13 +168,13 @@ bind :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> f b
 bind f as = snd $ mapAccumL outer (0 :: Int) as
     where
         outer !i _ = (i + 1, f $ snd $ mapAccumL (inner i) 0 as)
-        inner !i !j a = (j + 1, if i == j then bundle a 1 else AD Zero)
+        inner !i !j a = (j + 1, if i == j then bundle a 1 else lift a)
 
 bind' :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> (b, f b)
 bind' f as = dropIx $ mapAccumL outer (0 :: Int, b0) as
     where
         outer (!i, _) _ = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), b)
-        inner !i !j a = (j + 1, if i == j then bundle a 1 else AD Zero)
+        inner !i !j a = (j + 1, if i == j then bundle a 1 else lift a)
         b0 = f (lift <$> as)
         dropIx ((_,b),bs) = (b,bs)
 

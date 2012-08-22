@@ -36,11 +36,12 @@ import Numeric.AD.Internal.Composition
 --
 -- Examples:
 --
---  > take 10 $ findZero (\\x->x^2-4) 1  -- converge to 2.0
+-- >>> take 10 $ findZero (\x->x^2-4) 1
+-- [1.0,1.8571428571428572,1.9997967892704736,1.9999999999994755,2.0]
 --
---  > module Data.Complex
---  > take 10 $ findZero ((+1).(^2)) (1 :+ 1)  -- converge to (0 :+ 1)@
---
+-- >>> import Data.Complex
+-- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
+-- 0.0 :+ 1.0
 findZero :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 findZero f = go
     where
@@ -54,8 +55,7 @@ findZero f = go
 -- results.  (Modulo the usual caveats.)
 --
 -- Note: the @take 10 $ inverse sqrt 1 (sqrt 10)@ example that works for Newton's method
--- fails with Halley's method because the preconditions do not hold.
-
+-- fails with Halley's method because the preconditions do not hold!
 inverse :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
 inverse f x0 y = findZero (\x -> f x - lift y) x0
 {-# INLINE inverse  #-}
@@ -64,7 +64,8 @@ inverse f x0 y = findZero (\x -> f x - lift y) x0
 -- function using Halley's method; its output is a stream of
 -- increasingly accurate results.  (Modulo the usual caveats.)
 --
--- > take 10 $ fixedPoint cos 1 -- converges to 0.7390851332151607
+-- >>> last $ take 10 $ fixedPoint cos 1
+-- 0.7390851332151607
 fixedPoint :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
@@ -73,7 +74,8 @@ fixedPoint f = findZero (\x -> f x - x)
 -- function using Halley's method; produces a stream of increasingly
 -- accurate results.  (Modulo the usual caveats.)
 --
--- > take 10 $ extremum cos 1 -- convert to 0
+-- >>> take 10 $ extremum cos 1
+-- [1.0,0.29616942658570555,4.59979519460002e-3,1.6220740159042513e-8,0.0]
 extremum :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}

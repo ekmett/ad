@@ -36,11 +36,12 @@ import Numeric.AD.Internal.Composition
 --
 -- Examples:
 --
---  > take 10 $ findZero (\\x->x^2-4) 1  -- converge to 2.0
+-- >>> take 10 $ findZero (\x->x^2-4) 1
+-- [1.0,2.5,2.05,2.000609756097561,2.0000000929222947,2.000000000000002,2.0]
 --
---  > module Data.Complex
---  > take 10 $ findZero ((+1).(^2)) (1 :+ 1)  -- converge to (0 :+ 1)@
---
+-- >>> import Data.Complex
+-- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
+-- 0.0 :+ 1.0
 findZero :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 findZero f = go
     where
@@ -49,14 +50,14 @@ findZero f = go
                 (y,y') = diff' f x
 {-# INLINE findZero #-}
 
--- | The 'inverseNewton' function inverts a scalar function using
+-- | The 'inverse' function inverts a scalar function using
 -- Newton's method; its output is a stream of increasingly accurate
 -- results.  (Modulo the usual caveats.)
 --
 -- Example:
 --
--- > take 10 $ inverseNewton sqrt 1 (sqrt 10)  -- converges to 10
---
+-- >>> last $ take 10 $ inverse sqrt 1 (sqrt 10)
+-- 10.0
 inverse :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
 inverse f x0 y = findZero (\x -> f x - lift y) x0
 {-# INLINE inverse  #-}
@@ -65,7 +66,8 @@ inverse f x0 y = findZero (\x -> f x - lift y) x0
 -- function using Newton's method; its output is a stream of
 -- increasingly accurate results.  (Modulo the usual caveats.)
 --
--- > take 10 $ fixedPoint cos 1 -- converges to 0.7390851332151607
+-- >>> last $ take 10 $ fixedPoint cos 1
+-- 0.7390851332151607
 fixedPoint :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
@@ -74,7 +76,8 @@ fixedPoint f = findZero (\x -> f x - x)
 -- function using Newton's method; produces a stream of increasingly
 -- accurate results.  (Modulo the usual caveats.)
 --
--- > take 10 $ extremum cos 1 -- convert to 0
+-- >>> last $ take 10 $ extremum cos 1
+-- 0.0
 extremum :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}

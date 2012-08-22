@@ -208,7 +208,7 @@ hessianProduct' f = duF' (grad (decomposeMode . f . fmap composeMode))
 hessian :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f (f a)
 hessian f = Sparse.jacobian (grad (decomposeMode . f . fmap composeMode))
 
--- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function using Sparse or Sparse-on-Reverse
+-- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function using 'Sparse' or 'Sparse'-on-'Reverse'
 hessianF :: (Traversable f, Functor g, Num a) => (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f (f a))
 hessianF f as
     | big (size as) = decomposeFunctor $ Sparse.jacobian (ComposeFunctor . Reverse.jacobian (fmap decomposeMode . f . fmap composeMode)) as

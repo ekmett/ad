@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, TemplateHaskell, ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE CPP, TypeOperators, TemplateHaskell, ScopedTypeVariables, FlexibleContexts #-}
 {-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |

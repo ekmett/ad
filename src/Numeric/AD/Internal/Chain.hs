@@ -82,10 +82,14 @@ modifyTape :: Reifies s Tape => p s -> (Head -> (Head, r)) -> IO r
 modifyTape p = atomicModifyIORef (getTape (reflect p))
 {-# INLINE modifyTape #-}
 
+-- | This is used to create a new entry on the chain given a unary function, its derivative with respect to its input,
+-- the variable ID of its input, and the value of its input. Used by 'unary' and 'binary' internally.
 unarily :: forall s a. Reifies s Tape => (a -> a) -> a -> Int -> a -> Chain s a
 unarily f di i b = Chain (unsafePerformIO (modifyTape (Proxy :: Proxy s) (un i di))) $! f b
 {-# INLINE unarily #-}
 
+-- | This is used to create a new entry on the chain given a binary function, its derivatives with respect to its inputs,
+-- their variable IDs and values. Used by 'binary' internally.
 binarily :: forall s a. Reifies s Tape => (a -> a -> a) -> a -> a -> Int -> a -> Int -> a -> Chain s a
 binarily f di dj i b j c = Chain (unsafePerformIO (modifyTape (Proxy :: Proxy s) (bin i j di dj))) $! f b c
 {-# INLINE binarily #-}
@@ -152,14 +156,17 @@ instance (Reifies s Tape, Lifted (Chain s)) => Jacobian (Chain s) where
 let s = varT (mkName "s") in
   deriveLifted (classP ''Reifies [s, conT ''Tape] :) (conT ''Chain `appT` s)
 
+-- | Helper that extracts the derivative of a chain when the chain was constructed with one variable.
 derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Chain s) a -> a
 derivativeOf _ = sum . partials
 {-# INLINE derivativeOf #-}
 
+-- | Helper that extracts both the primal and derivative of a chain when the chain was constructed with one variable.
 derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> AD (Chain s) a -> (a, a)
 derivativeOf' p r = (primal r, derivativeOf p r)
 {-# INLINE derivativeOf' #-}
 
+-- | Used internally to push sensitivities down the chain.
 backPropagate :: Num a => Int -> Cells -> STArray s Int a -> ST s Int
 backPropagate k Nil _ = return k
 backPropagate k (Unary i g xs) ss = do
@@ -175,6 +182,7 @@ backPropagate k (Binary i j g h xs) ss = do
   writeArray ss j $! dc + unsafeCoerce h*da
   (backPropagate $! k - 1) xs ss
 
+-- | Extract the partials from the current chain for a given AD variable.
 {-# SPECIALIZE partials :: Reifies s Tape => AD (Chain s) Double -> [Double] #-}
 partials :: forall s a. (Reifies s Tape, Num a) => AD (Chain s) a -> [a]
 partials (AD Zero)        = []
@@ -199,6 +207,7 @@ partialMapOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Chain s) a -> IntMap a
 partialMapOf _ = fromDistinctAscList . zip [0..] . partials
 {-# INLINE partialMapOf #-}
 
+-- | Construct a tape that starts with @n@ variables.
 reifyTape :: Int -> (forall s. Reifies s Tape => Proxy s -> r) -> r
 reifyTape vs k = unsafePerformIO $ do
   h <- newIORef (Head vs Nil)

@@ -1,0 +1,21 @@
+" Add the following to your .vimrc to automatically load this on startup
+" if filereadable(".vim.custom")
+"     so .vim.custom
+" endif
+
+function StripTrailingWhitespace()
+  let myline=line(".")
+  let mycolumn = col(".")
+  silent %s/  *$//
+  call cursor(myline, mycolumn)
+endfunction
+
+syntax on
+set tags=TAGS;/
+set listchars=tab:‗‗,trail:‗
+set list
+
+map <F2> :exec ":!hasktags -x -c --ignore src"<CR><CR>
+
+au BufWritePre *.hs,*.markdown silent! cal StripTrailingWhitespace()
+au BufWritePost *.hs silent! :exec ":!hasktags -x -c --ignore src"

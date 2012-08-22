@@ -37,12 +37,14 @@ import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 
+-- | 'Forward' mode AD.
 data Forward a
   = Forward !a a
   | Lift !a
   | Zero
   deriving (Show, Data, Typeable)
 
+-- | Calculate the 'tangent' using forward mode AD.
 tangent :: Num a => AD Forward a -> a
 tangent (AD (Forward _ da)) = da
 tangent _ = 0

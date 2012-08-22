@@ -12,14 +12,10 @@
 module Numeric.AD.Internal.Combinators
     ( zipWithT
     , zipWithDefaultT
-    , on
     ) where
 
 import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)
-
-on :: (a -> a -> b) -> (c -> a) -> c -> c -> b
-on f g a b = f (g a) (g b)
 
 zipWithT :: (Foldable f, Traversable g) => (a -> b -> c) -> f a -> g b -> g c
 zipWithT f as = snd . mapAccumL (\(a:as') b -> (as', f a b)) (toList as)

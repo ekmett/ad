@@ -29,7 +29,7 @@ module Numeric.AD.Internal.Classes
 import Control.Applicative hiding ((<**>))
 import Data.Char
 import Language.Haskell.TH
-import Numeric.AD.Internal.Combinators (on)
+import Data.Function (on)
 
 infixr 8 **!, <**>
 infixl 7 *!, /!, ^*, *^, ^/

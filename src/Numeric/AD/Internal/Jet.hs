@@ -10,7 +10,6 @@
 -- Portability :  GHC only
 --
 -----------------------------------------------------------------------------
-
 module Numeric.AD.Internal.Jet
     ( Jet(..)
     , headJet
@@ -35,9 +34,14 @@ import Control.Comonad.Cofree
 
 infixl 3 :-
 
--- | A jet is a tower of all (higher order) partial derivatives of a function
+-- | A 'Jet' is a tower of all (higher order) partial derivatives of a function
+--
+-- At each step, a @'Jet' f@ is wrapped in another layer worth of @f@.
+--
+-- > a :- f a :- f (f a) :- f (f (f a)) :- ...
 data Jet f a = a :- Jet f (f a)
 
+-- | Used to sidestep the need for UndecidableInstances.
 newtype Showable = Showable (Int -> String -> String)
 
 instance Show Showable where
@@ -62,14 +66,17 @@ instance Foldable f => Foldable (Jet f) where
 instance Traversable f => Traversable (Jet f) where
     traverse f (a :- as) = (:-) <$> f a <*> traverse (traverse f) as
 
+-- | Take the tail of a 'Jet'.
 tailJet :: Jet f a -> Jet f (f a)
 tailJet (_ :- as) = as
 {-# INLINE tailJet #-}
 
+-- | Take the head of a 'Jet'.
 headJet :: Jet f a -> a
 headJet (a :- _) = a
 {-# INLINE headJet #-}
 
+-- | Construct a 'Jet' by unzipping the layers of a 'Cofree' 'Comonad'.
 jet :: Functor f => Cofree f a -> Jet f a
 jet (a :< as) = a :- dist (jet <$> as)
     where

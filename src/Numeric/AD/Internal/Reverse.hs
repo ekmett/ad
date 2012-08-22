@@ -74,6 +74,13 @@ instance MuRef (Reverse a) where
     mapDeRef f (Reverse (Unary a dadb b)) = Unary a dadb <$> f b
 
 instance Lifted Reverse => Mode Reverse where
+    isKnownZero (Reverse Zero) = True
+    isKnownZero _    = False
+
+    isKnownConstant (Reverse Zero) = True
+    isKnownConstant (Reverse (Lift a)) = True
+    isKnownConstant _ = False
+
     lift a = Reverse (Lift a)
     zero   = Reverse Zero
     (<+>)  = binary (+) one one

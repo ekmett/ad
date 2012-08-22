@@ -101,6 +101,12 @@ data Chain s a where
   deriving (Show, Typeable)
 
 instance (Reifies s Tape, Lifted (Chain s)) => Mode (Chain s) where
+  isKnownZero Zero = True
+  isKnownZero _    = False
+
+  isKnownConstant Chain{} = False
+  isKnownConstant _ = True
+
   lift = Lift
   zero = Zero
   (<+>)  = binary (+) one one

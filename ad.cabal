@@ -12,7 +12,7 @@ homepage:     http://github.com/ekmett/ad
 bug-reports:  http://github.com/ekmett/ad/issues
 build-type:   Simple
 cabal-version: >= 1.6
-extra-source-files: TODO .travis.yml
+extra-source-files: TODO .travis.yml CHANGELOG.markdown README.markdown
 synopsis:     Automatic Differentiation
 description:
     Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.

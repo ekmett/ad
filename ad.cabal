@@ -1,5 +1,5 @@
 name:         ad
-version:      3.1
+version:      3.1.1
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2012,
@@ -91,7 +91,7 @@ library
     comonad          == 3.0.*,
     containers       >= 0.2 && < 0.6,
     data-reify       >= 0.6 && < 0.7,
-    free             == 3.0.*,
+    free             >= 3.0 && <= 3.2,
     reflection       >= 1.1.6 && < 1.2,
     tagged           >= 0.4.2.1 && < 0.5,
     template-haskell >= 2.5 && < 2.9

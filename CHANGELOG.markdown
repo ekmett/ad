@@ -1,3 +1,7 @@
+3.1.2
+-----
+* Dependency bump
+
 3.1
 ---
 * Added `Chain` mode, which is `Reverse` using a linear tape that doesn't need to be sorted.

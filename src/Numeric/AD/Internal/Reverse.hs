@@ -78,7 +78,7 @@ instance Lifted Reverse => Mode Reverse where
     isKnownZero _    = False
 
     isKnownConstant (Reverse Zero) = True
-    isKnownConstant (Reverse (Lift a)) = True
+    isKnownConstant (Reverse (Lift _)) = True
     isKnownConstant _ = False
 
     lift a = Reverse (Lift a)

@@ -102,7 +102,6 @@ library
     Numeric.AD.Types
 
     Numeric.AD.Newton
-    Numeric.AD.CG
     Numeric.AD.Halley
 
     Numeric.AD.Mode.Chain

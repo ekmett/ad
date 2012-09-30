@@ -20,14 +20,18 @@ module Numeric.AD.Newton
     -- * Gradient Ascent/Descent (Reverse AD)
     , gradientDescent
     , gradientAscent
+    , conjugateGradientDescent
+    , conjugateGradientAscent
     ) where
 
-import Prelude hiding (all)
-import Data.Foldable (all)
-import Data.Traversable (Traversable)
+import Prelude hiding (all, mapM, sum)
+import Data.Functor
+import Data.Foldable (all, sum)
+import Data.Traversable
 import Numeric.AD.Types
 import Numeric.AD.Mode.Forward (diff, diff')
-import Numeric.AD.Mode.Reverse (gradWith')
+import Numeric.AD.Mode.Reverse (grad, gradWith')
+import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Composition
 
 -- | The 'findZero' function finds a zero of a scalar function using
@@ -109,3 +113,24 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
 gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
 gradientAscent f = gradientDescent (negate . f)
 {-# INLINE gradientAscent #-}
+
+
+conjugateGradientDescent :: (Traversable f, Fractional a, Ord a) =>
+                (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
+conjugateGradientDescent f x0 = go x0 d0 d0
+  where
+    dot x y = sum $ zipWithT (*) x y
+    d0 = negate <$> grad f x0
+    go xi ri di = xi : go xi1 ri1 di1
+      where
+        ai  = last $ take 20 $ extremum (\a -> f $ zipWithT (\x d -> lift x + a * lift d) xi di) 0
+        xi1 = zipWithT (\x d -> x + ai*d) xi di
+        ri1 = negate <$> grad f xi1
+        bi1 = max 0 $ dot ri1 (zipWithT (-) ri1 ri) / dot ri1 ri1
+        -- bi1 = max 0 $ sum (zipWithT (\a b -> a * (a - b)) ri1 ri) / dot ri1 ri1
+        di1 = zipWithT (\r d -> r * bi1*d) ri1 di
+{-# INLINE conjugateGradientDescent #-}
+
+conjugateGradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
+conjugateGradientAscent f = conjugateGradientDescent (negate . f)
+{-# INLINE conjugateGradientAscent #-}

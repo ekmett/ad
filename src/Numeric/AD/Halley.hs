@@ -32,7 +32,8 @@ import Numeric.AD.Internal.Composition
 
 -- | The 'findZero' function finds a zero of a scalar function using
 -- Halley's method; its output is a stream of increasingly accurate
--- results.  (Modulo the usual caveats.)
+-- results.  (Modulo the usual caveats.) If the stream becomes constant
+-- ("it converges"), no further elements are returned.
 --
 -- Examples:
 --
@@ -43,16 +44,16 @@ import Numeric.AD.Internal.Composition
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
 findZero :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-findZero f = go
-    where
-        go x = x : if y == 0 then [] else go (x - 2*y*y'/(2*y'*y'-y*y''))
-            where
-                (y:y':y'':_) = diffs0 f x
+findZero f = go where
+  go x = x : if x == xn then [] else go xn where
+    (y:y':y'':_) = diffs0 f x
+    xn = x - 2*y*y'/(2*y'*y'-y*y'')
 {-# INLINE findZero #-}
 
 -- | The 'inverse' function inverts a scalar function using
 -- Halley's method; its output is a stream of increasingly accurate
--- results.  (Modulo the usual caveats.)
+-- results.  (Modulo the usual caveats.) If the stream becomes constant
+-- ("it converges"), no further elements are returned.
 --
 -- Note: the @take 10 $ inverse sqrt 1 (sqrt 10)@ example that works for Newton's method
 -- fails with Halley's method because the preconditions do not hold!
@@ -64,6 +65,9 @@ inverse f x0 y = findZero (\x -> f x - lift y) x0
 -- function using Halley's method; its output is a stream of
 -- increasingly accurate results.  (Modulo the usual caveats.)
 --
+-- If the stream becomes constant ("it converges"), no further
+-- elements are returned.
+--
 -- >>> last $ take 10 $ fixedPoint cos 1
 -- 0.7390851332151607
 fixedPoint :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
@@ -72,11 +76,11 @@ fixedPoint f = findZero (\x -> f x - x)
 
 -- | The 'extremum' function finds an extremum of a scalar
 -- function using Halley's method; produces a stream of increasingly
--- accurate results.  (Modulo the usual caveats.)
+-- accurate results.  (Modulo the usual caveats.) If the stream becomes
+-- constant ("it converges"), no further elements are returned.
 --
 -- >>> take 10 $ extremum cos 1
 -- [1.0,0.29616942658570555,4.59979519460002e-3,1.6220740159042513e-8,0.0]
 extremum :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}
-

@@ -36,7 +36,8 @@ import Numeric.AD.Internal.Composition
 
 -- | The 'findZero' function finds a zero of a scalar function using
 -- Newton's method; its output is a stream of increasingly accurate
--- results.  (Modulo the usual caveats.)
+-- results.  (Modulo the usual caveats.) If the stream becomes constant
+-- ("it converges"), no further elements are returned.
 --
 -- Examples:
 --
@@ -47,16 +48,16 @@ import Numeric.AD.Internal.Composition
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
 findZero :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
-findZero f = go
-    where
-        go x = x : if y == 0 then [] else go (x - y/y')
-            where
-                (y,y') = diff' f x
+findZero f = go where
+  go x = x : if x == xn then [] else go xn where
+    (y,y') = diff' f x
+    xn = x - y/y'
 {-# INLINE findZero #-}
 
 -- | The 'inverse' function inverts a scalar function using
 -- Newton's method; its output is a stream of increasingly accurate
--- results.  (Modulo the usual caveats.)
+-- results.  (Modulo the usual caveats.) If the stream becomes
+-- constant ("it converges"), no further elements are returned.
 --
 -- Example:
 --
@@ -70,6 +71,9 @@ inverse f x0 y = findZero (\x -> f x - lift y) x0
 -- function using Newton's method; its output is a stream of
 -- increasingly accurate results.  (Modulo the usual caveats.)
 --
+-- If the stream becomes constant ("it converges"), no further
+-- elements are returned.
+--
 -- >>> last $ take 10 $ fixedPoint cos 1
 -- 0.7390851332151607
 fixedPoint :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
@@ -78,7 +82,8 @@ fixedPoint f = findZero (\x -> f x - x)
 
 -- | The 'extremum' function finds an extremum of a scalar
 -- function using Newton's method; produces a stream of increasingly
--- accurate results.  (Modulo the usual caveats.)
+-- accurate results.  (Modulo the usual caveats.) If the stream
+-- becomes constant ("it converges"), no further elements are returned.
 --
 -- >>> last $ take 10 $ extremum cos 1
 -- 0.0
@@ -110,11 +115,12 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
                 (fx1, xgx1) = gradWith' (,) f x1
 {-# INLINE gradientDescent #-}
 
+-- | Perform a gradient descent using reverse mode automatic differentiation to compute the gradient.
 gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
 gradientAscent f = gradientDescent (negate . f)
 {-# INLINE gradientAscent #-}
 
-
+-- | Perform a conjugate gradient descent using reverse mode automatic differentiation to compute the gradient.
 conjugateGradientDescent :: (Traversable f, Fractional a, Ord a) =>
                 (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
 conjugateGradientDescent f x0 = go x0 d0 d0
@@ -131,6 +137,7 @@ conjugateGradientDescent f x0 = go x0 d0 d0
         di1 = zipWithT (\r d -> r * bi1*d) ri1 di
 {-# INLINE conjugateGradientDescent #-}
 
+-- | Perform a conjugate gradient ascent using reverse mode automatic differentiation to compute the gradient.
 conjugateGradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
 conjugateGradientAscent f = conjugateGradientDescent (negate . f)
 {-# INLINE conjugateGradientAscent #-}

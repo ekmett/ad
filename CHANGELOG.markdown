@@ -1,3 +1,8 @@
+3.1.4
+-----
+* Added a better "convergence" test for `findZero`
+* Compute `tan` and `tanh` derivatives directly.
+
 3.1.3
 -----
 * Added `conjugateGradientDescent` and `conjugateGradientAscent` to `Numeric.AD.Newton`.

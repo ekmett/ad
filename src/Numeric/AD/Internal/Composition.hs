@@ -173,7 +173,7 @@ instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeMode f g) where
 
 instance (Typeable1 f, Typeable1 g, Typeable a) => Typeable (ComposeMode f g a) where
     typeOf = typeOfDefault
-    
+
 composeModeTyCon :: TyCon
 #if MIN_VERSION_base(4,4,0)
 composeModeTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Composition" "ComposeMode"

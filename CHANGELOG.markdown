@@ -1,3 +1,7 @@
+3.1.3
+-----
+* Added `conjugateGradientDescent` and `conjugateGradientAscent` to `Numeric.AD.Newton`.
+
 3.1.2
 -----
 * Dependency bump

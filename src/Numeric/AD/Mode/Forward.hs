@@ -184,8 +184,10 @@ gradWith g f = bindWith g (tangent . f)
 -- user-specified function.
 --
 -- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Wengert.gradWith'' for @n@ inputs, in exchange for better space utilization.
+-- >>> gradWith' (,) sum [0..4]
+-- (10,[(0,1),(1,1),(2,1),(3,1),(4,1)])
 gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f b)
-gradWith' g f = bindWith' g (tangent . f)
+gradWith' g f as = (primal $ f (AD . Lift <$> as), bindWith g (tangent . f) as)
 {-# INLINE gradWith' #-}
 
 -- | Compute the product of a vector with the Hessian using forward-on-forward-mode AD.

@@ -37,7 +37,7 @@ import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 
--- | 'Forward' mode AD.
+-- | 'Forward' mode AD
 data Forward a
   = Forward !a a
   | Lift !a
@@ -182,13 +182,13 @@ bindWith :: (Traversable f, Num a) => (a -> b -> c) -> (f (AD Forward a) -> b) -
 bindWith g f as = snd $ mapAccumL outer (0 :: Int) as
     where
         outer !i a = (i + 1, g a $ f $ snd $ mapAccumL (inner i) 0 as)
-        inner !i !j a = (j + 1, if i == j then bundle a 1 else AD Zero)
+        inner !i !j a = (j + 1, if i == j then bundle a 1 else auto a)
 
 bindWith' :: (Traversable f, Num a) => (a -> b -> c) -> (f (AD Forward a) -> b) -> f a -> (b, f c)
 bindWith' g f as = dropIx $ mapAccumL outer (0 :: Int, b0) as
     where
         outer (!i, _) a = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), g a b)
-        inner !i !j a = (j + 1, if i == j then bundle a 1 else AD Zero)
+        inner !i !j a = (j + 1, if i == j then bundle a 1 else auto a)
         b0 = f (auto <$> as)
         dropIx ((_,b),bs) = (b,bs)
 

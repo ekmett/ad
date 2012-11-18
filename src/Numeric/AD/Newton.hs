@@ -64,7 +64,7 @@ findZero f = go where
 -- >>> last $ take 10 $ inverse sqrt 1 (sqrt 10)
 -- 10.0
 inverse :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
-inverse f x0 y = findZero (\x -> f x - lift y) x0
+inverse f x0 y = findZero (\x -> f x - auto y) x0
 {-# INLINE inverse  #-}
 
 -- | The 'fixedPoint' function find a fixedpoint of a scalar
@@ -129,7 +129,7 @@ conjugateGradientDescent f x0 = go x0 d0 d0
     d0 = negate <$> grad f x0
     go xi ri di = xi : go xi1 ri1 di1
       where
-        ai  = last $ take 20 $ extremum (\a -> f $ zipWithT (\x d -> lift x + a * lift d) xi di) 0
+        ai  = last $ take 20 $ extremum (\a -> f $ zipWithT (\x d -> auto x + a * auto d) xi di) 0
         xi1 = zipWithT (\x d -> x + ai*d) xi di
         ri1 = negate <$> grad f xi1
         bi1 = max 0 $ dot ri1 (zipWithT (-) ri1 ri) / dot ri1 ri1

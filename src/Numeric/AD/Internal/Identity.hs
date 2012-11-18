@@ -129,7 +129,7 @@ instance Lifted Id where
     maxBound1 = maxBound
 
 instance Mode Id where
-    lift = Id
+    auto = Id
     Id a ^* b = Id (a * b)
     a *^ Id b = Id (a * b)
     Id a <+> Id b = Id (a + b)

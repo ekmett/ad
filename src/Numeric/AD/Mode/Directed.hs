@@ -33,7 +33,7 @@ import Data.Traversable (Traversable)
 import qualified Numeric.AD.Mode.Reverse as R
 import qualified Numeric.AD.Mode.Forward as F
 import qualified Numeric.AD.Mode.Tower as T
-import qualified Numeric.AD.Mode.Chain as C
+import qualified Numeric.AD.Mode.Wengert as W
 import qualified Numeric.AD as M
 import Data.Ix
 
@@ -42,7 +42,7 @@ import Data.Ix
 data Direction
     = Forward
     | Reverse
-    | Chain
+    | Wengert
     | Tower
     | Mixed
     deriving (Show, Eq, Ord, Read, Bounded, Enum, Ix)
@@ -50,7 +50,7 @@ data Direction
 diff :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> a
 diff Forward = F.diff
 diff Reverse = R.diff
-diff Chain = C.diff
+diff Wengert = W.diff
 diff Tower = T.diff
 diff Mixed = F.diff
 {-# INLINE diff #-}
@@ -58,7 +58,7 @@ diff Mixed = F.diff
 diff' :: Num a => Direction -> (forall s. Mode s => AD s a -> AD s a) -> a -> (a, a)
 diff' Forward = F.diff'
 diff' Reverse = R.diff'
-diff' Chain = C.diff'
+diff' Wengert = W.diff'
 diff' Tower = T.diff'
 diff' Mixed = F.diff'
 {-# INLINE diff' #-}
@@ -66,7 +66,7 @@ diff' Mixed = F.diff'
 jacobian :: (Traversable f, Traversable g, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (f a)
 jacobian Forward = F.jacobian
 jacobian Reverse = R.jacobian
-jacobian Chain = C.jacobian
+jacobian Wengert = W.jacobian
 jacobian Tower = F.jacobian -- error "jacobian Tower: unimplemented"
 jacobian Mixed = M.jacobian
 {-# INLINE jacobian #-}
@@ -74,7 +74,7 @@ jacobian Mixed = M.jacobian
 jacobian' :: (Traversable f, Traversable g, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> g (AD s a)) -> f a -> g (a, f a)
 jacobian' Forward = F.jacobian'
 jacobian' Reverse = R.jacobian'
-jacobian' Chain = C.jacobian'
+jacobian' Wengert = W.jacobian'
 jacobian' Tower = F.jacobian' -- error "jacobian' Tower: unimplemented"
 jacobian' Mixed = M.jacobian'
 {-# INLINE jacobian' #-}
@@ -82,7 +82,7 @@ jacobian' Mixed = M.jacobian'
 grad :: (Traversable f, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> f a
 grad Forward = F.grad
 grad Reverse = R.grad
-grad Chain   = C.grad
+grad Wengert   = W.grad
 grad Tower   = F.grad -- error "grad Tower: unimplemented"
 grad Mixed   = M.grad
 {-# INLINE grad #-}
@@ -90,7 +90,7 @@ grad Mixed   = M.grad
 grad' :: (Traversable f, Num a) => Direction -> (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (a, f a)
 grad' Forward = F.grad'
 grad' Reverse = R.grad'
-grad' Chain   = C.grad'
+grad' Wengert   = W.grad'
 grad' Tower   = F.grad' -- error "grad' Tower: unimplemented"
 grad' Mixed   = M.grad'
 {-# INLINE grad' #-}

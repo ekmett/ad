@@ -81,15 +81,15 @@ instance Lifted Reverse => Mode Reverse where
     isKnownConstant (Reverse (Lift _)) = True
     isKnownConstant _ = False
 
-    lift a = Reverse (Lift a)
+    auto a = Reverse (Lift a)
     zero   = Reverse Zero
     (<+>)  = binary (+) one one
-    a *^ b = lift1 (a *) (\_ -> lift a) b
-    a ^* b = lift1 (* b) (\_ -> lift b) a
-    a ^/ b = lift1 (/ b) (\_ -> lift (recip b)) a
+    a *^ b = lift1 (a *) (\_ -> auto a) b
+    a ^* b = lift1 (* b) (\_ -> auto b) a
+    a ^/ b = lift1 (/ b) (\_ -> auto (recip b)) a
 
-    Reverse Zero <**> y                = lift (0 ** primal y)
-    _            <**> Reverse Zero     = lift 1
+    Reverse Zero <**> y                = auto (0 ** primal y)
+    _            <**> Reverse Zero     = auto 1
     x            <**> Reverse (Lift y) = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
     x            <**> y                = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 

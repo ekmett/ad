@@ -93,18 +93,18 @@ instance (Primal f, Mode g, Primal g) => Primal (ComposeMode f g) where
     primal = primal . primal . runComposeMode
 
 instance (Mode f, Mode g) => Mode (ComposeMode f g) where
-    lift = ComposeMode . lift . lift
+    auto = ComposeMode . auto . auto
     ComposeMode a <+> ComposeMode b = ComposeMode (a <+> b)
-    a *^ ComposeMode b = ComposeMode (lift a *^ b)
-    ComposeMode a ^* b = ComposeMode (a ^* lift b)
-    ComposeMode a ^/ b = ComposeMode (a ^/ lift b)
+    a *^ ComposeMode b = ComposeMode (auto a *^ b)
+    ComposeMode a ^* b = ComposeMode (a ^* auto b)
+    ComposeMode a ^/ b = ComposeMode (a ^/ auto b)
     ComposeMode a <**> ComposeMode b = ComposeMode (a <**> b)
 
 instance (Mode f, Mode g) => Lifted (ComposeMode f g) where
     showsPrec1 n (ComposeMode a) = showsPrec1 n a
     ComposeMode a ==! ComposeMode b  = a ==! b
     compare1 (ComposeMode a) (ComposeMode b) = compare1 a b
-    fromInteger1 = ComposeMode . lift . fromInteger1
+    fromInteger1 = ComposeMode . auto . fromInteger1
     ComposeMode a +! ComposeMode b = ComposeMode (a +! b)
     ComposeMode a -! ComposeMode b = ComposeMode (a -! b)
     ComposeMode a *! ComposeMode b = ComposeMode (a *! b)
@@ -113,7 +113,7 @@ instance (Mode f, Mode g) => Lifted (ComposeMode f g) where
     signum1 (ComposeMode a) = ComposeMode (signum1 a)
     ComposeMode a /! ComposeMode b = ComposeMode (a /! b)
     recip1 (ComposeMode a) = ComposeMode (recip1 a)
-    fromRational1 = ComposeMode . lift . fromRational1
+    fromRational1 = ComposeMode . auto . fromRational1
     toRational1 (ComposeMode a) = toRational1 a
     pi1 = ComposeMode pi1
     exp1 (ComposeMode a) = ComposeMode (exp1 a)

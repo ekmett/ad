@@ -92,7 +92,7 @@ class Lifted t => Mode t where
     isKnownZero _ = False
 
     -- | Embed a constant
-    lift  :: Num a => a -> t a
+    auto  :: Num a => a -> t a
 
     -- | Vector sum
     (<+>) :: Num a => t a -> t a -> t a
@@ -113,19 +113,19 @@ class Lifted t => Mode t where
     -- | > 'zero' = 'lift' 0
     zero :: Num a => t a
 
-    a *^ b = lift a *! b
-    a ^* b = a *! lift b
+    a *^ b = auto a *! b
+    a ^* b = a *! auto b
 
     a ^/ b = a ^* recip b
 
-    zero = lift 0
+    zero = auto 0
 
 one :: (Mode t, Num a) => t a
-one = lift 1
+one = auto 1
 {-# INLINE one #-}
 
 negOne :: (Mode t, Num a) => t a
-negOne = lift (-1)
+negOne = auto (-1)
 {-# INLINE negOne #-}
 
 -- | 'Primal' is used by 'deriveMode' but is not exposed
@@ -133,7 +133,7 @@ negOne = lift (-1)
 -- via the AD data type.
 --
 -- It provides direct access to the result, stripped of its derivative information,
--- but this is unsafe in general as (lift . primal) would discard derivative
+-- but this is unsafe in general as (auto . primal) would discard derivative
 -- information. The end user is protected from accidentally using this function
 -- by the universal quantification on the various combinators we expose.
 
@@ -200,11 +200,11 @@ deriveLifted f _t = do
        instance Lifted $_t where
         (==!)         = (==) `on` primal
         compare1      = compare `on` primal
-        maxBound1     = lift maxBound
-        minBound1     = lift minBound
+        maxBound1     = auto maxBound
+        minBound1     = auto minBound
         showsPrec1 d  = showsPrec d . primal
         fromInteger1 0 = zero
-        fromInteger1 n = lift (fromInteger n)
+        fromInteger1 n = auto (fromInteger n)
         (+!)          = (<+>) -- binary (+) one one
         (-!)          = binary (-) one negOne -- TODO: <-> ? as it is, this might be pretty bad for Tower
         (*!)          = lift2 (*) (\x y -> (y, x))
@@ -212,14 +212,14 @@ deriveLifted f _t = do
         abs1          = lift1 abs signum1
         signum1       = lift1 signum (const zero)
         fromRational1 0 = zero
-        fromRational1 r = lift (fromRational r)
+        fromRational1 r = auto (fromRational r)
         x /! y        = x *! recip1 y
         recip1        = lift1_ recip (const . negate1 . square1)
-        pi1       = lift pi
+        pi1       = auto pi
         exp1      = lift1_ exp const
         log1      = lift1 log recip1
         logBase1 x y = log1 y /! log1 x
-        sqrt1     = lift1_ sqrt (\z _ -> recip1 (lift 2 *! z))
+        sqrt1     = lift1_ sqrt (\z _ -> recip1 (auto 2 *! z))
         (**!)     = (<**>)
         --x **! y
         --   | isKnownZero y     = 1
@@ -240,7 +240,7 @@ deriveLifted f _t = do
 
         succ1                 = lift1 succ (const one)
         pred1                 = lift1 pred (const one)
-        toEnum1               = lift . toEnum
+        toEnum1               = auto . toEnum
         fromEnum1             = discrete1 fromEnum
         enumFrom1 a           = withPrimal a <$> discrete1 enumFrom a
         enumFromTo1 a b       = withPrimal a <$> discrete2 enumFromTo a b
@@ -252,7 +252,7 @@ deriveLifted f _t = do
         floatDigits1     = discrete1 floatDigits
         floatRange1      = discrete1 floatRange
         decodeFloat1     = discrete1 decodeFloat
-        encodeFloat1 m e = lift (encodeFloat m e)
+        encodeFloat1 m e = auto (encodeFloat m e)
         isNaN1           = discrete1 isNaN
         isInfinite1      = discrete1 isInfinite
         isDenormalized1  = discrete1 isDenormalized

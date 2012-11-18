@@ -72,7 +72,7 @@ times (Sparse a as) n (Sparse b bs) = Sparse (a * b) $
 vars :: (Traversable f, Num a) => f a -> f (AD Sparse a)
 vars = snd . mapAccumL var 0
     where
-        var !n a = (n + 1, AD $ Sparse a $ singleton n $ lift 1)
+        var !n a = (n + 1, AD $ Sparse a $ singleton n $ auto 1)
 {-# INLINE vars #-}
 
 apply :: (Traversable f, Num a) => (f (AD Sparse a) -> b) -> f a -> b
@@ -105,7 +105,7 @@ ds fs (AD as@(Sparse a _)) = a :< (go emptyIndex <$> fns)
 
 {-
 vvars :: Num a => Vector a -> Vector (AD Sparse a)
-vvars = Vector.imap (\n a -> AD $ Sparse a $ singleton n $ lift 1)
+vvars = Vector.imap (\n a -> AD $ Sparse a $ singleton n $ auto 1)
 {-# INLINE vvars #-}
 
 vapply :: Num a => (Vector (AD Sparse a) -> b) -> Vector a -> b
@@ -131,7 +131,7 @@ vds n (AD as@(Sparse a _)) = a :< Vector.generate n (go emptyIndex)
 
 partial :: Num a => [Int] -> Sparse a -> a
 partial []     (Sparse a _)  = a
-partial (n:ns) (Sparse _ da) = partial ns $ findWithDefault (lift 0) n da
+partial (n:ns) (Sparse _ da) = partial ns $ findWithDefault (auto 0) n da
 partial _      Zero          = 0
 {-# INLINE partial #-}
 
@@ -148,10 +148,10 @@ instance Primal Sparse where
     primal Zero = 0
 
 instance Lifted Sparse => Mode Sparse where
-    lift a = Sparse a IntMap.empty
+    auto a = Sparse a IntMap.empty
     zero = Zero
-    Zero <**> y    = lift (0 ** primal y)
-    _    <**> Zero = lift 1
+    Zero <**> y    = auto (0 ** primal y)
+    _    <**> Zero = auto 1
     x    <**> y@(Sparse b bs)
       | IntMap.null bs = lift1 (**b) (\z -> (b *^ z <**> Sparse (b-1) IntMap.empty)) x
       | otherwise      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
@@ -167,17 +167,17 @@ instance Lifted Sparse => Mode Sparse where
 
 instance Lifted Sparse => Jacobian Sparse where
     type D Sparse = Sparse
-    unary f _ Zero = lift (f 0)
+    unary f _ Zero = auto (f 0)
     unary f dadb (Sparse pb bs) = Sparse (f pb) $ mapWithKey (times dadb) bs
 
-    lift1 f _ Zero = lift (f 0)
+    lift1 f _ Zero = auto (f 0)
     lift1 f df b@(Sparse pb bs) = Sparse (f pb) $ mapWithKey (times (df b)) bs
 
-    lift1_ f _  Zero = lift (f 0)
+    lift1_ f _  Zero = auto (f 0)
     lift1_ f df b@(Sparse pb bs) = a where
         a = Sparse (f pb) $ mapWithKey (times (df a b)) bs
 
-    binary f _    _    Zero           Zero           = lift (f 0 0)
+    binary f _    _    Zero           Zero           = auto (f 0 0)
     binary f _    dadc Zero           (Sparse pc dc) = Sparse (f 0  pc) $ mapWithKey (times dadc) dc
     binary f dadb _    (Sparse pb db) Zero           = Sparse (f pb 0 ) $ mapWithKey (times dadb) db
     binary f dadb dadc (Sparse pb db) (Sparse pc dc) = Sparse (f pb pc) $
@@ -185,7 +185,7 @@ instance Lifted Sparse => Jacobian Sparse where
             (mapWithKey (times dadb) db)
             (mapWithKey (times dadc) dc)
 
-    lift2 f _  Zero             Zero = lift (f 0 0)
+    lift2 f _  Zero             Zero = auto (f 0 0)
     lift2 f df Zero c@(Sparse pc dc) = Sparse (f 0 pc) $ mapWithKey (times dadc) dc where dadc = snd (df zero c)
     lift2 f df b@(Sparse pb db) Zero = Sparse (f pb 0) $ mapWithKey (times dadb) db where dadb = fst (df b zero)
     lift2 f df b@(Sparse pb db) c@(Sparse pc dc) = Sparse (f pb pc) da where
@@ -194,7 +194,7 @@ instance Lifted Sparse => Jacobian Sparse where
             (mapWithKey (times dadb) db)
             (mapWithKey (times dadc) dc)
 
-    lift2_ f _  Zero             Zero = lift (f 0 0)
+    lift2_ f _  Zero             Zero = auto (f 0 0)
     lift2_ f df b@(Sparse pb db) Zero = a where a = Sparse (f pb 0) (mapWithKey (times (fst (df a b zero))) db)
     lift2_ f df Zero c@(Sparse pc dc) = a where a = Sparse (f 0 pc) (mapWithKey (times (snd (df a zero c))) dc)
     lift2_ f df b@(Sparse pb db) c@(Sparse pc dc) = a where

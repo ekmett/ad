@@ -1,3 +1,8 @@
+3.2
+---
+* Renamed `Chain` to `Wengert` to reflect its use of Wengert lists for reverse mode.
+* Renamed `lift` to `auto` to avoid conflict with the more prevalent `transformers` library.
+
 3.1.4
 -----
 * Added a better "convergence" test for `findZero`

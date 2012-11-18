@@ -70,7 +70,7 @@ instance Primal Forward where
     primal Zero = 0
 
 instance Lifted Forward => Mode Forward where
-    lift = Lift
+    auto = Lift
     zero = Zero
 
     isKnownZero Zero = True
@@ -86,8 +86,8 @@ instance Lifted Forward => Mode Forward where
     Lift a <+> Forward b db = Forward (a + b) db
     Lift a <+> Lift b = Lift (a + b)
 
-    Zero <**> y      = lift (0 ** primal y)
-    _    <**> Zero   = lift 1
+    Zero <**> y      = auto (0 ** primal y)
+    _    <**> Zero   = auto 1
     x    <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
     x    <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
@@ -168,14 +168,14 @@ bind :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> f b
 bind f as = snd $ mapAccumL outer (0 :: Int) as
     where
         outer !i _ = (i + 1, f $ snd $ mapAccumL (inner i) 0 as)
-        inner !i !j a = (j + 1, if i == j then bundle a 1 else lift a)
+        inner !i !j a = (j + 1, if i == j then bundle a 1 else auto a)
 
 bind' :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> (b, f b)
 bind' f as = dropIx $ mapAccumL outer (0 :: Int, b0) as
     where
         outer (!i, _) _ = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), b)
-        inner !i !j a = (j + 1, if i == j then bundle a 1 else lift a)
-        b0 = f (lift <$> as)
+        inner !i !j a = (j + 1, if i == j then bundle a 1 else auto a)
+        b0 = f (auto <$> as)
         dropIx ((_,b),bs) = (b,bs)
 
 bindWith :: (Traversable f, Num a) => (a -> b -> c) -> (f (AD Forward a) -> b) -> f a -> f c
@@ -189,7 +189,7 @@ bindWith' g f as = dropIx $ mapAccumL outer (0 :: Int, b0) as
     where
         outer (!i, _) a = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), g a b)
         inner !i !j a = (j + 1, if i == j then bundle a 1 else AD Zero)
-        b0 = f (lift <$> as)
+        b0 = f (auto <$> as)
         dropIx ((_,b),bs) = (b,bs)
 
 -- we can't transpose arbitrary traversables, since we can't construct one out of whole cloth, and the outer

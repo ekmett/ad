@@ -2,25 +2,26 @@
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Internal.Chain
+-- Module      :  Numeric.AD.Internal.Wengert
 -- Copyright   :  (c) Edward Kmett 2012
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
 -- Portability :  GHC only
 --
--- Reverse-Mode Automatic Differentiation using a single tape.
+-- Reverse-Mode Automatic Differentiation using a single Wengert list (or \"tape\").
 --
--- This version uses @Data.Reflection@ to find and update the tape
+-- This version uses @Data.Reflection@ to find and update the tape.
 --
 -- This is asymptotically faster than using @Reverse@, which
 -- is forced to reify and topologically sort the graph, but it requires
--- a fairly expensive rendezvous during construction.
+-- a fairly expensive rendezvous during construction when updated using
+-- multiple threads.
 --
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Internal.Chain
-    ( Chain(..)
+module Numeric.AD.Internal.Wengert
+    ( Wengert(..)
     , Tape(..)
     , Head(..)
     , Cells(..)
@@ -84,52 +85,52 @@ modifyTape p = atomicModifyIORef (getTape (reflect p))
 
 -- | This is used to create a new entry on the chain given a unary function, its derivative with respect to its input,
 -- the variable ID of its input, and the value of its input. Used by 'unary' and 'binary' internally.
-unarily :: forall s a. Reifies s Tape => (a -> a) -> a -> Int -> a -> Chain s a
-unarily f di i b = Chain (unsafePerformIO (modifyTape (Proxy :: Proxy s) (un i di))) $! f b
+unarily :: forall s a. Reifies s Tape => (a -> a) -> a -> Int -> a -> Wengert s a
+unarily f di i b = Wengert (unsafePerformIO (modifyTape (Proxy :: Proxy s) (un i di))) $! f b
 {-# INLINE unarily #-}
 
 -- | This is used to create a new entry on the chain given a binary function, its derivatives with respect to its inputs,
 -- their variable IDs and values. Used by 'binary' internally.
-binarily :: forall s a. Reifies s Tape => (a -> a -> a) -> a -> a -> Int -> a -> Int -> a -> Chain s a
-binarily f di dj i b j c = Chain (unsafePerformIO (modifyTape (Proxy :: Proxy s) (bin i j di dj))) $! f b c
+binarily :: forall s a. Reifies s Tape => (a -> a -> a) -> a -> a -> Int -> a -> Int -> a -> Wengert s a
+binarily f di dj i b j c = Wengert (unsafePerformIO (modifyTape (Proxy :: Proxy s) (bin i j di dj))) $! f b c
 {-# INLINE binarily #-}
 
-data Chain s a where
-  Zero :: Chain s a
-  Lift :: a -> Chain s a
-  Chain :: {-# UNPACK #-} !Int -> a -> Chain s a
+data Wengert s a where
+  Zero :: Wengert s a
+  Lift :: a -> Wengert s a
+  Wengert :: {-# UNPACK #-} !Int -> a -> Wengert s a
   deriving (Show, Typeable)
 
-instance (Reifies s Tape, Lifted (Chain s)) => Mode (Chain s) where
+instance (Reifies s Tape, Lifted (Wengert s)) => Mode (Wengert s) where
   isKnownZero Zero = True
   isKnownZero _    = False
 
-  isKnownConstant Chain{} = False
+  isKnownConstant Wengert{} = False
   isKnownConstant _ = True
 
-  lift = Lift
+  auto = Lift
   zero = Zero
   (<+>)  = binary (+) one one
-  a *^ b = lift1 (a *) (\_ -> lift a) b
-  a ^* b = lift1 (* b) (\_ -> lift b) a
-  a ^/ b = lift1 (/ b) (\_ -> lift (recip b)) a
+  a *^ b = lift1 (a *) (\_ -> auto a) b
+  a ^* b = lift1 (* b) (\_ -> auto b) a
+  a ^/ b = lift1 (/ b) (\_ -> auto (recip b)) a
 
-  Zero <**> y      = lift (0 ** primal y)
-  _    <**> Zero   = lift 1
+  Zero <**> y      = auto (0 ** primal y)
+  _    <**> Zero   = auto 1
   x    <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
   x    <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
-instance Primal (Chain s) where
+instance Primal (Wengert s) where
     primal Zero = 0
     primal (Lift a) = a
-    primal (Chain _ a) = a
+    primal (Wengert _ a) = a
 
-instance (Reifies s Tape, Lifted (Chain s)) => Jacobian (Chain s) where
-    type D (Chain s) = Id
+instance (Reifies s Tape, Lifted (Wengert s)) => Jacobian (Wengert s) where
+    type D (Wengert s) = Id
 
     unary f _         (Zero)   = Lift (f 0)
     unary f _         (Lift a) = Lift (f a)
-    unary f (Id dadi) (Chain i b) = unarily f dadi i b
+    unary f (Id dadi) (Wengert i b) = unarily f dadi i b
 
     lift1 f df b = unary f (df (Id pb)) b
         where pb = primal b
@@ -143,11 +144,11 @@ instance (Reifies s Tape, Lifted (Chain s)) => Jacobian (Chain s) where
     binary f _         _         (Lift b) Zero     = Lift (f b 0)
     binary f _         _         (Lift b) (Lift c) = Lift (f b c)
 
-    binary f _         (Id dadc) Zero        (Chain i c) = unarily (f 0) dadc i c
-    binary f _         (Id dadc) (Lift b)    (Chain i c) = unarily (f b) dadc i c
-    binary f (Id dadb) _         (Chain i b) Zero        = unarily (`f` 0) dadb i b
-    binary f (Id dadb) _         (Chain i b) (Lift c)    = unarily (`f` c) dadb i b
-    binary f (Id dadb) (Id dadc) (Chain i b) (Chain j c) = binarily f dadb dadc i b j c
+    binary f _         (Id dadc) Zero        (Wengert i c) = unarily (f 0) dadc i c
+    binary f _         (Id dadc) (Lift b)    (Wengert i c) = unarily (f b) dadc i c
+    binary f (Id dadb) _         (Wengert i b) Zero        = unarily (`f` 0) dadb i b
+    binary f (Id dadb) _         (Wengert i b) (Lift c)    = unarily (`f` c) dadb i b
+    binary f (Id dadb) (Id dadc) (Wengert i b) (Wengert j c) = binarily f dadb dadc i b j c
 
     lift2 f df b c = binary f dadb dadc b c
         where (dadb, dadc) = df (Id (primal b)) (Id (primal c))
@@ -160,15 +161,15 @@ instance (Reifies s Tape, Lifted (Chain s)) => Jacobian (Chain s) where
             (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
 let s = varT (mkName "s") in
-  deriveLifted (classP ''Reifies [s, conT ''Tape] :) (conT ''Chain `appT` s)
+  deriveLifted (classP ''Reifies [s, conT ''Tape] :) (conT ''Wengert `appT` s)
 
 -- | Helper that extracts the derivative of a chain when the chain was constructed with one variable.
-derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Chain s) a -> a
+derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Wengert s) a -> a
 derivativeOf _ = sum . partials
 {-# INLINE derivativeOf #-}
 
 -- | Helper that extracts both the primal and derivative of a chain when the chain was constructed with one variable.
-derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> AD (Chain s) a -> (a, a)
+derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> AD (Wengert s) a -> (a, a)
 derivativeOf' p r = (primal r, derivativeOf p r)
 {-# INLINE derivativeOf' #-}
 
@@ -189,11 +190,11 @@ backPropagate k (Binary i j g h xs) ss = do
   (backPropagate $! k - 1) xs ss
 
 -- | Extract the partials from the current chain for a given AD variable.
-{-# SPECIALIZE partials :: Reifies s Tape => AD (Chain s) Double -> [Double] #-}
-partials :: forall s a. (Reifies s Tape, Num a) => AD (Chain s) a -> [a]
+{-# SPECIALIZE partials :: Reifies s Tape => AD (Wengert s) Double -> [Double] #-}
+partials :: forall s a. (Reifies s Tape, Num a) => AD (Wengert s) a -> [a]
 partials (AD Zero)        = []
 partials (AD (Lift _))    = []
-partials (AD (Chain k _)) = map (sensitivities !) [0..vs] where
+partials (AD (Wengert k _)) = map (sensitivities !) [0..vs] where
    Head n t = unsafePerformIO $ readIORef (getTape (reflect (Proxy :: Proxy s)))
    tk = dropCells (n - k) t
    (vs,sensitivities) = runST $ do
@@ -204,12 +205,12 @@ partials (AD (Chain k _)) = map (sensitivities !) [0..vs] where
      return (v, as)
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.
-partialArrayOf :: (Reifies s Tape, Num a) => Proxy s -> (Int, Int) -> AD (Chain s) a -> Array Int a
+partialArrayOf :: (Reifies s Tape, Num a) => Proxy s -> (Int, Int) -> AD (Wengert s) a -> Array Int a
 partialArrayOf _ vbounds = accumArray (+) 0 vbounds . zip [0..] . partials
 {-# INLINE partialArrayOf #-}
 
 -- | Return an 'IntMap' of sparse partials
-partialMapOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Chain s) a -> IntMap a
+partialMapOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Wengert s) a -> IntMap a
 partialMapOf _ = fromDistinctAscList . zip [0..] . partials
 {-# INLINE partialMapOf #-}
 
@@ -220,7 +221,7 @@ reifyTape vs k = unsafePerformIO $ do
   return (reify (Tape h) k)
 {-# NOINLINE reifyTape #-}
 
-instance Var (Chain s) where
-    var a v = Chain v a
-    varId (Chain v _) = v
+instance Var (Wengert s) where
+    var a v = Wengert v a
+    varId (Wengert v _) = v
     varId _ = error "varId: not a Var"

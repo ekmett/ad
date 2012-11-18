@@ -1,5 +1,5 @@
 name:         ad
-version:      3.1.4
+version:      3.2
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2012,
@@ -26,7 +26,7 @@ description:
     .
     * @Numeric.AD.Mode.Reverse@ uses benign side-effects to compute reverse-mode AD. It is good for computing gradients in one pass. It generates a tree-like tape that needs to be topologically sorted in the end.
     .
-    * @Numeric.AD.Mode.Chain@ uses benign side-effects to compute reverse-mode AD. It is good for computing gradients in one pass. It generates a linear tape using @Data.Reflection@.
+    * @Numeric.AD.Mode.Wengert@ uses benign side-effects to compute reverse-mode AD. It is good for computing gradients in one pass. It generates a Wengert list (linear tape) using @Data.Reflection@.
     .
     * @Numeric.AD.Mode.Sparse@ computes a sparse forward-mode AD tower. It is good for higher derivatives or large numbers of outputs.
     .
@@ -104,7 +104,7 @@ library
     Numeric.AD.Newton
     Numeric.AD.Halley
 
-    Numeric.AD.Mode.Chain
+    Numeric.AD.Mode.Wengert
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward
     Numeric.AD.Mode.Reverse
@@ -121,7 +121,7 @@ library
     Numeric.AD.Internal.Tower
     Numeric.AD.Internal.Reverse
     Numeric.AD.Internal.Var
-    Numeric.AD.Internal.Chain
+    Numeric.AD.Internal.Wengert
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Composition

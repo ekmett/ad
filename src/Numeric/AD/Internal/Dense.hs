@@ -80,7 +80,7 @@ instance Primal (Dense f) where
     primal (Dense a _) = a
 
 instance (Traversable f, Lifted (Dense f)) => Mode (Dense f) where
-    lift = Lift
+    auto = Lift
     zero = Zero
 
     Zero <+> a = a
@@ -90,8 +90,8 @@ instance (Traversable f, Lifted (Dense f)) => Mode (Dense f) where
     Dense a da <+> Lift b     = Dense (a + b) da
     Dense a da <+> Dense b db = Dense (a + b) $ zipWithT (+) da db
 
-    Zero <**> y      = lift (0 ** primal y)
-    _    <**> Zero   = lift 1
+    Zero <**> y      = auto (0 ** primal y)
+    _    <**> Zero   = auto 1
     x    <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
     x    <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 

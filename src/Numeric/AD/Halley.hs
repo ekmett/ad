@@ -58,7 +58,7 @@ findZero f = go where
 -- Note: the @take 10 $ inverse sqrt 1 (sqrt 10)@ example that works for Newton's method
 -- fails with Halley's method because the preconditions do not hold!
 inverse :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
-inverse f x0 y = findZero (\x -> f x - lift y) x0
+inverse f x0 y = findZero (\x -> f x - auto y) x0
 {-# INLINE inverse  #-}
 
 -- | The 'fixedPoint' function find a fixedpoint of a scalar

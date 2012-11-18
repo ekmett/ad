@@ -1,18 +1,18 @@
 {-# LANGUAGE Rank2Types, TemplateHaskell, BangPatterns, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, UndecidableInstances, ScopedTypeVariables #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Mode.Chain
+-- Module      :  Numeric.AD.Mode.Wengert
 -- Copyright   :  (c) Edward Kmett 2010
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
 -- Portability :  GHC only
 --
--- Reverse Automatic Differentiation using Data.Reflection
+-- Reverse-mode automatic differentiation using Wengert lists and Data.Reflection
 --
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Mode.Chain
+module Numeric.AD.Mode.Wengert
     (
     -- * Gradient
       grad
@@ -43,7 +43,7 @@ import Data.Traversable (Traversable)
 import Numeric.AD.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Composition
-import Numeric.AD.Internal.Chain
+import Numeric.AD.Internal.Wengert
 import Numeric.AD.Internal.Var
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with reverse-mode AD in a single pass.

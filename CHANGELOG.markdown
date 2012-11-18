@@ -2,6 +2,7 @@
 ---
 * Renamed `Chain` to `Wengert` to reflect its use of Wengert lists for reverse mode.
 * Renamed `lift` to `auto` to avoid conflict with the more prevalent `transformers` library.
+* Fixed a bug in `Numeric.AD.Forward.gradWith'`, which caused it to return the wrong value for the primal.
 
 3.1.4
 -----

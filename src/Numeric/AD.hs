@@ -108,6 +108,12 @@ module Numeric.AD
     -- * Maclaurin Series (Tower)
     , maclaurin
     , maclaurin0
+
+    -- * Gradient Descent
+    , gradientDescent
+    , gradientAscent
+    , conjugateGradientDescent
+    , conjugateGradientAscent
     ) where
 
 import Data.Traversable (Traversable)
@@ -136,6 +142,8 @@ import Numeric.AD.Mode.Reverse
 import qualified Numeric.AD.Mode.Sparse as Sparse
 import Numeric.AD.Mode.Sparse
     ( grads, jacobians, hessian', hessianF')
+
+import Numeric.AD.Newton
 
 -- | Calculate the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
 --

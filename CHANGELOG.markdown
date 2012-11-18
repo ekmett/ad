@@ -1,3 +1,7 @@
+3.2.2
+-----
+* Export of the `conjugateGradientDescent` and `gradientDescent` from `Numeric.AD`
+
 3.2.1
 ---
 * `conjugateGradientDescent` now stops before it starts returning NaN results.

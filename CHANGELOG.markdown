@@ -1,3 +1,7 @@
+3.2.1
+---
+* `conjugateGradientDescent` now stops before it starts returning NaN results.
+
 3.2
 ---
 * Renamed `Chain` to `Wengert` to reflect its use of Wengert lists for reverse mode.

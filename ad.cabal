@@ -1,5 +1,5 @@
 name:         ad
-version:      3.2.2
+version:      3.3
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2012,
@@ -24,9 +24,9 @@ description:
     .
     * @Numeric.AD.Mode.Forward@ provides basic forward-mode AD. It is good for computing simple derivatives.
     .
-    * @Numeric.AD.Mode.Reverse@ uses benign side-effects to compute reverse-mode AD. It is good for computing gradients in one pass. It generates a tree-like tape that needs to be topologically sorted in the end.
+    * @Numeric.AD.Mode.Reverse@ uses benign side-effects to compute reverse-mode AD. It is good for computing gradients in one pass. It generates a Wengert list (linear tape) using @Data.Reflection@.
     .
-    * @Numeric.AD.Mode.Wengert@ uses benign side-effects to compute reverse-mode AD. It is good for computing gradients in one pass. It generates a Wengert list (linear tape) using @Data.Reflection@.
+    * @Numeric.AD.Mode.Kahn@ uses benign side-effects to compute reverse-mode AD. It is good for computing gradients in one pass. It generates a tree-like tape that needs to be topologically sorted in the end.
     .
     * @Numeric.AD.Mode.Sparse@ computes a sparse forward-mode AD tower. It is good for higher derivatives or large numbers of outputs.
     .
@@ -104,24 +104,24 @@ library
     Numeric.AD.Newton
     Numeric.AD.Halley
 
-    Numeric.AD.Mode.Wengert
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward
+    Numeric.AD.Mode.Kahn
     Numeric.AD.Mode.Reverse
     Numeric.AD.Mode.Tower
     Numeric.AD.Mode.Sparse
 
     Numeric.AD.Variadic
-    Numeric.AD.Variadic.Reverse
+    Numeric.AD.Variadic.Kahn
     Numeric.AD.Variadic.Sparse
 
     Numeric.AD.Internal.Classes
     Numeric.AD.Internal.Combinators
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Tower
+    Numeric.AD.Internal.Kahn
     Numeric.AD.Internal.Reverse
     Numeric.AD.Internal.Var
-    Numeric.AD.Internal.Wengert
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Composition

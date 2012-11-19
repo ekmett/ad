@@ -8,13 +8,7 @@
 -- Stability   :  experimental
 -- Portability :  GHC only
 --
--- Reverse-Mode Automatic Differentiation using a single tape.
---
--- This version uses @Data.Reflection@ to update a single tape.
---
--- This is asymptotically faster than using @Reverse@, which
--- is forced to reify and topologically sort the graph, but it is
--- less friendly to the use of sparks.
+-- Variables used for reverse-mode automatic differentiation.
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Internal.Var

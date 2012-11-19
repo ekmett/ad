@@ -1,111 +1,136 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, FlexibleContexts, TemplateHaskell, UndecidableInstances, DeriveDataTypeable #-}
+{-# LANGUAGE Rank2Types, TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, FlexibleContexts, TemplateHaskell, UndecidableInstances, DeriveDataTypeable, GADTs, ScopedTypeVariables #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Reverse
--- Copyright   :  (c) Edward Kmett 2010
+-- Copyright   :  (c) Edward Kmett 2012
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
 -- Portability :  GHC only
 --
--- Reverse-Mode Automatic Differentiation implementation details
+-- Reverse-Mode Automatic Differentiation using a single Wengert list (or \"tape\").
 --
--- For reverse mode AD we use 'System.Mem.StableName.StableName' to recover sharing information from
--- the tape to avoid combinatorial explosion, and thus run asymptotically faster
--- than it could without such sharing information, but the use of side-effects
--- contained herein is benign.
+-- This version uses @Data.Reflection@ to find and update the tape.
+--
+-- This is asymptotically faster than using @Reverse@, which
+-- is forced to reify and topologically sort the graph, but it requires
+-- a fairly expensive rendezvous during construction when updated using
+-- multiple threads.
 --
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Internal.Reverse
     ( Reverse(..)
     , Tape(..)
+    , Head(..)
+    , Cells(..)
+    , reifyTape
     , partials
-    , partialArray
-    , partialMap
-    , derivative
-    , derivative'
-    , vgrad, vgrad'
-    , Grad(..)
+    , partialArrayOf
+    , partialMapOf
+    , derivativeOf
+    , derivativeOf'
     ) where
 
-import Prelude hiding (mapM)
-import Control.Applicative (Applicative(..),(<$>))
 import Control.Monad.ST
-import Control.Monad (forM_)
-import Data.List (foldl')
 import Data.Array.ST
 import Data.Array
-import Data.IntMap (IntMap, fromListWith)
-import Data.Graph (Vertex, transposeG, Graph)
-import Data.Reify (reifyGraph, MuRef(..))
-import qualified Data.Reify.Graph as Reified
-import System.IO.Unsafe (unsafePerformIO)
-import Language.Haskell.TH
-import Data.Data (Data)
-import Data.Typeable (Typeable)
+import Data.Array.Unsafe as Unsafe
+import Data.IORef
+import Data.IntMap (IntMap, fromDistinctAscList)
+import Data.Proxy
+import Data.Reflection
+import Data.Typeable
+import Language.Haskell.TH hiding (reify)
 import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Internal.Var
+import Prelude hiding (mapM)
+import System.IO.Unsafe (unsafePerformIO)
+import Unsafe.Coerce
 
--- | A @Tape@ records the information needed back propagate from the output to each input during 'Reverse' 'Mode' AD.
-data Tape a t
-    = Zero
-    | Lift !a
-    | Var !a {-# UNPACK #-} !Int
-    | Binary !a a a t t
-    | Unary !a a t
-    deriving (Show, Data, Typeable)
+-- evil untyped tape
+data Cells where
+  Nil    :: Cells
+  Unary  :: {-# UNPACK #-} !Int -> a -> Cells -> Cells
+  Binary :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Int -> a -> a -> Cells -> Cells
 
--- | @Reverse@ is a 'Mode' using reverse-mode automatic differentiation that provides fast 'diffFU', 'diff2FU', 'grad', 'grad2' and a fast 'jacobian' when you have a significantly smaller number of outputs than inputs.
-newtype Reverse a = Reverse (Tape a (Reverse a)) deriving (Show, Typeable)
+dropCells :: Int -> Cells -> Cells
+dropCells 0 xs = xs
+dropCells _ Nil = Nil
+dropCells n (Unary _ _ xs)      = (dropCells $! n - 1) xs
+dropCells n (Binary _ _ _ _ xs) = (dropCells $! n - 1) xs
 
--- deriving instance (Data (Tape a (Reverse a)) => Data (Reverse a)
+data Head = Head {-# UNPACK #-} !Int Cells
 
-instance MuRef (Reverse a) where
-    type DeRef (Reverse a) = Tape a
+newtype Tape = Tape { getTape :: IORef Head }
 
-    mapDeRef _ (Reverse Zero) = pure Zero
-    mapDeRef _ (Reverse (Lift a)) = pure (Lift a)
-    mapDeRef _ (Reverse (Var a v)) = pure (Var a v)
-    mapDeRef f (Reverse (Binary a dadb dadc b c)) = Binary a dadb dadc <$> f b <*> f c
-    mapDeRef f (Reverse (Unary a dadb b)) = Unary a dadb <$> f b
+un :: Int -> a -> Head -> (Head, Int)
+un i di (Head r t) = h `seq` r' `seq` (h, r') where
+  r' = r + 1
+  h = Head r' (Unary i di t)
+{-# INLINE un #-}
 
-instance Lifted Reverse => Mode Reverse where
-    isKnownZero (Reverse Zero) = True
-    isKnownZero _    = False
+bin :: Int -> Int -> a -> a -> Head -> (Head, Int)
+bin i j di dj (Head r t) = h `seq` r' `seq` (h, r') where
+  r' = r + 1
+  h = Head r' (Binary i j di dj t)
+{-# INLINE bin #-}
 
-    isKnownConstant (Reverse Zero) = True
-    isKnownConstant (Reverse (Lift _)) = True
-    isKnownConstant _ = False
+modifyTape :: Reifies s Tape => p s -> (Head -> (Head, r)) -> IO r
+modifyTape p = atomicModifyIORef (getTape (reflect p))
+{-# INLINE modifyTape #-}
 
-    auto a = Reverse (Lift a)
-    zero   = Reverse Zero
-    (<+>)  = binary (+) one one
-    a *^ b = lift1 (a *) (\_ -> auto a) b
-    a ^* b = lift1 (* b) (\_ -> auto b) a
-    a ^/ b = lift1 (/ b) (\_ -> auto (recip b)) a
+-- | This is used to create a new entry on the chain given a unary function, its derivative with respect to its input,
+-- the variable ID of its input, and the value of its input. Used by 'unary' and 'binary' internally.
+unarily :: forall s a. Reifies s Tape => (a -> a) -> a -> Int -> a -> Reverse s a
+unarily f di i b = Reverse (unsafePerformIO (modifyTape (Proxy :: Proxy s) (un i di))) $! f b
+{-# INLINE unarily #-}
 
-    Reverse Zero <**> y                = auto (0 ** primal y)
-    _            <**> Reverse Zero     = auto 1
-    x            <**> Reverse (Lift y) = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
-    x            <**> y                = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
+-- | This is used to create a new entry on the chain given a binary function, its derivatives with respect to its inputs,
+-- their variable IDs and values. Used by 'binary' internally.
+binarily :: forall s a. Reifies s Tape => (a -> a -> a) -> a -> a -> Int -> a -> Int -> a -> Reverse s a
+binarily f di dj i b j c = Reverse (unsafePerformIO (modifyTape (Proxy :: Proxy s) (bin i j di dj))) $! f b c
+{-# INLINE binarily #-}
 
-instance Primal Reverse where
-    primal (Reverse Zero) = 0
-    primal (Reverse (Lift a)) = a
-    primal (Reverse (Var a _)) = a
-    primal (Reverse (Binary a _ _ _ _)) = a
-    primal (Reverse (Unary a _ _)) = a
+data Reverse s a where
+  Zero :: Reverse s a
+  Lift :: a -> Reverse s a
+  Reverse :: {-# UNPACK #-} !Int -> a -> Reverse s a
+  deriving (Show, Typeable)
 
-instance Lifted Reverse => Jacobian Reverse where
-    type D Reverse = Id
+instance (Reifies s Tape, Lifted (Reverse s)) => Mode (Reverse s) where
+  isKnownZero Zero = True
+  isKnownZero _    = False
 
-    unary f _         (Reverse Zero)     = Reverse (Lift (f 0))
-    unary f _         (Reverse (Lift a)) = Reverse (Lift (f a))
-    unary f (Id dadb) b                  = Reverse (Unary (f (primal b)) dadb b)
+  isKnownConstant Reverse{} = False
+  isKnownConstant _ = True
+
+  auto = Lift
+  zero = Zero
+  (<+>)  = binary (+) one one
+  a *^ b = lift1 (a *) (\_ -> auto a) b
+  a ^* b = lift1 (* b) (\_ -> auto b) a
+  a ^/ b = lift1 (/ b) (\_ -> auto (recip b)) a
+
+  Zero <**> y      = auto (0 ** primal y)
+  _    <**> Zero   = auto 1
+  x    <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
+  x    <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
+
+instance Primal (Reverse s) where
+    primal Zero = 0
+    primal (Lift a) = a
+    primal (Reverse _ a) = a
+
+instance (Reifies s Tape, Lifted (Reverse s)) => Jacobian (Reverse s) where
+    type D (Reverse s) = Id
+
+    unary f _         (Zero)   = Lift (f 0)
+    unary f _         (Lift a) = Lift (f a)
+    unary f (Id dadi) (Reverse i b) = unarily f dadi i b
 
     lift1 f df b = unary f (df (Id pb)) b
         where pb = primal b
@@ -114,15 +139,16 @@ instance Lifted Reverse => Jacobian Reverse where
         where pb = primal b
               a = f pb
 
-    binary f _         _         (Reverse Zero)     (Reverse Zero)     = Reverse (Lift (f 0 0))
-    binary f _         _         (Reverse Zero)     (Reverse (Lift c)) = Reverse (Lift (f 0 c))
-    binary f _         _         (Reverse (Lift b)) (Reverse Zero)     = Reverse (Lift (f b 0))
-    binary f _         _         (Reverse (Lift b)) (Reverse (Lift c)) = Reverse (Lift (f b c))
-    binary f _         (Id dadc) (Reverse Zero)     c                  = Reverse (Unary (f 0 (primal c)) dadc c)
-    binary f _         (Id dadc) (Reverse (Lift b)) c                  = Reverse (Unary (f b (primal c)) dadc c)
-    binary f (Id dadb) _         b                  (Reverse Zero)     = Reverse (Unary (f (primal b) 0) dadb b)
-    binary f (Id dadb) _         b                  (Reverse (Lift c)) = Reverse (Unary (f (primal b) c) dadb b)
-    binary f (Id dadb) (Id dadc) b                  c                  = Reverse (Binary (f (primal b) (primal c)) dadb dadc b c)
+    binary f _         _         Zero     Zero     = Lift (f 0 0)
+    binary f _         _         Zero     (Lift c) = Lift (f 0 c)
+    binary f _         _         (Lift b) Zero     = Lift (f b 0)
+    binary f _         _         (Lift b) (Lift c) = Lift (f b c)
+
+    binary f _         (Id dadc) Zero        (Reverse i c) = unarily (f 0) dadc i c
+    binary f _         (Id dadc) (Lift b)    (Reverse i c) = unarily (f b) dadc i c
+    binary f (Id dadb) _         (Reverse i b) Zero        = unarily (`f` 0) dadb i b
+    binary f (Id dadb) _         (Reverse i b) (Lift c)    = unarily (`f` c) dadb i b
+    binary f (Id dadb) (Id dadc) (Reverse i b) (Reverse j c) = binarily f dadb dadc i b j c
 
     lift2 f df b c = binary f dadb dadc b c
         where (dadb, dadc) = df (Id (primal b)) (Id (primal c))
@@ -134,130 +160,68 @@ instance Lifted Reverse => Jacobian Reverse where
             a = f pb pc
             (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
-deriveLifted id (conT ''Reverse)
+let s = varT (mkName "s") in
+  deriveLifted (classP ''Reifies [s, conT ''Tape] :) (conT ''Reverse `appT` s)
 
-derivative :: Num a => AD Reverse a -> a
-derivative = sum . map snd . partials
-{-# INLINE derivative #-}
+-- | Helper that extracts the derivative of a chain when the chain was constructed with one variable.
+derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Reverse s) a -> a
+derivativeOf _ = sum . partials
+{-# INLINE derivativeOf #-}
 
-derivative' :: Num a => AD Reverse a -> (a, a)
-derivative' r = (primal r, derivative r)
-{-# INLINE derivative' #-}
+-- | Helper that extracts both the primal and derivative of a chain when the chain was constructed with one variable.
+derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> AD (Reverse s) a -> (a, a)
+derivativeOf' p r = (primal r, derivativeOf p r)
+{-# INLINE derivativeOf' #-}
 
--- | back propagate sensitivities along a tape.
-backPropagate :: Num a => (Vertex -> (Tape a Int, Int, [Int])) -> STArray s Int a -> Vertex -> ST s ()
-backPropagate vmap ss v = do
-        case node of
-            Unary _ g b -> do
-                da <- readArray ss i
-                db <- readArray ss b
-                writeArray ss b (db + g*da)
-            Binary _ gb gc b c -> do
-                da <- readArray ss i
-                db <- readArray ss b
-                writeArray ss b (db + gb*da)
-                dc <- readArray ss c
-                writeArray ss c (dc + gc*da)
-            _ -> return ()
-    where
-        (node, i, _) = vmap v
-        -- this isn't _quite_ right, as it should allow negative zeros to multiply through
+-- | Used internally to push sensitivities down the chain.
+backPropagate :: Num a => Int -> Cells -> STArray s Int a -> ST s Int
+backPropagate k Nil _ = return k
+backPropagate k (Unary i g xs) ss = do
+  da <- readArray ss k
+  db <- readArray ss i
+  writeArray ss i $! db + unsafeCoerce g*da
+  (backPropagate $! k - 1) xs ss
+backPropagate k (Binary i j g h xs) ss = do
+  da <- readArray ss k
+  db <- readArray ss i
+  writeArray ss i $! db + unsafeCoerce g*da
+  dc <- readArray ss j
+  writeArray ss j $! dc + unsafeCoerce h*da
+  (backPropagate $! k - 1) xs ss
 
-topSortAcyclic :: Graph -> [Vertex]
-topSortAcyclic g = reverse $ runST $ do
-    del <- newArray (bounds g) False :: ST s (STUArray s Int Bool)
-    let tg = transposeG g
-        starters = [ n | (n, []) <- assocs tg ]
-        loop [] rs = return rs
-        loop (n:ns) rs = do
-            writeArray del n True
-            let add [] = return ns
-                add (m:ms) = do
-                    b <- ok (tg!m)
-                    ms' <- add ms
-                    if b then return (m:ms') else return ms'
-                ok [] = return True
-                ok (x:xs) = do b <- readArray del x; if b then ok xs else return False
-            ns' <- add (g!n)
-            loop ns' (n : rs)
-    loop starters []
-
--- | This returns a list of contributions to the partials.
--- The variable ids returned in the list are likely /not/ unique!
-{-# SPECIALIZE partials :: AD Reverse Double -> [(Int, Double)] #-}
-partials :: forall a . Num a => AD Reverse a -> [(Int, a)]
-partials (AD tape) = [ let v = sensitivities ! ix in seq v (ident, v) | (ix, Var _ ident) <- xs ]
-    where
-        Reified.Graph xs start = unsafePerformIO $ reifyGraph tape
-        g = array xsBounds [ (i, successors t) | (i, t) <- xs ]
-        vertexMap = array xsBounds xs
-        vmap i = (vertexMap ! i, i, [])
-        xsBounds = sbounds xs
-
-        sensitivities = runSTArray $ do
-            ss <- newArray xsBounds 0
-            writeArray ss start 1
-            forM_ (topSortAcyclic g) $
-                backPropagate vmap ss
-            return ss
-
-        sbounds ((a,_):as) = foldl' (\(lo,hi) (b,_) -> let lo' = min lo b; hi' = max hi b in lo' `seq` hi' `seq` (lo', hi')) (a,a) as
-        sbounds _ = undefined -- the graph can't be empty, it contains the output node!
-
-        successors :: Tape a t -> [t]
-        successors (Unary _ _ b) = [b]
-        successors (Binary _ _ _ b c) = [b,c]
-        successors _ = []
+-- | Extract the partials from the current chain for a given AD variable.
+{-# SPECIALIZE partials :: Reifies s Tape => AD (Reverse s) Double -> [Double] #-}
+partials :: forall s a. (Reifies s Tape, Num a) => AD (Reverse s) a -> [a]
+partials (AD Zero)        = []
+partials (AD (Lift _))    = []
+partials (AD (Reverse k _)) = map (sensitivities !) [0..vs] where
+   Head n t = unsafePerformIO $ readIORef (getTape (reflect (Proxy :: Proxy s)))
+   tk = dropCells (n - k) t
+   (vs,sensitivities) = runST $ do
+     ss <- newArray (0, k) 0
+     writeArray ss k 1
+     v <- backPropagate k tk ss
+     as <- Unsafe.unsafeFreeze ss
+     return (v, as)
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.
-partialArray :: Num a => (Int, Int) -> AD Reverse a -> Array Int a
-partialArray vbounds tape = accumArray (+) 0 vbounds (partials tape)
-{-# INLINE partialArray #-}
+partialArrayOf :: (Reifies s Tape, Num a) => Proxy s -> (Int, Int) -> AD (Reverse s) a -> Array Int a
+partialArrayOf _ vbounds = accumArray (+) 0 vbounds . zip [0..] . partials
+{-# INLINE partialArrayOf #-}
 
 -- | Return an 'IntMap' of sparse partials
-partialMap :: Num a => AD Reverse a -> IntMap a
-partialMap = fromListWith (+) . partials
-{-# INLINE partialMap #-}
+partialMapOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Reverse s) a -> IntMap a
+partialMapOf _ = fromDistinctAscList . zip [0..] . partials
+{-# INLINE partialMapOf #-}
 
--- A simple fresh variable supply monad
-newtype S a = S { runS :: Int -> (a,Int) }
-instance Monad S where
-    return a = S (\s -> (a,s))
-    S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
+-- | Construct a tape that starts with @n@ variables.
+reifyTape :: Int -> (forall s. Reifies s Tape => Proxy s -> r) -> r
+reifyTape vs k = unsafePerformIO $ do
+  h <- newIORef (Head vs Nil)
+  return (reify (Tape h) k)
+{-# NOINLINE reifyTape #-}
 
-instance Var Reverse where
-    var a v = Reverse (Var a v)
-    varId (Reverse (Var _ v)) = v
+instance Var (Reverse s) where
+    var a v = Reverse v a
+    varId (Reverse v _) = v
     varId _ = error "varId: not a Var"
-
-class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
-    pack :: i -> [AD Reverse a] -> AD Reverse a
-    unpack :: ([a] -> [a]) -> o
-    unpack' :: ([a] -> (a, [a])) -> o'
-
-instance Num a => Grad (AD Reverse a) [a] (a, [a]) a where
-    pack i _ = i
-    unpack f = f []
-    unpack' f = f []
-
-instance Grad i o o' a => Grad (AD Reverse a -> i) (a -> o) (a -> o') a where
-    pack f (a:as) = pack (f a) as
-    pack _ [] = error "Grad.pack: logic error"
-    unpack f a = unpack (f . (a:))
-    unpack' f a = unpack' (f . (a:))
-
-vgrad :: Grad i o o' a => i -> o
-vgrad i = unpack (unsafeGrad (pack i))
-    where
-        unsafeGrad f as = unbind vs (partialArray bds $ f vs)
-            where
-                (vs,bds) = bind as
-
-vgrad' :: Grad i o o' a => i -> o'
-vgrad' i = unpack' (unsafeGrad' (pack i))
-    where
-        unsafeGrad' f as = (primal r, unbind vs (partialArray bds r))
-            where
-                r = f vs
-                (vs,bds) = bind as
-

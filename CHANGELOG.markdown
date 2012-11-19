@@ -1,3 +1,9 @@
+3.3
+---
+* Renamed `Reverse` to `Kahn` and `Wengert` to `Reverse`. We use Arthur Kahn's topological sorting algorithm to
+  sort the tape after the fact in Kahn mode, while the stock Reverse mode builds a Wengert list as it goes, which
+  is more efficient in practice.
+
 3.2.2
 -----
 * Export of the `conjugateGradientDescent` and `gradientDescent` from `Numeric.AD`

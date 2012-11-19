@@ -25,5 +25,5 @@ module Numeric.AD.Variadic
     , Grads, vgrads
     ) where
 
-import Numeric.AD.Variadic.Reverse
+import Numeric.AD.Variadic.Kahn
 import Numeric.AD.Variadic.Sparse (Grads, vgrads)

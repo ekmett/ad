@@ -1,7 +1,7 @@
 {-# LANGUAGE Rank2Types, TemplateHaskell, BangPatterns, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, UndecidableInstances, ScopedTypeVariables #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Variadic.Reverse
+-- Module      :  Numeric.AD.Variadic.Kahn
 -- Copyright   :  (c) Edward Kmett 2010-2012
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
@@ -17,11 +17,11 @@
 --
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Variadic.Reverse
+module Numeric.AD.Variadic.Kahn
     (
     -- * Unsafe Variadic Gradient
       vgrad, vgrad'
     , Grad
     ) where
 
-import Numeric.AD.Internal.Reverse
+import Numeric.AD.Internal.Kahn

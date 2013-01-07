@@ -1,5 +1,5 @@
 name:         ad
-version:      3.3.1.1
+version:      3.3.1.2
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2013,
@@ -12,7 +12,16 @@ homepage:     http://github.com/ekmett/ad
 bug-reports:  http://github.com/ekmett/ad/issues
 build-type:   Custom
 cabal-version: >= 1.8
-extra-source-files: TODO .travis.yml CHANGELOG.markdown README.markdown
+extra-source-files:
+  .ghci
+  .gitignore
+  .travis.yml
+  .vim.custom
+  TODO
+  CHANGELOG.markdown
+  README.markdown
+  travis/cabal-apt-install
+  travis/config
 synopsis:     Automatic Differentiation
 description:
     Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.

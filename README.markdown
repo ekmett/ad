@@ -33,10 +33,8 @@ Or both the answer and the derivative of a function:
 
 You can compute the derivative of a function with a constant parameter using `auto` from Numeric.AD.Types:
 
-    Prelude Numeric.AD Numeric.AD.Types> let t = 2.0
-    let t = 2.0
-    Prelude Numeric.AD Numeric.AD.Types> diff (\ x -> (auto t) * sin x) 0 
-    diff (\ x -> (auto t) * sin x) 0 
+    Prelude Numeric.AD Numeric.AD.Types> let t = 2.0 :: Double
+    Prelude Numeric.AD Numeric.AD.Types> diff (\ x -> auto t * sin x) 0
     2.0
 
 You can use a symbolic numeric type, like the one from `simple-reflect` to obtain symbolic derivatives:

@@ -1,3 +1,10 @@
+3.3.1
+-----
+* Build system improvements
+* Removed unused LANGUAGE pragmas
+* Added HLint configuration
+* We now use exactly the same versions of the packages used to build `ad` when running the doctests.
+
 3.3
 ---
 * Renamed `Reverse` to `Kahn` and `Wengert` to `Reverse`. We use Arthur Kahn's topological sorting algorithm to

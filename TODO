@@ -1,21 +1,21 @@
 * Use the f-branching stream and tensors to generate:
 
-    gradients :: Traversable f => FU f a -> f a -> Stream f a 
+    gradients :: Traversable f => FU f a -> f a -> Stream f a
 
 * Allow the type to vary within our AD data type container, in the same fashion as Numeric.FAD.
 
-    Although, while Pearlmutter and Siskind provided the functionality to permit 
-    it in the derivative combinators, they provided no combinators to convert, 
+    Although, while Pearlmutter and Siskind provided the functionality to permit
+    it in the derivative combinators, they provided no combinators to convert,
     say, @Dual tag Float@ to a @Dual tag Double@, so that extra functionality cannot
     currently be leveraged.
 
-  One approach: GADT'd Tape. 
+  One approach: GADT'd Tape.
     Lets us use local matrix-valued jacobians as blackboxes.
     However, this requires a custom higher-order data-reify.
 
 * Do we need some kind of Array implementation? These'd be easy:
 
-    (new)?type ADArray s i e = Array i (AD s e) 
+    (new)?type ADArray s i e = Array i (AD s e)
     (new)?type ADIOArray s i e = IOArray i (AD s e)
     (new)?type ADSTArray s i e = STArray i (AD s e)
 
@@ -34,8 +34,8 @@
         , MArray (ADIOArray s) e IO
         , Lifted s) => LiftedArray s e where
 
-     type ADArr s e  :: * -> * -> * 
-     type ADSTArr s e :: * -> * -> * 
+     type ADArr s e  :: * -> * -> *
+     type ADSTArr s e :: * -> * -> *
      type ADIOArr s e :: * -> * -> *
 
   newtype ADArray s i e = ADArray (ADArr s e i e)

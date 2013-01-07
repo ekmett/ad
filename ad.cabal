@@ -61,6 +61,10 @@ description:
     .
     * @0@ means that the resulting derivative list is padded with 0s at the end.
 
+flag lib-Werror
+  default: False
+  manual: True
+
 source-repository head
   type: git
   location: git://github.com/ekmett/ad.git
@@ -131,7 +135,12 @@ library
     Numeric.AD.Internal.Jet
     Numeric.AD.Internal.Identity
 
-  ghc-options: -Wall -fspec-constr -fdicts-cheap -O2
+  if flag(lib-Werror)
+    ghc-options: -Werror
+  else
+    ghc-options: -Wall
+
+  ghc-options: -fspec-constr -fdicts-cheap -O2
 
 -- Verify the results of the examples
 test-suite doctests

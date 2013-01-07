@@ -31,6 +31,14 @@ Or both the answer and the derivative of a function:
     Prelude Numeric.AD> diff' (exp . log) 2
     (2.0,1.0)
 
+You can compute the derivative of a function with a constant parameter using `auto` from Numeric.AD.Types:
+
+    Prelude Numeric.AD Numeric.AD.Types> let t = 2.0
+    let t = 2.0
+    Prelude Numeric.AD Numeric.AD.Types> diff (\ x -> (auto t) * sin x) 0 
+    diff (\ x -> (auto t) * sin x) 0 
+    2.0
+
 You can use a symbolic numeric type, like the one from `simple-reflect` to obtain symbolic derivatives:
 
     Prelude Debug.SimpleReflect Numeric.AD> diff atanh x

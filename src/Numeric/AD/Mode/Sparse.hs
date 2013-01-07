@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, BangPatterns #-}
+{-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      : Numeric.AD.Mode.Sparse

@@ -1,1 +1,28 @@
 language: haskell
+before_install:
+  # Uncomment whenever hackage is down.
+  # - mkdir -p ~/.cabal && cp config ~/.cabal/config && cabal update
+
+  # Try installing some of the build-deps with apt-get for speed.
+  - ./travis-cabal-apt-install --only-dependencies --force-reinstall $mode
+
+  - sudo apt-get -q -y install hlint || cabal install hlint
+
+install:
+  - cabal configure -flib-Werror $mode
+  - cabal build
+
+script:
+  - $script
+  - hlint src --cpp-define HLINT
+
+notifications:
+  irc:
+    channels:
+      - "irc.freenode.org#haskell-lens"
+    skip_join: true
+    template:
+      - "\x0313ad\x03/\x0306%{branch}\x03 \x0314%{commit}\x03 %{build_url} %{message}"
+
+env:
+  - mode="--enable-tests" script="cabal test"

@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, BangPatterns, ScopedTypeVariables #-}
+{-# LANGUAGE Rank2Types, ScopedTypeVariables #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Halley

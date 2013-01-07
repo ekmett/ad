@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, FlexibleContexts, TemplateHaskell, UndecidableInstances, DeriveDataTypeable, GADTs, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, Rank2Types, MultiParamTypeClasses, FlexibleInstances, UndecidableInstances, ScopedTypeVariables, TemplateHaskell, GADTs, TypeFamilies, DeriveDataTypeable, FlexibleContexts #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
@@ -51,11 +51,15 @@ import Prelude hiding (mapM)
 import System.IO.Unsafe (unsafePerformIO)
 import Unsafe.Coerce
 
+{-# ANN module "HLint: ignore Reduce duplication" #-}
+
 -- evil untyped tape
+#ifndef HLINT
 data Cells where
   Nil    :: Cells
   Unary  :: {-# UNPACK #-} !Int -> a -> Cells -> Cells
   Binary :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Int -> a -> a -> Cells -> Cells
+#endif
 
 dropCells :: Int -> Cells -> Cells
 dropCells 0 xs = xs
@@ -95,11 +99,13 @@ binarily :: forall s a. Reifies s Tape => (a -> a -> a) -> a -> a -> Int -> a ->
 binarily f di dj i b j c = Reverse (unsafePerformIO (modifyTape (Proxy :: Proxy s) (bin i j di dj))) $! f b c
 {-# INLINE binarily #-}
 
+#ifndef HLINT
 data Reverse s a where
   Zero :: Reverse s a
   Lift :: a -> Reverse s a
   Reverse :: {-# UNPACK #-} !Int -> a -> Reverse s a
   deriving (Show, Typeable)
+#endif
 
 instance (Reifies s Tape, Lifted (Reverse s)) => Mode (Reverse s) where
   isKnownZero Zero = True
@@ -117,7 +123,7 @@ instance (Reifies s Tape, Lifted (Reverse s)) => Mode (Reverse s) where
 
   Zero <**> y      = auto (0 ** primal y)
   _    <**> Zero   = auto 1
-  x    <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
+  x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
   x    <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
 instance Primal (Reverse s) where

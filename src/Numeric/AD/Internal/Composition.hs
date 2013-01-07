@@ -1,6 +1,4 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE Rank2Types, TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, FlexibleContexts, TemplateHaskell, UndecidableInstances, TypeOperators #-}
--- {-# OPTIONS_HADDOCK hide, prune #-}
+{-# LANGUAGE CPP, Rank2Types, TypeFamilies, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, UndecidableInstances, TypeOperators #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Composition
@@ -34,6 +32,9 @@ import Data.Foldable (Foldable(foldMap))
 import Data.Traversable (Traversable(traverse))
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Types
+
+{-# ANN module "Hlint: ignore Eta reduce" #-}
+{-# ANN module "Hlint: ignore Reduce duplication" #-}
 
 -- | Functor composition, used to nest the use of jacobian and grad
 newtype ComposeFunctor f g a = ComposeFunctor { decomposeFunctor :: f (g a) }

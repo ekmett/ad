@@ -28,6 +28,8 @@ import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, g
 import Language.Haskell.TH
 import Numeric.AD.Internal.Classes
 
+{-# ANN module "HLint: ignore Eta reduce" #-}
+
 -- | 'AD' serves as a common wrapper for different 'Mode' instances, exposing a traditional
 -- numerical tower. Universal quantification is used to limit the actions in user code to
 -- machinery that will return the same answers under all AD modes, allowing us to use modes

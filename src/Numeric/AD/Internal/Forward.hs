@@ -37,6 +37,8 @@ import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 
+{-# ANN module "HLint: ignore Reduce duplication" #-}
+
 -- | 'Forward' mode AD
 data Forward a
   = Forward !a a
@@ -88,7 +90,7 @@ instance Lifted Forward => Mode Forward where
 
     Zero <**> y      = auto (0 ** primal y)
     _    <**> Zero   = auto 1
-    x    <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
+    x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
     x    <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
     a *^ Forward b db = Forward (a * b) (a * db)

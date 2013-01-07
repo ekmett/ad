@@ -107,7 +107,7 @@ instance Lifted Tower => Mode Tower where
     zero = Tower []
     Tower [] <**> y         = auto (0 ** primal y)
     _        <**> Tower []  = auto 1
-    x        <**> Tower [y] = lift1 (**y) (\z -> (y *^ z <**> Tower [y-1])) x
+    x        <**> Tower [y] = lift1 (**y) (\z -> y *^ z <**> Tower [y-1]) x
     x        <**> y         = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
     Tower [] <+> bs = bs

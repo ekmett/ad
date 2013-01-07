@@ -153,7 +153,7 @@ instance Lifted Sparse => Mode Sparse where
     Zero <**> y    = auto (0 ** primal y)
     _    <**> Zero = auto 1
     x    <**> y@(Sparse b bs)
-      | IntMap.null bs = lift1 (**b) (\z -> (b *^ z <**> Sparse (b-1) IntMap.empty)) x
+      | IntMap.null bs = lift1 (**b) (\z -> b *^ z <**> Sparse (b-1) IntMap.empty) x
       | otherwise      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
     Zero <+> a = a
     a <+> Zero = a

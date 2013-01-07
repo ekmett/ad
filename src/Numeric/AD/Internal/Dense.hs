@@ -92,7 +92,7 @@ instance (Traversable f, Lifted (Dense f)) => Mode (Dense f) where
 
     Zero <**> y      = auto (0 ** primal y)
     _    <**> Zero   = auto 1
-    x    <**> Lift y = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
+    x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
     x    <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
     _ *^ Zero       = Zero

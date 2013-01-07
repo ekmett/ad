@@ -1,4 +1,5 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, FlexibleContexts, TemplateHaskell, UndecidableInstances, DeriveDataTypeable #-}
+{-# LANGUAGE Rank2Types, MultiParamTypeClasses, FlexibleInstances, UndecidableInstances, ScopedTypeVariables, TemplateHaskell, TypeFamilies, DeriveDataTypeable, FunctionalDependencies #-}
+
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
@@ -91,7 +92,7 @@ instance Lifted Kahn => Mode Kahn where
 
     Kahn Zero <**> y                = auto (0 ** primal y)
     _            <**> Kahn Zero     = auto 1
-    x            <**> Kahn (Lift y) = lift1 (**y) (\z -> (y *^ z ** Id (y-1))) x
+    x            <**> Kahn (Lift y) = lift1 (**y) (\z -> y *^ z ** Id (y-1)) x
     x            <**> y                = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
 
 instance Primal Kahn where
@@ -147,22 +148,21 @@ derivative' r = (primal r, derivative r)
 
 -- | back propagate sensitivities along a tape.
 backPropagate :: Num a => (Vertex -> (Tape a Int, Int, [Int])) -> STArray s Int a -> Vertex -> ST s ()
-backPropagate vmap ss v = do
-        case node of
-            Unary _ g b -> do
-                da <- readArray ss i
-                db <- readArray ss b
-                writeArray ss b (db + g*da)
-            Binary _ gb gc b c -> do
-                da <- readArray ss i
-                db <- readArray ss b
-                writeArray ss b (db + gb*da)
-                dc <- readArray ss c
-                writeArray ss c (dc + gc*da)
-            _ -> return ()
-    where
-        (node, i, _) = vmap v
-        -- this isn't _quite_ right, as it should allow negative zeros to multiply through
+backPropagate vmap ss v = case node of
+  Unary _ g b -> do
+      da <- readArray ss i
+      db <- readArray ss b
+      writeArray ss b (db + g*da)
+  Binary _ gb gc b c -> do
+      da <- readArray ss i
+      db <- readArray ss b
+      writeArray ss b (db + gb*da)
+      dc <- readArray ss c
+      writeArray ss c (dc + gc*da)
+  _ -> return ()
+  where
+    (node, i, _) = vmap v
+    -- this isn't _quite_ right, as it should allow negative zeros to multiply through
 
 topSortAcyclic :: Graph -> [Vertex]
 topSortAcyclic g = reverse $ runST $ do
@@ -176,7 +176,7 @@ topSortAcyclic g = reverse $ runST $ do
                 add (m:ms) = do
                     b <- ok (tg!m)
                     ms' <- add ms
-                    if b then return (m:ms') else return ms'
+                    return $ if b then m : ms' else ms'
                 ok [] = return True
                 ok (x:xs) = do b <- readArray del x; if b then ok xs else return False
             ns' <- add (g!n)

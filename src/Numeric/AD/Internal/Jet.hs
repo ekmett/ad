@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, TypeOperators, TemplateHaskell, ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE CPP, TypeOperators, ScopedTypeVariables, FlexibleContexts #-}
 {-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |
@@ -48,7 +48,7 @@ instance Show Showable where
   showsPrec d (Showable f) = f d
 
 showable :: Show a => a -> Showable
-showable a = Showable (\d -> showsPrec d a)
+showable a = Showable (`showsPrec` a)
 
 -- Polymorphic recursion precludes 'Data' in its current form, as no Data1 class exists
 -- Polymorphic recursion also breaks 'show' for 'Jet'!

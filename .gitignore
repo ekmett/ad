@@ -1,4 +1,13 @@
-_darcs
 dist
-tags
+docs
+wiki
 TAGS
+tags
+wip
+.DS_Store
+.*.swp
+.*.swo
+*.o
+*.hi
+*~
+*#

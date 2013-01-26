@@ -28,8 +28,9 @@ module Numeric.AD.Internal.Classes
 
 import Control.Applicative hiding ((<**>))
 import Data.Char
-import Language.Haskell.TH
 import Data.Function (on)
+import Data.Number.Erf
+import Language.Haskell.TH
 
 infixr 8 **!, <**>
 infixl 7 *!, /!, ^*, *^, ^/
@@ -81,6 +82,10 @@ class Lifted t where
     enumFromThenTo1 :: (Num a, Enum a) => t a -> t a -> t a -> [t a]
     minBound1       :: (Num a, Bounded a) => t a
     maxBound1       :: (Num a, Bounded a) => t a
+    erf1            :: Erf a => t a -> t a
+    erfc1           :: Erf a => t a -> t a
+    inverf1         :: InvErf a => t a -> t a
+    inverfc1        :: InvErf a => t a -> t a
 
 class Lifted t => Mode t where
     -- | allowed to return False for items with a zero derivative, but we'll give more NaNs than strictly necessary
@@ -268,7 +273,13 @@ deriveLifted f _t = do
         truncate1 = discrete1 truncate
         round1    = discrete1 round
         ceiling1  = discrete1 ceiling
-        floor1    = discrete1 floor |]
+        floor1    = discrete1 floor
+
+        erf1 = lift1 erf $ \x -> (fromInteger1 2 /! sqrt1 pi1) *! exp1 (negate1 x *! x)
+        erfc1 = lift1 erfc $ \x -> negate1 (fromInteger1 2 /! sqrt1 pi1) *! exp1 (negate1 x *! x)
+
+        inverf1 = lift1 inverfc $ \x -> recip1 $ (fromInteger1 2 /! sqrt1 pi1) *! exp1 (negate1 x *! x)
+        inverfc1 = lift1 inverfc $ \x -> recip1 $ negate1 (fromInteger1 2 /! sqrt1 pi1) *! exp1 (negate1 x *! x) |]
 
 varA :: Q Type
 varA = varT (mkName "a")
@@ -302,7 +313,7 @@ deriveNumeric f t = do
     members <- liftedMembers
     let keep n = nameBase n `elem` members
     xs <- lowerInstance keep ((classP ''Num [varA]:) . f) t `mapM` [''Enum, ''Eq, ''Ord, ''Bounded, ''Show]
-    ys <- lowerInstance keep f                            t `mapM` [''Num, ''Fractional, ''Floating, ''RealFloat,''RealFrac, ''Real]
+    ys <- lowerInstance keep f                            t `mapM` [''Num, ''Fractional, ''Floating, ''RealFloat,''RealFrac, ''Real, ''Erf, ''InvErf]
     return (xs ++ ys)
 
 lowerInstance :: (Name -> Bool) -> ([Q Pred] -> [Q Pred]) -> Q Type -> Name -> Q Dec

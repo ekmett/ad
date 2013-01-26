@@ -130,8 +130,10 @@ instance Lifted Id where
     maxBound1 = maxBound
     erf1 = erf
     erfc1 = erfc
+    normcdf1 = normcdf
     inverf1 = inverf
     inverfc1 = inverfc
+    invnormcdf1 = invnormcdf
 
 instance Mode Id where
     auto = Id

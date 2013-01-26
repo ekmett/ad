@@ -166,8 +166,10 @@ instance (Mode f, Mode g) => Lifted (ComposeMode f g) where
     maxBound1 = ComposeMode maxBound1
     erf1 (ComposeMode a) = ComposeMode (erf1 a)
     erfc1 (ComposeMode a) = ComposeMode (erfc1 a)
+    normcdf1 (ComposeMode a) = ComposeMode (normcdf1 a)
     inverf1 (ComposeMode a) = ComposeMode (inverf1 a)
     inverfc1 (ComposeMode a) = ComposeMode (inverfc1 a)
+    invnormcdf1 (ComposeMode a) = ComposeMode (invnormcdf1 a)
 
 instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeMode f g) where
     typeOf1 tfga = mkTyConApp composeModeTyCon [typeOf1 (fa tfga), typeOf1 (ga tfga)]

@@ -84,8 +84,10 @@ class Lifted t where
     maxBound1       :: (Num a, Bounded a) => t a
     erf1            :: Erf a => t a -> t a
     erfc1           :: Erf a => t a -> t a
+    normcdf1        :: Erf a => t a -> t a
     inverf1         :: InvErf a => t a -> t a
     inverfc1        :: InvErf a => t a -> t a
+    invnormcdf1     :: InvErf a => t a -> t a
 
 class Lifted t => Mode t where
     -- | allowed to return False for items with a zero derivative, but we'll give more NaNs than strictly necessary
@@ -276,10 +278,12 @@ deriveLifted f _t = do
         floor1    = discrete1 floor
 
         erf1 = lift1 erf $ \x -> (fromInteger1 2 /! sqrt1 pi1) *! exp1 (negate1 x *! x)
-        erfc1 = lift1 erfc $ \x -> negate1 (fromInteger1 2 /! sqrt1 pi1) *! exp1 (negate1 x *! x)
+        erfc1 = lift1 erfc $ \x -> (fromInteger1 (-2) /! sqrt1 pi1) *! exp1 (negate1 x *! x)
+        normcdf1 = lift1 normcdf $ \x -> (fromInteger1 (-1) /! sqrt1 pi1) *! exp1 (x *! x *! fromRational1 (- recip 2) /! sqrt1 (fromInteger1 2))
 
         inverf1 = lift1 inverfc $ \x -> recip1 $ (fromInteger1 2 /! sqrt1 pi1) *! exp1 (negate1 x *! x)
-        inverfc1 = lift1 inverfc $ \x -> recip1 $ negate1 (fromInteger1 2 /! sqrt1 pi1) *! exp1 (negate1 x *! x) |]
+        inverfc1 = lift1 inverfc $ \x -> recip1 $ negate1 (fromInteger1 2 /! sqrt1 pi1) *! exp1 (negate1 x *! x)
+        invnormcdf1 = lift1 invnormcdf $ \x -> recip1 $ (fromInteger1 (-1) /! sqrt1 pi1) *! exp1 (x *! x *! fromRational1 (- recip 2) /! sqrt1 (fromInteger1 2)) |]
 
 varA :: Q Type
 varA = varT (mkName "a")

@@ -19,13 +19,14 @@ module Numeric.AD.Internal.Identity
     ) where
 
 import Control.Applicative
-import Numeric.AD.Internal.Classes
-import Numeric.AD.Internal.Types
-import Data.Monoid
 import Data.Data (Data)
+import Data.Foldable (Foldable, foldMap)
+import Data.Monoid
+import Data.Number.Erf
 import Data.Typeable (Typeable)
 import Data.Traversable (Traversable, traverse)
-import Data.Foldable (Foldable, foldMap)
+import Numeric.AD.Internal.Classes
+import Numeric.AD.Internal.Types
 
 newtype Id a = Id { runId :: a } deriving
     (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable)
@@ -127,6 +128,12 @@ instance Lifted Id where
     enumFromThenTo1 = enumFromThenTo
     minBound1 = minBound
     maxBound1 = maxBound
+    erf1 = erf
+    erfc1 = erfc
+    normcdf1 = normcdf
+    inverf1 = inverf
+    inverfc1 = inverfc
+    invnormcdf1 = invnormcdf
 
 instance Mode Id where
     auto = Id
@@ -137,3 +144,13 @@ instance Mode Id where
 
 instance Primal Id where
     primal (Id a) = a
+
+instance Erf a => Erf (Id a) where
+  erf = Id . erf . runId
+  erfc = Id . erfc . runId
+  normcdf = Id . normcdf . runId
+
+instance InvErf a => InvErf (Id a) where
+  inverf = Id . inverf . runId
+  inverfc = Id . inverfc . runId
+  invnormcdf = Id . invnormcdf . runId

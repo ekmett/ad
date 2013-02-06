@@ -59,8 +59,9 @@ If you need multiple derivatives you can calculate them with `diffs`:
     Prelude Numeric.AD> take 10 $ diffs sin 1
     [0.8414709848078965,0.5403023058681398,-0.8414709848078965,-0.5403023058681398,0.8414709848078965,0.5403023058681398,-0.8414709848078965,-0.5403023058681398,0.8414709848078965,0.5403023058681398]
 
-or if your function takes multiple inputs, you can use grads, which returns an 'f-branching stream' of derivatives. Somewhat more intuitive answers can be obtained by converting the stream into the
-polymorphically recursive `Tensors` data type. With that we can look at a single 'layer' of the answer at a time:
+or if your function takes multiple inputs, you can use grads, which returns an 'f-branching stream' of derivatives, that you can
+inspect lazily. Somewhat more intuitive answers can be obtained by converting the stream into the polymorphically recursive 
+`Jet` data type. With that we can look at a single "layer" of the answer at a time:
 
 The answer:
 
@@ -82,7 +83,8 @@ Or even higher order tensors of derivatives.
     Prelude Numeric.AD> headJet $ tailJet $ tailJet $ tailJet $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
     [[[59.1124487914452,44.3343365935839],[44.3343365935839,14.7781121978613]],[[44.3343365935839,14.7781121978613],[14.7781121978613,7.38905609893065]]]
 
-Note the redundant values caused by the various symmetries in the tensors. The `ad` library is careful to compute each distinct derivative only once and to share the resulting thunks.
+Note the redundant values caused by the various symmetries in the tensors. The `ad` library is careful to compute 
+each distinct derivative only once, lazily and to share the resulting computation.
 
 Overview
 --------

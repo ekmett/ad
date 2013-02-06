@@ -23,7 +23,7 @@ Examples
 
 You can compute derivatives of functions
 
-    Prelude Numeric.AD> diff sin 0 {-# cos 0 #-}
+    Prelude Numeric.AD> diff sin 0 {- cos 0 -}
     1.0
 
 Or both the answer and the derivative of a function:
@@ -82,7 +82,7 @@ Or even higher order tensors of derivatives.
     Prelude Numeric.AD> headJet $ tailJet $ tailJet $ tailJet $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
     [[[59.1124487914452,44.3343365935839],[44.3343365935839,14.7781121978613]],[[44.3343365935839,14.7781121978613],[14.7781121978613,7.38905609893065]]]
 
-Note the redundant values caused by the various symmetries in the tensors. The 'ad' library is careful to compute each distinct derivative only once and to share the resulting thunks.
+Note the redundant values caused by the various symmetries in the tensors. The `ad` library is careful to compute each distinct derivative only once and to share the resulting thunks.
 
 Overview
 --------

@@ -124,7 +124,7 @@ gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. (Reifies s 
 gradientAscent f = gradientDescent (negate . f)
 {-# INLINE gradientAscent #-}
 
--- | Perform a conjugate gradient descent using reverse mode automatic differentiation to compute the gradient.
+-- | Perform a conjugate gradient descent using reverse mode automatic differentiation to compute the gradient, and using forward-on-forward mode for computing extrema.
 conjugateGradientDescent :: (Traversable f, Fractional a, Ord a) => (forall m s. Mode m => f (AD m s a) -> AD m s a) -> f a -> [f a]
 conjugateGradientDescent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0)
   where

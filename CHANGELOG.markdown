@@ -1,3 +1,7 @@
+3.4
+---
+* Added support for `erf` and `inverf`, etc. from `Data.Number.Erf`.
+
 3.3.1
 -----
 * Build system improvements

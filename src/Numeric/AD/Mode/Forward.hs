@@ -194,11 +194,11 @@ gradWith' g f as = (primal $ f (AD . Lift <$> as), bindWith g (tangent . f) as)
 
 -- | Compute the product of a vector with the Hessian using forward-on-forward-mode AD.
 --
-hessianProduct :: (Traversable f, Num a) => (forall m s. Mode m => f (AD m s a) -> AD m s a) -> f (a, a) -> f a
+hessianProduct :: (Traversable f, Num a) => (forall s s'. f (AD (ComposeMode Forward Forward s') s a) -> AD (ComposeMode Forward Forward s') s a) -> f (a, a) -> f a
 hessianProduct f = duF $ grad $ decomposeMode . f . fmap composeMode
 
 -- | Compute the gradient and hessian product using forward-on-forward-mode AD.
-hessianProduct' :: (Traversable f, Num a) => (forall m s. Mode m => f (AD m s a) -> AD m s a) -> f (a, a) -> f (a, a)
+hessianProduct' :: (Traversable f, Num a) => (forall s s'. f (AD (ComposeMode Forward Forward s') s a) -> AD (ComposeMode Forward Forward s') s a) -> f (a, a) -> f (a, a)
 hessianProduct' f = duF' $ grad $ decomposeMode . f . fmap composeMode
 
 -- * Experimental

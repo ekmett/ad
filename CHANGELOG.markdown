@@ -1,6 +1,7 @@
 3.4
 ---
 * Added support for `erf` and `inverf`, etc. from `Data.Number.Erf`.
+* Split the infinitesimal and mode into two separate parameters to facilitate inlining and easier extension of the API.
 
 3.3.1
 -----

@@ -34,18 +34,19 @@ import Numeric.AD.Internal.Classes
 -- numerical tower. Universal quantification is used to limit the actions in user code to
 -- machinery that will return the same answers under all AD modes, allowing us to use modes
 -- interchangeably as both the type level \"brand\" and dictionary, providing a common API.
-newtype AD f a = AD { runAD :: f a } deriving (Iso (f a), Lifted, Mode, Primal)
+newtype AD f s a = AD { runAD :: f a } deriving (Iso (f a), Lifted, Mode, Primal)
 
 -- > instance (Lifted f, Num a) => Num (AD f a)
 -- etc.
-let f = varT (mkName "f") in
+let f = varT (mkName "f")
+    s = varT (mkName "s") in
     deriveNumeric
         (classP ''Lifted [f]:)
-        (conT ''AD `appT` f)
+        (conT ''AD `appT` f `appT` s)
 
-instance Typeable1 f => Typeable1 (AD f) where
+instance Typeable1 f => Typeable1 (AD f s) where
     typeOf1 tfa = mkTyConApp adTyCon [typeOf1 (undefined `asArgsType` tfa)]
-        where asArgsType :: f a -> t f a -> f a
+        where asArgsType :: f a -> t f s a -> f a
               asArgsType = const
 
 adTyCon :: TyCon
@@ -64,7 +65,7 @@ adDataType :: DataType
 adDataType = mkDataType "Numeric.AD.Internal.Types.AD" [adConstr]
 {-# NOINLINE adDataType #-}
 
-instance (Typeable1 f, Typeable a, Data (f a), Data a) => Data (AD f a) where
+instance (Typeable1 f, Typeable a, Data (f a), Data a) => Data (AD f s a) where
     gfoldl f z (AD a) = z AD `f` a
     toConstr _ = adConstr
     gunfold k z c = case constrIndex c of

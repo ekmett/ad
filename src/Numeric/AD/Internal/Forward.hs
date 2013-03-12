@@ -47,22 +47,22 @@ data Forward a
   deriving (Show, Data, Typeable)
 
 -- | Calculate the 'tangent' using forward mode AD.
-tangent :: Num a => AD Forward a -> a
+tangent :: Num a => AD Forward s a -> a
 tangent (AD (Forward _ da)) = da
 tangent _ = 0
 {-# INLINE tangent #-}
 
-unbundle :: Num a => AD Forward a -> (a, a)
+unbundle :: Num a => AD Forward s a -> (a, a)
 unbundle (AD (Forward a da)) = (a, da)
 unbundle (AD Zero) = (0,0)
 unbundle (AD (Lift a)) = (a, 0)
 {-# INLINE unbundle #-}
 
-bundle :: a -> a -> AD Forward a
+bundle :: a -> a -> AD Forward s a
 bundle a da = AD (Forward a da)
 {-# INLINE bundle #-}
 
-apply :: Num a => (AD Forward a -> b) -> a -> b
+apply :: Num a => (AD Forward s a -> b) -> a -> b
 apply f a = f (bundle a 1)
 {-# INLINE apply #-}
 
@@ -166,13 +166,13 @@ instance Lifted Forward => Jacobian Forward where
 
 deriveLifted id $ conT ''Forward
 
-bind :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> f b
+bind :: (Traversable f, Num a) => (f (AD Forward s a) -> b) -> f a -> f b
 bind f as = snd $ mapAccumL outer (0 :: Int) as
     where
         outer !i _ = (i + 1, f $ snd $ mapAccumL (inner i) 0 as)
         inner !i !j a = (j + 1, if i == j then bundle a 1 else auto a)
 
-bind' :: (Traversable f, Num a) => (f (AD Forward a) -> b) -> f a -> (b, f b)
+bind' :: (Traversable f, Num a) => (f (AD Forward s a) -> b) -> f a -> (b, f b)
 bind' f as = dropIx $ mapAccumL outer (0 :: Int, b0) as
     where
         outer (!i, _) _ = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), b)
@@ -180,13 +180,13 @@ bind' f as = dropIx $ mapAccumL outer (0 :: Int, b0) as
         b0 = f (auto <$> as)
         dropIx ((_,b),bs) = (b,bs)
 
-bindWith :: (Traversable f, Num a) => (a -> b -> c) -> (f (AD Forward a) -> b) -> f a -> f c
+bindWith :: (Traversable f, Num a) => (a -> b -> c) -> (f (AD Forward s a) -> b) -> f a -> f c
 bindWith g f as = snd $ mapAccumL outer (0 :: Int) as
     where
         outer !i a = (i + 1, g a $ f $ snd $ mapAccumL (inner i) 0 as)
         inner !i !j a = (j + 1, if i == j then bundle a 1 else auto a)
 
-bindWith' :: (Traversable f, Num a) => (a -> b -> c) -> (f (AD Forward a) -> b) -> f a -> (b, f c)
+bindWith' :: (Traversable f, Num a) => (a -> b -> c) -> (f (AD Forward s a) -> b) -> f a -> (b, f c)
 bindWith' g f as = dropIx $ mapAccumL outer (0 :: Int, b0) as
     where
         outer (!i, _) a = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), g a b)

@@ -51,26 +51,26 @@ instance Show a => Show (Dense f a) where
     showsPrec d (Dense a _) = showsPrec d a
     showsPrec _ Zero        = showString "0"
 
-ds :: f a -> AD (Dense f) a -> f a
+ds :: f a -> AD (Dense f) s a -> f a
 ds _ (AD (Dense _ da)) = da
 ds z _ = z
 {-# INLINE ds #-}
 
-ds' :: Num a => f a -> AD (Dense f) a -> (a, f a)
+ds' :: Num a => f a -> AD (Dense f) s a -> (a, f a)
 ds' _ (AD (Dense a da)) = (a, da)
 ds' z (AD (Lift a)) = (a, z)
 ds' z (AD Zero) = (0, z)
 {-# INLINE ds' #-}
 
 -- Bind variables and count inputs
-vars :: (Traversable f, Num a) => f a -> f (AD (Dense f) a)
+vars :: (Traversable f, Num a) => f a -> f (AD (Dense f) s a)
 vars as = snd $ mapAccumL outer (0 :: Int) as
     where
         outer !i a = (i + 1, AD $ Dense a $ snd $ mapAccumL (inner i) 0 as)
         inner !i !j _ = (j + 1, if i == j then 1 else 0)
 {-# INLINE vars #-}
 
-apply :: (Traversable f, Num a) => (f (AD (Dense f) a) -> b) -> f a -> b
+apply :: (Traversable f, Num a) => (f (AD (Dense f) s a) -> b) -> f a -> b
 apply f as = f (vars as)
 {-# INLINE apply #-}
 

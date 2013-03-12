@@ -138,11 +138,11 @@ instance Lifted Kahn => Jacobian Kahn where
 
 deriveLifted id (conT ''Kahn)
 
-derivative :: Num a => AD Kahn a -> a
+derivative :: Num a => AD Kahn s a -> a
 derivative = sum . map snd . partials
 {-# INLINE derivative #-}
 
-derivative' :: Num a => AD Kahn a -> (a, a)
+derivative' :: Num a => AD Kahn s a -> (a, a)
 derivative' r = (primal r, derivative r)
 {-# INLINE derivative' #-}
 
@@ -185,8 +185,8 @@ topSortAcyclic g = reverse $ runST $ do
 
 -- | This returns a list of contributions to the partials.
 -- The variable ids returned in the list are likely /not/ unique!
-{-# SPECIALIZE partials :: AD Kahn Double -> [(Int, Double)] #-}
-partials :: forall a . Num a => AD Kahn a -> [(Int, a)]
+{-# SPECIALIZE partials :: AD Kahn s Double -> [(Int, Double)] #-}
+partials :: forall s a . Num a => AD Kahn s a -> [(Int, a)]
 partials (AD tape) = [ let v = sensitivities ! ix in seq v (ident, v) | (ix, Var _ ident) <- xs ]
     where
         Reified.Graph xs start = unsafePerformIO $ reifyGraph tape
@@ -211,12 +211,12 @@ partials (AD tape) = [ let v = sensitivities ! ix in seq v (ident, v) | (ix, Var
         successors _ = []
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.
-partialArray :: Num a => (Int, Int) -> AD Kahn a -> Array Int a
+partialArray :: Num a => (Int, Int) -> AD Kahn s a -> Array Int a
 partialArray vbounds tape = accumArray (+) 0 vbounds (partials tape)
 {-# INLINE partialArray #-}
 
 -- | Return an 'IntMap' of sparse partials
-partialMap :: Num a => AD Kahn a -> IntMap a
+partialMap :: Num a => AD Kahn s a -> IntMap a
 partialMap = fromListWith (+) . partials
 {-# INLINE partialMap #-}
 
@@ -232,16 +232,16 @@ instance Var Kahn where
     varId _ = error "varId: not a Var"
 
 class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
-    pack :: i -> [AD Kahn a] -> AD Kahn a
+    pack :: i -> [AD Kahn () a] -> AD Kahn () a
     unpack :: ([a] -> [a]) -> o
     unpack' :: ([a] -> (a, [a])) -> o'
 
-instance Num a => Grad (AD Kahn a) [a] (a, [a]) a where
+instance Num a => Grad (AD Kahn () a) [a] (a, [a]) a where
     pack i _ = i
     unpack f = f []
     unpack' f = f []
 
-instance Grad i o o' a => Grad (AD Kahn a -> i) (a -> o) (a -> o') a where
+instance Grad i o o' a => Grad (AD Kahn () a -> i) (a -> o) (a -> o') a where
     pack f (a:as) = pack (f a) as
     pack _ [] = error "Grad.pack: logic error"
     unpack f a = unpack (f . (a:))

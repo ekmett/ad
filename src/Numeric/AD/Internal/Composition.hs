@@ -82,18 +82,18 @@ instance (Typeable1 f, Typeable1 g, Data (f (g a)), Data a) => Data (ComposeFunc
     dataCast1 f = gcast1 f
 
 -- | The composition of two AD modes is an AD mode in its own right
-newtype ComposeMode f g a = ComposeMode { runComposeMode :: f (AD g a) }
+newtype ComposeMode f g s a = ComposeMode { runComposeMode :: f (AD g s a) }
 
-composeMode :: AD f (AD g a) -> AD (ComposeMode f g) a
+composeMode :: AD f s' (AD g s a) -> AD (ComposeMode f g s) s' a
 composeMode (AD a) = AD (ComposeMode a)
 
-decomposeMode :: AD (ComposeMode f g) a -> AD f (AD g a)
+decomposeMode :: AD (ComposeMode f g s) s' a -> AD f s' (AD g s a)
 decomposeMode (AD (ComposeMode a)) = AD a
 
-instance (Primal f, Mode g, Primal g) => Primal (ComposeMode f g) where
+instance (Primal f, Mode g, Primal g) => Primal (ComposeMode f g s) where
     primal = primal . primal . runComposeMode
 
-instance (Mode f, Mode g) => Mode (ComposeMode f g) where
+instance (Mode f, Mode g) => Mode (ComposeMode f g s) where
     auto = ComposeMode . auto . auto
     ComposeMode a <+> ComposeMode b = ComposeMode (a <+> b)
     a *^ ComposeMode b = ComposeMode (auto a *^ b)
@@ -101,7 +101,7 @@ instance (Mode f, Mode g) => Mode (ComposeMode f g) where
     ComposeMode a ^/ b = ComposeMode (a ^/ auto b)
     ComposeMode a <**> ComposeMode b = ComposeMode (a <**> b)
 
-instance (Mode f, Mode g) => Lifted (ComposeMode f g) where
+instance (Mode f, Mode g) => Lifted (ComposeMode f g s) where
     showsPrec1 n (ComposeMode a) = showsPrec1 n a
     ComposeMode a ==! ComposeMode b  = a ==! b
     compare1 (ComposeMode a) (ComposeMode b) = compare1 a b
@@ -171,14 +171,14 @@ instance (Mode f, Mode g) => Lifted (ComposeMode f g) where
     inverfc1 (ComposeMode a) = ComposeMode (inverfc1 a)
     invnormcdf1 (ComposeMode a) = ComposeMode (invnormcdf1 a)
 
-instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeMode f g) where
+instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeMode f g s) where
     typeOf1 tfga = mkTyConApp composeModeTyCon [typeOf1 (fa tfga), typeOf1 (ga tfga)]
-        where fa :: t f (g :: * -> *) a -> f a
+        where fa :: t f (g :: * -> *) s a -> f a
               fa = undefined
-              ga :: t (f :: * -> *) g a -> g a
+              ga :: t (f :: * -> *) g s a -> g a
               ga = undefined
 
-instance (Typeable1 f, Typeable1 g, Typeable a) => Typeable (ComposeMode f g a) where
+instance (Typeable1 f, Typeable1 g, Typeable a) => Typeable (ComposeMode f g s a) where
     typeOf = typeOfDefault
 
 composeModeTyCon :: TyCon
@@ -197,7 +197,7 @@ composeModeDataType :: DataType
 composeModeDataType = mkDataType "Numeric.AD.Internal.Composition.ComposeMode" [composeModeConstr]
 {-# NOINLINE composeModeDataType #-}
 
-instance (Typeable1 f, Typeable1 g, Data (f (AD g a)), Data a) => Data (ComposeMode f g a) where
+instance (Typeable1 f, Typeable1 g, Data (f (AD g s a)), Data a) => Data (ComposeMode f g s a) where
     gfoldl f z (ComposeMode a) = z ComposeMode `f` a
     toConstr _ = composeModeConstr
     gunfold k z c = case constrIndex c of

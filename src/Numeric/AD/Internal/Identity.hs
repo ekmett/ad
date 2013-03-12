@@ -31,10 +31,10 @@ import Numeric.AD.Internal.Types
 newtype Id a = Id { runId :: a } deriving
     (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable)
 
-probe :: a -> AD Id a
+probe :: a -> AD Id s a
 probe a = AD (Id a)
 
-unprobe :: AD Id a -> a
+unprobe :: AD Id s a -> a
 unprobe (AD (Id a)) = a
 
 pid :: f a -> f (Id a)
@@ -43,10 +43,10 @@ pid = iso
 unpid :: f (Id a) -> f a
 unpid = osi
 
-probed :: f a -> f (AD Id a)
+probed :: f a -> f (AD Id s a)
 probed = iso . pid
 
-unprobed :: f (AD Id a) -> f a
+unprobed :: f (AD Id s a) -> f a
 unprobed = unpid . osi
 
 instance Functor Id where

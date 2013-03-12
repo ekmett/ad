@@ -47,7 +47,7 @@ import Numeric.AD.Internal.Composition
 -- >>> import Data.Complex
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
-findZero :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
+findZero :: (Fractional a, Eq a) => (forall m s. Mode m => AD m s a -> AD m s a) -> a -> [a]
 findZero f = go where
   go x = x : if x == xn then [] else go xn where
     (y,y') = diff' f x
@@ -63,7 +63,7 @@ findZero f = go where
 --
 -- >>> last $ take 10 $ inverse sqrt 1 (sqrt 10)
 -- 10.0
-inverse :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> a -> [a]
+inverse :: (Fractional a, Eq a) => (forall m s. Mode m => AD m s a -> AD m s a) -> a -> a -> [a]
 inverse f x0 y = findZero (\x -> f x - auto y) x0
 {-# INLINE inverse  #-}
 
@@ -76,7 +76,7 @@ inverse f x0 y = findZero (\x -> f x - auto y) x0
 --
 -- >>> last $ take 10 $ fixedPoint cos 1
 -- 0.7390851332151607
-fixedPoint :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
+fixedPoint :: (Fractional a, Eq a) => (forall m s. Mode m => AD m s a -> AD m s a) -> a -> [a]
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
 
@@ -87,7 +87,7 @@ fixedPoint f = findZero (\x -> f x - x)
 --
 -- >>> last $ take 10 $ extremum cos 1
 -- 0.0
-extremum :: (Fractional a, Eq a) => (forall s. Mode s => AD s a -> AD s a) -> a -> [a]
+extremum :: (Fractional a, Eq a) => (forall m s. Mode m => AD m s a -> AD m s a) -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}
 
@@ -98,7 +98,7 @@ extremum f = findZero (diff (decomposeMode . f . composeMode))
 -- increasingly accurate results.  (Modulo the usual caveats.)
 --
 -- It uses reverse mode automatic differentiation to compute the gradient.
-gradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
+gradientDescent :: (Traversable f, Fractional a, Ord a) => (forall m s. Mode m => f (AD m s a) -> AD m s a) -> f a -> [f a]
 gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
     where
         (fx0, xgx0) = gradWith' (,) f x0
@@ -116,12 +116,12 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
 {-# INLINE gradientDescent #-}
 
 -- | Perform a gradient descent using reverse mode automatic differentiation to compute the gradient.
-gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
+gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall m s. Mode m => f (AD m s a) -> AD m s a) -> f a -> [f a]
 gradientAscent f = gradientDescent (negate . f)
 {-# INLINE gradientAscent #-}
 
 -- | Perform a conjugate gradient descent using reverse mode automatic differentiation to compute the gradient.
-conjugateGradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
+conjugateGradientDescent :: (Traversable f, Fractional a, Ord a) => (forall m s. Mode m => f (AD m s a) -> AD m s a) -> f a -> [f a]
 conjugateGradientDescent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0)
   where
     dot x y = sum $ zipWithT (*) x y
@@ -136,6 +136,6 @@ conjugateGradientDescent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0)
 {-# INLINE conjugateGradientDescent #-}
 
 -- | Perform a conjugate gradient ascent using reverse mode automatic differentiation to compute the gradient.
-conjugateGradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> [f a]
+conjugateGradientAscent :: (Traversable f, Fractional a, Ord a) => (forall m s. Mode m => f (AD m s a) -> AD m s a) -> f a -> [f a]
 conjugateGradientAscent f = conjugateGradientDescent (negate . f)
 {-# INLINE conjugateGradientAscent #-}

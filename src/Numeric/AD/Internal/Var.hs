@@ -34,7 +34,7 @@ class Primal v => Var v where
     var   :: a -> Int -> v a
     varId :: v a -> Int
 
-instance Var f => Var (AD f) where
+instance Var f => Var (AD f s) where
     var a v = AD (var a v)
     varId (AD v) = varId v
 

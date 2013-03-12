@@ -25,6 +25,8 @@ module Numeric.AD.Halley
     ) where
 
 import Prelude hiding (all)
+import Numeric.AD.Internal.Forward (Forward)
+import Numeric.AD.Internal.Tower (Tower)
 import Numeric.AD.Types
 import Numeric.AD.Mode.Tower (diffs0)
 import Numeric.AD.Mode.Forward (diff) -- , diff')
@@ -43,7 +45,7 @@ import Numeric.AD.Internal.Composition
 -- >>> import Data.Complex
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
-findZero :: (Fractional a, Eq a) => (forall m s. Mode m => AD m s a -> AD m s a) -> a -> [a]
+findZero :: (Fractional a, Eq a) => (forall s. AD Tower s a -> AD Tower s a) -> a -> [a]
 findZero f = go where
   go x = x : if x == xn then [] else go xn where
     (y:y':y'':_) = diffs0 f x
@@ -57,7 +59,7 @@ findZero f = go where
 --
 -- Note: the @take 10 $ inverse sqrt 1 (sqrt 10)@ example that works for Newton's method
 -- fails with Halley's method because the preconditions do not hold!
-inverse :: (Fractional a, Eq a) => (forall m s. Mode m => AD m s a -> AD m s a) -> a -> a -> [a]
+inverse :: (Fractional a, Eq a) => (forall s. AD Tower s a -> AD Tower s a) -> a -> a -> [a]
 inverse f x0 y = findZero (\x -> f x - auto y) x0
 {-# INLINE inverse  #-}
 
@@ -70,7 +72,7 @@ inverse f x0 y = findZero (\x -> f x - auto y) x0
 --
 -- >>> last $ take 10 $ fixedPoint cos 1
 -- 0.7390851332151607
-fixedPoint :: (Fractional a, Eq a) => (forall m s. Mode m => AD m s a -> AD m s a) -> a -> [a]
+fixedPoint :: (Fractional a, Eq a) => (forall s. AD Tower s a -> AD Tower s a) -> a -> [a]
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
 
@@ -81,6 +83,6 @@ fixedPoint f = findZero (\x -> f x - x)
 --
 -- >>> take 10 $ extremum cos 1
 -- [1.0,0.29616942658570555,4.59979519460002e-3,1.6220740159042513e-8,0.0]
-extremum :: (Fractional a, Eq a) => (forall m s. Mode m => AD m s a -> AD m s a) -> a -> [a]
+extremum :: (Fractional a, Eq a) => (forall s s'. AD (ComposeMode Forward Tower s') s a -> AD (ComposeMode Forward Tower s') s a) -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}

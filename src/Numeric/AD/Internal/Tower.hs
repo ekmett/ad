@@ -83,19 +83,19 @@ bundle :: a -> Tower a -> Tower a
 bundle a (Tower as) = Tower (a:as)
 {-# INLINE bundle #-}
 
-withD :: (a, a) -> AD Tower a
+withD :: (a, a) -> AD Tower s a
 withD (a, da) = AD (Tower [a,da])
 {-# INLINE withD #-}
 
-apply :: Num a => (AD Tower a -> b) -> a -> b
+apply :: Num a => (AD Tower s a -> b) -> a -> b
 apply f a = f (AD (Tower [a,1]))
 {-# INLINE apply #-}
 
-getADTower :: AD Tower a -> [a]
+getADTower :: AD Tower s a -> [a]
 getADTower (AD t) = getTower t
 {-# INLINE getADTower #-}
 
-tower :: [a] -> AD Tower a
+tower :: [a] -> AD Tower s a
 tower as = AD (Tower as)
 
 instance Primal Tower where

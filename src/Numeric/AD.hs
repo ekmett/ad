@@ -148,7 +148,7 @@ import Numeric.AD.Mode.Sparse
 
 import Numeric.AD.Newton
 
--- | Calculate the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
+-- | Calculate the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between sparse and reverse mode AD based on the number of inputs and outputs.
 --
 -- If you know the relative number of inputs and outputs, consider 'Numeric.AD.Reverse.jacobian' or 'Nuneric.AD.Sparse.jacobian'.
 jacobian :: (Traversable f, Functor g, Num a) => (forall m s. Mode m => f (AD m s a) -> g (AD m s a)) -> f a -> g (f a)
@@ -164,7 +164,7 @@ big :: Nat -> Bool
 big (S (S (S (S (S (S (S (S (S (S _)))))))))) = True
 big _ = False
 
--- | Calculate both the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward- and reverse- mode AD based on the relative, based on the number of inputs
+-- | Calculate both the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between sparse- and reverse- mode AD based on the relative, based on the number of inputs
 --
 -- If you know the relative number of inputs and outputs, consider 'Numeric.AD.Reverse.jacobian'' or 'Nuneric.AD.Sparse.jacobian''.
 jacobian' :: (Traversable f, Functor g, Num a) => (forall m s. Mode m => f (AD m s a) -> g (AD m s a)) -> f a -> g (a, f a)
@@ -175,7 +175,7 @@ jacobian' f bs | Z <- n = fmap (\x -> (unprobe x, bs)) (f (probed bs))
         n = size bs
 {-# INLINE jacobian' #-}
 
--- | @'jacobianWith' g f@ calculates the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between forward and reverse mode AD based on the number of inputs and outputs.
+-- | @'jacobianWith' g f@ calculates the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between sparse and reverse mode AD based on the number of inputs and outputs.
 --
 -- The resulting Jacobian matrix is then recombined element-wise with the input using @g@.
 --

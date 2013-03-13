@@ -53,7 +53,7 @@ import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Kahn
 import Numeric.AD.Internal.Var
 
--- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with reverse-mode AD in a single pass.
+-- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with kahn-mode AD in a single pass.
 --
 -- >>> grad (\[x,y,z] -> x*y+z) [1,2,3]
 -- [2,1,1]
@@ -63,7 +63,7 @@ grad f as = unbind vs (partialArray bds $ f vs)
     where (vs,bds) = bind as
 {-# INLINE grad #-}
 
--- | The 'grad'' function calculates the result and gradient of a non-scalar-to-scalar function with reverse-mode AD in a single pass.
+-- | The 'grad'' function calculates the result and gradient of a non-scalar-to-scalar function with kahn-mode AD in a single pass.
 --
 -- >>> grad' (\[x,y,z] -> 4*x*exp y+cos z) [1,2,3]
 -- (28.566231899122155,[29.5562243957226,29.5562243957226,-0.1411200080598672])
@@ -73,7 +73,7 @@ grad' f as = (primal r, unbind vs $ partialArray bds r)
           r = f vs
 {-# INLINE grad' #-}
 
--- | @'grad' g f@ function calculates the gradient of a non-scalar-to-scalar function @f@ with reverse-mode AD in a single pass.
+-- | @'grad' g f@ function calculates the gradient of a non-scalar-to-scalar function @f@ with kahn-mode AD in a single pass.
 -- The gradient is combined element-wise with the argument using the function @g@.
 --
 -- @
@@ -87,7 +87,7 @@ gradWith g f as = unbindWith g vs (partialArray bds $ f vs)
     where (vs,bds) = bind as
 {-# INLINE gradWith #-}
 
--- | @'grad'' g f@ calculates the result and gradient of a non-scalar-to-scalar function @f@ with reverse-mode AD in a single pass
+-- | @'grad'' g f@ calculates the result and gradient of a non-scalar-to-scalar function @f@ with kahn-mode AD in a single pass
 -- the gradient is combined element-wise with the argument using the function @g@.
 --
 -- @'grad'' == 'gradWith'' (\_ dx -> dx)@
@@ -97,7 +97,7 @@ gradWith' g f as = (primal r, unbindWith g vs $ partialArray bds r)
           r = f vs
 {-# INLINE gradWith' #-}
 
--- | The 'jacobian' function calculates the jacobian of a non-scalar-to-non-scalar function with reverse AD lazily in @m@ passes for @m@ outputs.
+-- | The 'jacobian' function calculates the jacobian of a non-scalar-to-non-scalar function with kahn AD lazily in @m@ passes for @m@ outputs.
 --
 -- >>> jacobian (\[x,y] -> [y,x,x*y]) [2,1]
 -- [[0,1],[1,0],[1,2]]
@@ -109,7 +109,7 @@ jacobian f as = unbind vs . partialArray bds <$> f vs where
     (vs, bds) = bind as
 {-# INLINE jacobian #-}
 
--- | The 'jacobian'' function calculates both the result and the Jacobian of a nonscalar-to-nonscalar function, using @m@ invocations of reverse AD,
+-- | The 'jacobian'' function calculates both the result and the Jacobian of a nonscalar-to-nonscalar function, using @m@ invocations of kahn AD,
 -- where @m@ is the output dimensionality. Applying @fmap snd@ to the result will recover the result of 'jacobian'
 -- | An alias for 'gradF''
 --
@@ -121,7 +121,7 @@ jacobian' f as = row <$> f vs where
     row a = (primal a, unbind vs (partialArray bds a))
 {-# INLINE jacobian' #-}
 
--- | 'jacobianWith g f' calculates the Jacobian of a non-scalar-to-non-scalar function @f@ with reverse AD lazily in @m@ passes for @m@ outputs.
+-- | 'jacobianWith g f' calculates the Jacobian of a non-scalar-to-non-scalar function @f@ with kahn AD lazily in @m@ passes for @m@ outputs.
 --
 -- Instead of returning the Jacobian matrix, the elements of the matrix are combined with the input using the @g@.
 --
@@ -134,7 +134,7 @@ jacobianWith g f as = unbindWith g vs . partialArray bds <$> f vs where
     (vs, bds) = bind as
 {-# INLINE jacobianWith #-}
 
--- | 'jacobianWith' g f' calculates both the result and the Jacobian of a nonscalar-to-nonscalar function @f@, using @m@ invocations of reverse AD,
+-- | 'jacobianWith' g f' calculates both the result and the Jacobian of a nonscalar-to-nonscalar function @f@, using @m@ invocations of kahn AD,
 -- where @m@ is the output dimensionality. Applying @fmap snd@ to the result will recover the result of 'jacobianWith'
 --
 -- Instead of returning the Jacobian matrix, the elements of the matrix are combined with the input using the @g@.
@@ -184,21 +184,21 @@ diffF' :: (Functor f, Num a) => (forall s. AD Kahn s a -> f (AD Kahn s a)) -> a 
 diffF' f a = derivative' <$> f (var a 0)
 {-# INLINE diffF' #-}
 
--- | Compute the 'hessian' via the 'jacobian' of the gradient. gradient is computed in reverse mode and then the 'jacobian' is computed in reverse mode.
+-- | Compute the 'hessian' via the 'jacobian' of the gradient. gradient is computed in kahn mode and then the 'jacobian' is computed in kahn mode.
 --
 -- However, since the @'grad' f :: f a -> f a@ is square this is not as fast as using the forward-mode 'jacobian' of a reverse mode gradient provided by 'Numeric.AD.hessian'.
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
 -- [[0,1],[1,0]]
-hessian :: (Traversable f, Num a) => (forall m s. Mode m => f (AD m s a) -> AD m s a) -> f a -> f (f a)
+hessian :: (Traversable f, Num a) => (forall s s'. f (AD (ComposeMode Kahn Kahn s') s a) -> AD (ComposeMode Kahn Kahn s') s a) -> f a -> f (f a)
 hessian f = jacobian (grad (decomposeMode . f . fmap composeMode))
 
--- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the reverse-mode Jacobian of the reverse-mode Jacobian of the function.
+-- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the kahn-mode Jacobian of the kahn-mode Jacobian of the function.
 --
 -- Less efficient than 'Numeric.AD.Mode.Mixed.hessianF'.
 --
 -- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
-hessianF :: (Traversable f, Functor g, Num a) => (forall m s. Mode m => f (AD m s a) -> g (AD m s a)) -> f a -> g (f (f a))
+hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. f (AD (ComposeMode Kahn Kahn s') s a) -> g (AD (ComposeMode Kahn Kahn s') s a)) -> f a -> g (f (f a))
 hessianF f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))
 

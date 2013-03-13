@@ -109,7 +109,7 @@ library
     mtl              >= 2,
     reflection       >= 1.1.6,
     tagged           >= 0.4.2.1,
-    template-haskell >= 2.5 && < 2.9
+    template-haskell >= 2.5 && < 3
 
   exposed-modules:
     Numeric.AD

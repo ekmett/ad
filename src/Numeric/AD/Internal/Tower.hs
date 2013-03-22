@@ -39,6 +39,8 @@ import Numeric.AD.Internal.Classes
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'
 newtype Tower a = Tower { getTower :: [a] } deriving (Data, Typeable)
 
+type instance Domain (Tower a) = a
+
 instance Show a => Show (Tower a) where
     showsPrec n (Tower as) = showParen (n > 10) $ showString "Tower " . showList as
 
@@ -83,32 +85,32 @@ bundle :: a -> Tower a -> Tower a
 bundle a (Tower as) = Tower (a:as)
 {-# INLINE bundle #-}
 
-withD :: (a, a) -> AD Tower s a
+withD :: (a, a) -> AD s (Tower a)
 withD (a, da) = AD (Tower [a,da])
 {-# INLINE withD #-}
 
-apply :: Num a => (AD Tower s a -> b) -> a -> b
+apply :: Num a => (AD s (Tower a) -> b) -> a -> b
 apply f a = f (AD (Tower [a,1]))
 {-# INLINE apply #-}
 
-getADTower :: AD Tower s a -> [a]
+getADTower :: AD s (Tower a) -> [a]
 getADTower (AD t) = getTower t
 {-# INLINE getADTower #-}
 
-tower :: [a] -> AD Tower s a
+tower :: [a] -> AD s (Tower a)
 tower as = AD (Tower as)
 
-instance Primal Tower where
+instance Primal (Tower a) where
     primal (Tower (x:_)) = x
     primal _ = 0
 
-instance Lifted Tower => Mode Tower where
+instance Mode (Tower a) where
     auto a = Tower [a]
     zero = Tower []
     Tower [] <**> y         = auto (0 ** primal y)
     _        <**> Tower []  = auto 1
     x        <**> Tower [y] = lift1 (**y) (\z -> y *^ z <**> Tower [y-1]) x
-    x        <**> y         = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
+    x        <**> y         = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
     Tower [] <+> bs = bs
     as <+> Tower [] = as
@@ -121,20 +123,20 @@ instance Lifted Tower => Mode Tower where
     Tower as ^* b = Tower (map (*b) as)
     Tower as ^/ b = Tower (map (/b) as)
 
-instance Lifted Tower => Jacobian Tower where
-    type D Tower = Tower
-    unary f dadb b = bundle (f (primal b)) (tangents b *! dadb)
-    lift1 f df b   = bundle (f (primal b)) (tangents b *! df b)
+instance Jacobian (Tower a) where
+    type D (Tower a) = Tower a
+    unary f dadb b = bundle (f (primal b)) (tangents b * dadb)
+    lift1 f df b   = bundle (f (primal b)) (tangents b * df b)
     lift1_ f df b = a where
-        a = bundle (f (primal b)) (tangents b *! df a b)
+        a = bundle (f (primal b)) (tangents b * df a b)
 
-    binary f dadb dadc b c = bundle (f (primal b) (primal c)) (tangents b *! dadb +! tangents c *! dadc)
-    lift2 f df b c = bundle (f (primal b) (primal c)) (tangents b *! dadb +! tangents c *! dadc) where
+    binary f dadb dadc b c = bundle (f (primal b) (primal c)) (tangents b * dadb + tangents c * dadc)
+    lift2 f df b c = bundle (f (primal b) (primal c)) (tangents b * dadb + tangents c * dadc) where
         (dadb, dadc) = df b c
     lift2_ f df b c = a where
         a0 = f (primal b) (primal c)
-        da = tangents b *! dadb +! tangents c *! dadc
+        da = tangents b * dadb + tangents c * dadc
         a = bundle a0 da
         (dadb, dadc) = df a b c
 
-deriveLifted id (conT ''Tower)
+deriveNumeric id (ConT ''Tower)

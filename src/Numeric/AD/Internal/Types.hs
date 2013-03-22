@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TemplateHaskell, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
+{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TemplateHaskell, TypeFamilies, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, DeriveDataTypeable #-}
 {-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |
@@ -19,13 +19,9 @@ module Numeric.AD.Internal.Types
 #define MIN_VERSION_base (x,y,z) 1
 #endif
 
-import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
-#if MIN_VERSION_base(4,4,0)
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon3, mkTyConApp, gcast1)
-#else
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, gcast1)
-#endif
-import Language.Haskell.TH
+import Data.Data (Data)
+import Data.Number.Erf
+import Data.Typeable (Typeable)
 import Numeric.AD.Internal.Classes
 
 {-# ANN module "HLint: ignore Eta reduce" #-}
@@ -34,42 +30,6 @@ import Numeric.AD.Internal.Classes
 -- numerical tower. Universal quantification is used to limit the actions in user code to
 -- machinery that will return the same answers under all AD modes, allowing us to use modes
 -- interchangeably as both the type level \"brand\" and dictionary, providing a common API.
-newtype AD f s a = AD { runAD :: f a } deriving (Iso (f a), Lifted, Mode, Primal)
+newtype AD s a = AD { runAD :: a } deriving (Iso a, Mode, Primal, Typeable, Data, Enum, Eq, Ord, Bounded, Num, Fractional, Floating, RealFloat, RealFrac, Real, Erf, InvErf)
 
--- > instance (Lifted f, Num a) => Num (AD f a)
--- etc.
-let f = varT (mkName "f")
-    s = varT (mkName "s") in
-    deriveNumeric
-        (classP ''Lifted [f]:)
-        (conT ''AD `appT` f `appT` s)
-
-instance Typeable1 f => Typeable1 (AD f s) where
-    typeOf1 tfa = mkTyConApp adTyCon [typeOf1 (undefined `asArgsType` tfa)]
-        where asArgsType :: f a -> t f s a -> f a
-              asArgsType = const
-
-adTyCon :: TyCon
-#if MIN_VERSION_base(4,4,0)
-adTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Types" "AD"
-#else
-adTyCon = mkTyCon "Numeric.AD.Internal.Types.AD"
-#endif
-{-# NOINLINE adTyCon #-}
-
-adConstr :: Constr
-adConstr = mkConstr adDataType "AD" [] Prefix
-{-# NOINLINE adConstr #-}
-
-adDataType :: DataType
-adDataType = mkDataType "Numeric.AD.Internal.Types.AD" [adConstr]
-{-# NOINLINE adDataType #-}
-
-instance (Typeable1 f, Typeable a, Data (f a), Data a) => Data (AD f s a) where
-    gfoldl f z (AD a) = z AD `f` a
-    toConstr _ = adConstr
-    gunfold k z c = case constrIndex c of
-        1 -> k (z AD)
-        _ -> error "gunfold"
-    dataTypeOf _ = adDataType
-    dataCast1 f = gcast1 f
+type instance Domain (AD s f) = Domain f

@@ -125,7 +125,7 @@ gradientAscent f = gradientDescent (negate . f)
 {-# INLINE gradientAscent #-}
 
 -- | Perform a conjugate gradient descent using reverse mode automatic differentiation to compute the gradient, and using forward-on-forward mode for computing extrema.
-conjugateGradientDescent :: (Traversable f, Floating a, Ord a) => (forall m s. (Mode m, Num m, a ~ Domain m) => f (AD s m) -> AD s m) -> f a -> [f a]
+conjugateGradientDescent :: (Traversable f, Floating a, Ord a) => (forall m s. (Mode m, Num m, a ~ Scalar m) => f (AD s m) -> AD s m) -> f a -> [f a]
 conjugateGradientDescent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0)
   where
     dot x y = sum $ zipWithT (*) x y
@@ -140,6 +140,6 @@ conjugateGradientDescent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0)
 {-# INLINE conjugateGradientDescent #-}
 
 -- | Perform a conjugate gradient ascent using reverse mode automatic differentiation to compute the gradient.
-conjugateGradientAscent :: (Traversable f, Floating a, Ord a) => (forall m s. (Mode m, Num m, a ~ Domain m) => f (AD s m) -> AD s m) -> f a -> [f a]
+conjugateGradientAscent :: (Traversable f, Floating a, Ord a) => (forall m s. (Mode m, Num m, a ~ Scalar m) => f (AD s m) -> AD s m) -> f a -> [f a]
 conjugateGradientAscent f = conjugateGradientDescent (negate . f)
 {-# INLINE conjugateGradientAscent #-}

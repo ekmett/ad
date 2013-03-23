@@ -22,7 +22,7 @@ module Numeric.AD.Internal.Classes
     , Primal(..)
     , deriveNumeric
     , Iso(..)
-    , Domain
+    , Scalar
     ) where
 
 import Control.Applicative ((<$>), pure)
@@ -30,7 +30,7 @@ import Control.Monad
 import Data.Number.Erf
 import Language.Haskell.TH.Syntax
 
-type family Domain t :: *
+type family Scalar t :: *
 
 class Iso a b where
     iso :: f a -> f b
@@ -46,47 +46,47 @@ class Mode t where
     isKnownConstant _ = False
 
     -- | allowed to return False for zero, but we give more NaN's than strictly necessary then
-    isKnownZero :: Num (Domain t) => t -> Bool
+    isKnownZero :: Num (Scalar t) => t -> Bool
     isKnownZero _ = False
 
     -- | Embed a constant
-    auto  :: Num (Domain t) => Domain t -> t
+    auto  :: Num (Scalar t) => Scalar t -> t
 
     -- | Vector sum
-    (<+>) :: Num (Domain t) => t -> t -> t
+    (<+>) :: Num (Scalar t) => t -> t -> t
 
     -- | Scalar-vector multiplication
-    (*^) :: Num (Domain t) => Domain t -> t -> t
+    (*^) :: Num (Scalar t) => Scalar t -> t -> t
 
     -- | Vector-scalar multiplication
-    (^*) :: Num (Domain t) => t -> Domain t -> t
+    (^*) :: Num (Scalar t) => t -> Scalar t -> t
 
     -- | Scalar division
-    (^/) :: Fractional (Domain t) => t -> Domain t -> t
+    (^/) :: Fractional (Scalar t) => t -> Scalar t -> t
 
     -- | Exponentiation, this should be overloaded if you can figure out anything about what is constant!
-    (<**>) :: Floating (Domain t) => t -> t -> t
+    (<**>) :: Floating (Scalar t) => t -> t -> t
 
-    -- default (<**>) :: (Jacobian t, Floating (D t), Floating (Domain t)) => t -> t -> t
+    -- default (<**>) :: (Jacobian t, Floating (D t), Floating (Scalar t)) => t -> t -> t
     -- x <**> y = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
     -- | > 'zero' = 'lift' 0
-    zero :: Num (Domain t) => t
+    zero :: Num (Scalar t) => t
 
-    default (*^) :: (Num t, Num (Domain t)) => Domain t -> t -> t
+    default (*^) :: (Num t, Num (Scalar t)) => Scalar t -> t -> t
     a *^ b = auto a * b
-    default (^*) :: (Num t, Num (Domain t)) => t -> Domain t -> t
+    default (^*) :: (Num t, Num (Scalar t)) => t -> Scalar t -> t
     a ^* b = a * auto b
 
     a ^/ b = a ^* recip b
 
     zero = auto 0
 
-one :: (Mode t, Num (Domain t)) => t
+one :: (Mode t, Num (Scalar t)) => t
 one = auto 1
 {-# INLINE one #-}
 
-negOne :: (Mode t, Num (Domain t)) => t
+negOne :: (Mode t, Num (Scalar t)) => t
 negOne = auto (-1)
 {-# INLINE negOne #-}
 
@@ -100,38 +100,38 @@ negOne = auto (-1)
 -- by the universal quantification on the various combinators we expose.
 
 class Primal t where
-    primal :: Num (Domain t) => t -> Domain t
+    primal :: Num (Scalar t) => t -> Scalar t
 
 -- | 'Jacobian' is used by 'deriveMode' but is not exposed
 -- via 'Mode' to prevent its abuse by end users
 -- via the 'AD' data type.
-class (Domain t ~ Domain (D t), Mode t, Mode (D t)) => Jacobian t where
+class (Scalar t ~ Scalar (D t), Mode t, Mode (D t)) => Jacobian t where
     type D t :: *
 
-    unary  :: (Num (Domain t), a ~ Domain t) => (a -> a) -> D t -> t -> t
-    lift1  :: (Num (Domain t), a ~ Domain t) => (a -> a) -> (D t -> D t) -> t -> t
-    lift1_ :: (Num (Domain t), a ~ Domain t) => (a -> a) -> (D t -> D t -> D t) -> t -> t
+    unary  :: (Num a, a ~ Scalar t) => (a -> a) -> D t -> t -> t
+    lift1  :: (Num a, a ~ Scalar t) => (a -> a) -> (D t -> D t) -> t -> t
+    lift1_ :: (Num a, a ~ Scalar t) => (a -> a) -> (D t -> D t -> D t) -> t -> t
 
-    binary :: (Num (Domain t), a ~ Domain t) => (a -> a -> a) -> D t -> D t -> t -> t -> t
-    lift2  :: (Num (Domain t), a ~ Domain t) => (a -> a -> a) -> (D t -> D t -> (D t, D t)) -> t -> t -> t
-    lift2_ :: (Num (Domain t), a ~ Domain t) => (a -> a -> a) -> (D t -> D t -> D t -> (D t, D t)) -> t -> t -> t
+    binary :: (Num a, a ~ Scalar t) => (a -> a -> a) -> D t -> D t -> t -> t -> t
+    lift2  :: (Num a, a ~ Scalar t) => (a -> a -> a) -> (D t -> D t -> (D t, D t)) -> t -> t -> t
+    lift2_ :: (Num a, a ~ Scalar t) => (a -> a -> a) -> (D t -> D t -> D t -> (D t, D t)) -> t -> t -> t
 
-withPrimal :: (Jacobian t, Num a, a ~ Domain t) => t -> a -> t
+withPrimal :: (Jacobian t, Num a, a ~ Scalar t) => t -> a -> t
 withPrimal t a = unary (const a) one t
 {-# INLINE withPrimal #-}
 
-fromBy :: (Jacobian t, Num a, Num (D t), a ~ Domain t) => t -> t -> Int -> a -> t
+fromBy :: (Jacobian t, Num a, Num (D t), a ~ Scalar t) => t -> t -> Int -> a -> t
 fromBy a delta n x = binary (\_ _ -> x) one (fromIntegral n) a delta
 
-discrete1 :: (Primal t, Num a, a ~ Domain t) => (a -> c) -> t -> c
+discrete1 :: (Primal t, Num a, a ~ Scalar t) => (a -> c) -> t -> c
 discrete1 f x = f (primal x)
 {-# INLINE discrete1 #-}
 
-discrete2 :: (Primal t, Num a, a ~ Domain t) => (a -> a -> c) -> t -> t -> c
+discrete2 :: (Primal t, Num a, a ~ Scalar t) => (a -> a -> c) -> t -> t -> c
 discrete2 f x y = f (primal x) (primal y)
 {-# INLINE discrete2 #-}
 
-discrete3 :: (Primal t, Num a, a ~ Domain t) => (a -> a -> a -> d) -> t -> t -> t -> d
+discrete3 :: (Primal t, Num a, a ~ Scalar t) => (a -> a -> a -> d) -> t -> t -> t -> d
 discrete3 f x y z = f (primal x) (primal y) (primal z)
 {-# INLINE discrete3 #-}
 

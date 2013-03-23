@@ -32,4 +32,4 @@ import Numeric.AD.Internal.Classes
 -- interchangeably as both the type level \"brand\" and dictionary, providing a common API.
 newtype AD s a = AD { runAD :: a } deriving (Iso a, Mode, Primal, Typeable, Data, Enum, Eq, Ord, Bounded, Num, Fractional, Floating, RealFloat, RealFrac, Real, Erf, InvErf)
 
-type instance Domain (AD s f) = Domain f
+type instance Scalar (AD s f) = Scalar f

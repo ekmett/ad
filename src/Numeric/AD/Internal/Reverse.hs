@@ -107,7 +107,7 @@ data Reverse s a where
   deriving (Show, Typeable)
 #endif
 
-type instance Domain (Reverse s a) = a
+type instance Scalar (Reverse s a) = a
 
 instance (Reifies s Tape) => Mode (Reverse s a) where
   isKnownZero Zero = True

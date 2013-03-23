@@ -98,7 +98,7 @@ deriving instance Real (f (AD s (g a))) => Real (ComposeMode f g s a)
 deriving instance Erf (f (AD s (g a))) => Erf (ComposeMode f g s a)
 deriving instance InvErf (f (AD s (g a))) => InvErf (ComposeMode f g s a)
 
-type instance Domain (ComposeMode f g s a) = a
+type instance Scalar (ComposeMode f g s a) = a
 
 composeMode :: AD s' (f (AD s (g a))) -> AD s' (ComposeMode f g s a)
 composeMode (AD a) = AD (ComposeMode a)
@@ -106,10 +106,10 @@ composeMode (AD a) = AD (ComposeMode a)
 decomposeMode :: AD s' (ComposeMode f g s a) -> AD s' (f (AD s (g a)))
 decomposeMode (AD (ComposeMode a)) = AD a
 
-instance (Primal (f (AD s (g a))), Mode (g a), Primal (g a), Domain (f (AD s (g a))) ~ AD s (g a), Num (g a), Domain (g a) ~ a) => Primal (ComposeMode f g s a) where
+instance (Primal (f (AD s (g a))), Mode (g a), Primal (g a), Scalar (f (AD s (g a))) ~ AD s (g a), Num (g a), Scalar (g a) ~ a) => Primal (ComposeMode f g s a) where
     primal = primal . primal . runComposeMode
 
-instance (Mode (f (AD s (g a))), Mode (g a), Domain (f (AD s (g a))) ~ AD s (g a), Domain (g a) ~ a, Floating (g a)) => Mode (ComposeMode f g s a) where
+instance (Mode (f (AD s (g a))), Mode (g a), Scalar (f (AD s (g a))) ~ AD s (g a), Scalar (g a) ~ a, Floating (g a)) => Mode (ComposeMode f g s a) where
     auto = ComposeMode . auto . auto
     ComposeMode a <+> ComposeMode b = ComposeMode (a <+> b)
     a *^ ComposeMode b = ComposeMode (auto a *^ b)

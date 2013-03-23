@@ -31,7 +31,7 @@ import Numeric.AD.Internal.Types
 newtype Id a = Id { runId :: a } deriving
     (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable, Erf, InvErf)
 
-type instance Domain (Id a) = a
+type instance Scalar (Id a) = a
 
 probe :: a -> AD s (Id a)
 probe a = AD (Id a)

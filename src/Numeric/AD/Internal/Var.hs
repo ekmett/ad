@@ -32,7 +32,7 @@ import Numeric.AD.Internal.Classes
 
 -- | Used to mark variables for inspection during the reverse pass
 class Primal v => Var v where
-    var   :: Domain v -> Int -> v
+    var   :: Scalar v -> Int -> v
     varId :: v -> Int
 
 instance Var f => Var (AD s f) where
@@ -45,26 +45,26 @@ instance Monad S where
     return a = S (\s -> (a,s))
     S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
 
-bind :: (Traversable f, Var v) => f (Domain v) -> (f v, (Int,Int))
+bind :: (Traversable f, Var v) => f (Scalar v) -> (f v, (Int,Int))
 bind xs = (r,(0,hi)) where
   (r,hi) = runS (mapM freshVar xs) 0
   freshVar a = S (\s -> let s' = s + 1 in s' `seq` (var a s, s'))
 
-unbind :: (Functor f, Var v)  => f v -> Array Int (Domain v) -> f (Domain v)
+unbind :: (Functor f, Var v)  => f v -> Array Int (Scalar v) -> f (Scalar v)
 unbind xs ys = fmap (\v -> ys ! varId v) xs
 
-unbindWith :: (Functor f, Var v, Num (Domain v)) => (Domain v -> b -> c) -> f v -> Array Int b -> f c
+unbindWith :: (Functor f, Var v, Num (Scalar v)) => (Scalar v -> b -> c) -> f v -> Array Int b -> f c
 unbindWith f xs ys = fmap (\v -> f (primal v) (ys ! varId v)) xs
 
-unbindMap :: (Functor f, Var v, Num (Domain v)) => f v -> IntMap (Domain v) -> f (Domain v)
+unbindMap :: (Functor f, Var v, Num (Scalar v)) => f v -> IntMap (Scalar v) -> f (Scalar v)
 unbindMap xs ys = fmap (\v -> findWithDefault 0 (varId v) ys) xs
 
-unbindMapWithDefault :: (Functor f, Var v, Num (Domain v)) => b -> (Domain v -> b -> c) -> f v -> IntMap b -> f c
+unbindMapWithDefault :: (Functor f, Var v, Num (Scalar v)) => b -> (Scalar v -> b -> c) -> f v -> IntMap b -> f c
 unbindMapWithDefault z f xs ys = fmap (\v -> f (primal v) $ findWithDefault z (varId v) ys) xs
 
 data Variable a = Variable a {-# UNPACK #-} !Int
 
-type instance Domain (Variable a) = a
+type instance Scalar (Variable a) = a
 
 instance Var (Variable a) where
   var = Variable
@@ -73,5 +73,5 @@ instance Var (Variable a) where
 instance Primal (Variable a) where
   primal (Variable a _) = a
 
-vary :: Var f => Variable (Domain f) -> f
+vary :: Var f => Variable (Scalar f) -> f
 vary (Variable a i) = var a i

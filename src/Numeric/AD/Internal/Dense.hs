@@ -46,7 +46,7 @@ data Dense f a
     | Dense !a (f a)
     | Zero
 
-type instance Domain (Dense f a) = a
+type instance Scalar (Dense f a) = a
 
 instance Show a => Show (Dense f a) where
     showsPrec d (Lift a)    = showsPrec d a

@@ -55,7 +55,7 @@ data Sparse a
   | Zero
   deriving (Show, Data, Typeable)
 
-type instance Domain (Sparse a) = a
+type instance Scalar (Sparse a) = a
 
 -- | drop keys below a given value
 dropMap :: Int -> IntMap a -> IntMap a

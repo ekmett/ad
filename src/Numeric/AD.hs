@@ -50,10 +50,10 @@ module Numeric.AD
     , grads
 
     -- * Jacobians (Sparse or Reverse)
-    , jacobian
-    , jacobian'
-    , jacobianWith
-    , jacobianWith'
+    -- , jacobian
+    -- , jacobian'
+    -- , jacobianWith
+    -- , jacobianWith'
 
     -- * Higher Order Jacobian (Sparse-on-Reverse)
     , jacobians
@@ -63,13 +63,13 @@ module Numeric.AD
     , jacobianWithT
 
     -- * Hessian (Sparse-On-Reverse)
-    , hessian
-    , hessian'
+    -- , hessian
+    -- , hessian'
 
     -- * Hessian Tensors (Sparse or Sparse-On-Reverse)
-    , hessianF
+    -- , hessianF
     -- * Hessian Tensors (Sparse)
-    , hessianF'
+    -- , hessianF'
 
     -- * Hessian Vector Products (Forward-On-Reverse)
     -- , hessianProduct
@@ -149,6 +149,7 @@ import Numeric.AD.Mode.Sparse
 
 import Numeric.AD.Newton
 
+{-
 -- | Calculate the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between sparse and reverse mode AD based on the number of inputs and outputs.
 --
 -- If you know the relative number of inputs and outputs, consider 'Numeric.AD.Reverse.jacobian' or 'Nuneric.AD.Sparse.jacobian'.
@@ -198,6 +199,7 @@ jacobianWith' g f bs
     where
         n = size bs
 {-# INLINE jacobianWith' #-}
+-}
 
 {-
 -- | @'hessianProduct' f wv@ computes the product of the hessian @H@ of a non-scalar-to-scalar function @f@ at @w = 'fst' <$> wv@ with a vector @v = snd <$> wv@ using \"Pearlmutter\'s method\" from <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.29.6143>, which states:
@@ -216,7 +218,6 @@ hessianProduct f = duF (grad (decomposeMode . f . fmap composeMode))
 -- Or in other words, we return the gradient and the directional derivative of the gradient. The gradient is calculated in reverse mode, then the directional derivative is calculated in forward mode.
 hessianProduct' :: (Traversable f, Num a) => (forall s s'. Reifies s Tape => f (AD s (ComposeMode (Reverse s) Forward s' a)) -> AD s (ComposeMode (Reverse s) Forward s' a)) -> f (a, a) -> f (a, a)
 hessianProduct' f = duF' (grad (decomposeMode . f . fmap composeMode))
--}
 
 -- | Compute the Hessian via the Jacobian of the gradient. gradient is computed in reverse mode and then the Jacobian is computed in sparse (forward) mode.
 --
@@ -233,3 +234,4 @@ hessianF :: (Traversable f, Functor g, Floating a) => (forall m s. (Mode m, Floa
 hessianF f as
     | big (size as) = decomposeFunctor $ Sparse.jacobian (ComposeFunctor . Reverse.jacobian (fmap decomposeMode . f . fmap composeMode)) as
     | otherwise = Sparse.hessianF f as
+-}

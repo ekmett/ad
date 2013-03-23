@@ -43,7 +43,6 @@ import Data.Proxy
 import Data.Reflection
 import Data.Typeable
 import Language.Haskell.TH hiding (reify)
-import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Internal.Var
@@ -172,12 +171,12 @@ let s = VarT (mkName "s") in
   deriveNumeric (ClassP ''Reifies [s, ConT ''Tape] :) (ConT ''Reverse `AppT` s)
 
 -- | Helper that extracts the derivative of a chain when the chain was constructed with one variable.
-derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> AD r (Reverse s a) -> a
+derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> Reverse s a -> a
 derivativeOf _ = sum . partials
 {-# INLINE derivativeOf #-}
 
 -- | Helper that extracts both the primal and derivative of a chain when the chain was constructed with one variable.
-derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> AD r (Reverse s a) -> (a, a)
+derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> Reverse s a -> (a, a)
 derivativeOf' p r = (primal r, derivativeOf p r)
 {-# INLINE derivativeOf' #-}
 
@@ -198,11 +197,11 @@ backPropagate k (Binary i j g h xs) ss = do
   (backPropagate $! k - 1) xs ss
 
 -- | Extract the partials from the current chain for a given AD variable.
-{-# SPECIALIZE partials :: Reifies s Tape => AD r (Reverse s Double) -> [Double] #-}
-partials :: forall r s a. (Reifies s Tape, Num a) => AD r (Reverse s a) -> [a]
-partials (AD Zero)        = []
-partials (AD (Lift _))    = []
-partials (AD (Reverse k _)) = map (sensitivities !) [0..vs] where
+{-# SPECIALIZE partials :: Reifies s Tape => Reverse s Double -> [Double] #-}
+partials :: forall s a. (Reifies s Tape, Num a) => Reverse s a -> [a]
+partials Zero        = []
+partials (Lift _)    = []
+partials (Reverse k _) = map (sensitivities !) [0..vs] where
    Head n t = unsafePerformIO $ readIORef (getTape (reflect (Proxy :: Proxy s)))
    tk = dropCells (n - k) t
    (vs,sensitivities) = runST $ do
@@ -213,12 +212,12 @@ partials (AD (Reverse k _)) = map (sensitivities !) [0..vs] where
      return (v, as)
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.
-partialArrayOf :: (Reifies s Tape, Num a) => Proxy s -> (Int, Int) -> AD r (Reverse s a) -> Array Int a
+partialArrayOf :: (Reifies s Tape, Num a) => Proxy s -> (Int, Int) -> Reverse s a -> Array Int a
 partialArrayOf _ vbounds = accumArray (+) 0 vbounds . zip [0..] . partials
 {-# INLINE partialArrayOf #-}
 
 -- | Return an 'IntMap' of sparse partials
-partialMapOf :: (Reifies s Tape, Num a) => Proxy s -> AD r (Reverse s a) -> IntMap a
+partialMapOf :: (Reifies s Tape, Num a) => Proxy s -> Reverse s a -> IntMap a
 partialMapOf _ = fromDistinctAscList . zip [0..] . partials
 {-# INLINE partialMapOf #-}
 

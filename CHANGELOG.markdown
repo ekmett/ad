@@ -1,3 +1,7 @@
+4.0
+---
+* An overhaul permitting monomorphic modes was completed by @alang9.
+
 3.4
 ---
 * Added support for `erf` and `inverf`, etc. from `Data.Number.Erf`.

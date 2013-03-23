@@ -55,6 +55,8 @@ data Sparse a
   | Zero
   deriving (Show, Data, Typeable)
 
+type instance Domain (Sparse a) = a
+
 -- | drop keys below a given value
 dropMap :: Int -> IntMap a -> IntMap a
 dropMap n = snd . IntMap.split (n - 1)
@@ -69,13 +71,13 @@ times (Sparse a as) n (Sparse b bs) = Sparse (a * b) $
         (fmap (a *^) (dropMap n bs))
 {-# INLINE times #-}
 
-vars :: (Traversable f, Num a) => f a -> f (AD Sparse s a)
+vars :: (Traversable f, Num a) => f a -> f (AD s (Sparse a))
 vars = snd . mapAccumL var 0
     where
         var !n a = (n + 1, AD $ Sparse a $ singleton n $ auto 1)
 {-# INLINE vars #-}
 
-apply :: (Traversable f, Num a) => (f (AD Sparse s a) -> b) -> f a -> b
+apply :: (Traversable f, Num a) => (f (AD s (Sparse a)) -> b) -> f a -> b
 apply f = f . vars
 {-# INLINE apply #-}
 
@@ -83,17 +85,17 @@ skeleton :: Traversable f => f a -> f Int
 skeleton = snd . mapAccumL (\ !n _ -> (n + 1, n)) 0
 {-# INLINE skeleton #-}
 
-d :: (Traversable f, Num a) => f b -> AD Sparse s a -> f a
+d :: (Traversable f, Num a) => f b -> AD s (Sparse a) -> f a
 d fs (AD Zero) = 0 <$ fs
 d fs (AD (Sparse _ da)) = snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs
 {-# INLINE d #-}
 
-d' :: (Traversable f, Num a) => f a -> AD Sparse s a -> (a, f a)
+d' :: (Traversable f, Num a) => f a -> AD s (Sparse a) -> (a, f a)
 d' fs (AD Zero) = (0, 0 <$ fs)
 d' fs (AD (Sparse a da)) = (a, snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs)
 {-# INLINE d' #-}
 
-ds :: (Traversable f, Num a) => f b -> AD Sparse s a -> Cofree f a
+ds :: (Traversable f, Num a) => f b -> AD s (Sparse a) -> Cofree f a
 ds fs (AD Zero) = r where r = 0 :< (r <$ fs)
 ds fs (AD as@(Sparse a _)) = a :< (go emptyIndex <$> fns)
     where
@@ -143,18 +145,18 @@ spartial (n:ns) (Sparse _ da) = do
 spartial _  Zero         = Nothing
 {-# INLINE spartial #-}
 
-instance Primal Sparse where
+instance Primal (Sparse a) where
     primal (Sparse a _) = a
     primal Zero = 0
 
-instance Lifted Sparse => Mode Sparse where
+instance Mode (Sparse a) where
     auto a = Sparse a IntMap.empty
     zero = Zero
     Zero <**> y    = auto (0 ** primal y)
     _    <**> Zero = auto 1
     x    <**> y@(Sparse b bs)
       | IntMap.null bs = lift1 (**b) (\z -> b *^ z <**> Sparse (b-1) IntMap.empty) x
-      | otherwise      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
+      | otherwise      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
     Zero <+> a = a
     a <+> Zero = a
     Sparse a as <+> Sparse b bs = Sparse (a + b) $ unionWith (<+>) as bs
@@ -165,8 +167,8 @@ instance Lifted Sparse => Mode Sparse where
     Zero        ^/ _ = Zero
     Sparse a as ^/ b = Sparse (a / b) $ fmap (^/ b) as
 
-instance Lifted Sparse => Jacobian Sparse where
-    type D Sparse = Sparse
+instance Jacobian (Sparse a) where
+    type D (Sparse a) = Sparse a
     unary f _ Zero = auto (f 0)
     unary f dadb (Sparse pb bs) = Sparse (f pb) $ mapWithKey (times dadb) bs
 
@@ -204,20 +206,20 @@ instance Lifted Sparse => Jacobian Sparse where
             (mapWithKey (times dadb) db)
             (mapWithKey (times dadc) dc)
 
-deriveLifted id $ conT ''Sparse
+deriveNumeric id $ ConT ''Sparse
 
 
 class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
-    pack :: i -> [AD Sparse () a] -> AD Sparse () a
+    pack :: i -> [AD () (Sparse a)] -> AD () (Sparse a)
     unpack :: ([a] -> [a]) -> o
     unpack' :: ([a] -> (a, [a])) -> o'
 
-instance Num a => Grad (AD Sparse () a) [a] (a, [a]) a where
+instance Num a => Grad (AD () (Sparse a)) [a] (a, [a]) a where
     pack i _ = i
     unpack f = f []
     unpack' f = f []
 
-instance Grad i o o' a => Grad (AD Sparse () a -> i) (a -> o) (a -> o') a where
+instance Grad i o o' a => Grad (AD () (Sparse a) -> i) (a -> o) (a -> o') a where
     pack f (a:as) = pack (f a) as
     pack _ [] = error "Grad.pack: logic error"
     unpack f a = unpack (f . (a:))
@@ -236,14 +238,14 @@ vgrad' i = unpack' (unsafeGrad' (pack i))
 {-# INLINE vgrad' #-}
 
 class Num a => Grads i o a | i -> a o, o -> a i where
-    packs :: i -> [AD Sparse () a] -> AD Sparse () a
+    packs :: i -> [AD () (Sparse a)] -> AD () (Sparse a)
     unpacks :: ([a] -> Cofree [] a) -> o
 
-instance Num a => Grads (AD Sparse () a) (Cofree [] a) a where
+instance Num a => Grads (AD () (Sparse a)) (Cofree [] a) a where
     packs i _ = i
     unpacks f = f []
 
-instance Grads i o a => Grads (AD Sparse () a -> i) (a -> o) a where
+instance Grads i o a => Grads (AD () (Sparse a) -> i) (a -> o) a where
     packs f (a:as) = packs (f a) as
     packs _ [] = error "Grad.pack: logic error"
     unpacks f a = unpacks (f . (a:))

@@ -46,40 +46,42 @@ data Dense f a
     | Dense !a (f a)
     | Zero
 
+type instance Domain (Dense f a) = a
+
 instance Show a => Show (Dense f a) where
     showsPrec d (Lift a)    = showsPrec d a
     showsPrec d (Dense a _) = showsPrec d a
     showsPrec _ Zero        = showString "0"
 
-ds :: f a -> AD (Dense f) s a -> f a
+ds :: f a -> AD s (Dense f a) -> f a
 ds _ (AD (Dense _ da)) = da
 ds z _ = z
 {-# INLINE ds #-}
 
-ds' :: Num a => f a -> AD (Dense f) s a -> (a, f a)
+ds' :: Num a => f a -> AD s (Dense f a) -> (a, f a)
 ds' _ (AD (Dense a da)) = (a, da)
 ds' z (AD (Lift a)) = (a, z)
 ds' z (AD Zero) = (0, z)
 {-# INLINE ds' #-}
 
 -- Bind variables and count inputs
-vars :: (Traversable f, Num a) => f a -> f (AD (Dense f) s a)
+vars :: (Traversable f, Num a) => f a -> f (AD s (Dense f a))
 vars as = snd $ mapAccumL outer (0 :: Int) as
     where
         outer !i a = (i + 1, AD $ Dense a $ snd $ mapAccumL (inner i) 0 as)
         inner !i !j _ = (j + 1, if i == j then 1 else 0)
 {-# INLINE vars #-}
 
-apply :: (Traversable f, Num a) => (f (AD (Dense f) s a) -> b) -> f a -> b
+apply :: (Traversable f, Num a) => (f (AD s (Dense f a)) -> b) -> f a -> b
 apply f as = f (vars as)
 {-# INLINE apply #-}
 
-instance Primal (Dense f) where
+instance Primal (Dense f a) where
     primal Zero = 0
     primal (Lift a) = a
     primal (Dense a _) = a
 
-instance (Traversable f, Lifted (Dense f)) => Mode (Dense f) where
+instance (Traversable f) => Mode (Dense f a) where
     auto = Lift
     zero = Zero
 
@@ -93,7 +95,7 @@ instance (Traversable f, Lifted (Dense f)) => Mode (Dense f) where
     Zero <**> y      = auto (0 ** primal y)
     _    <**> Zero   = auto 1
     x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
-    x    <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
+    x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
     _ *^ Zero       = Zero
     a *^ Lift b     = Lift (a * b)
@@ -105,8 +107,8 @@ instance (Traversable f, Lifted (Dense f)) => Mode (Dense f) where
     Lift a     ^/ b = Lift (a / b)
     Dense a da ^/ b = Dense (a / b) $ fmap (/b) da
 
-instance (Traversable f, Lifted (Dense f)) => Jacobian (Dense f) where
-    type D (Dense f) = Id
+instance (Traversable f) => Jacobian (Dense f a) where
+    type D (Dense f a) = Id a
     unary f _         Zero        = Lift (f 0)
     unary f _         (Lift b)    = Lift (f b)
     unary f (Id dadb) (Dense b db) = Dense (f b) (fmap (dadb *) db)
@@ -180,7 +182,7 @@ instance (Traversable f, Lifted (Dense f)) => Jacobian (Dense f) where
             (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
             productRule dbi dci = dadb * dbi + dci * dadc
 
-let f = varT (mkName "f") in
-    deriveLifted
-        (classP ''Traversable [f]:)
-        (conT ''Dense `appT` f)
+let f = VarT (mkName "f") in
+    deriveNumeric
+        (ClassP ''Traversable [f]:)
+        (ConT ''Dense `AppT` f)

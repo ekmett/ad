@@ -1,4 +1,7 @@
 {-# LANGUAGE CPP, GeneralizedNewtypeDeriving, Rank2Types, StandaloneDeriving, TypeFamilies, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, UndecidableInstances, TypeOperators #-}
+#if __GLASGOW_HASKELL__ >= 707
+{-# LANGUAGE DeriveDataTypeable, StandaloneDeriving #-}
+#endif
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Composition
@@ -22,13 +25,9 @@ module Numeric.AD.Internal.Composition
 #endif
 
 import Control.Applicative hiding ((<**>))
-import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
 import Data.Number.Erf
-#if MIN_VERSION_base(4,4,0)
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon3, mkTyConApp, typeOfDefault, gcast1)
-#else
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
-#endif
+import Data.Data
+import Data.Typeable
 import Data.Foldable (Foldable(foldMap))
 import Data.Traversable (Traversable(traverse))
 import Numeric.AD.Internal.Classes
@@ -49,6 +48,10 @@ instance (Foldable f, Foldable g) => Foldable (ComposeFunctor f g) where
 instance (Traversable f, Traversable g) => Traversable (ComposeFunctor f g) where
     traverse f (ComposeFunctor a) = ComposeFunctor <$> traverse (traverse f) a
 
+#if __GLASGOW_HASKELL__ >= 707
+deriving instance Typeable ComposeFunctor
+deriving instance (Typeable f, Typeable a, Typeable g, Data (f (g a))) => Data (ComposeFunctor f g a)
+#else
 instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeFunctor f g) where
     typeOf1 tfga = mkTyConApp composeFunctorTyCon [typeOf1 (fa tfga), typeOf1 (ga tfga)]
         where fa :: t f (g :: * -> *) a -> f a
@@ -81,6 +84,7 @@ instance (Typeable1 f, Typeable1 g, Data (f (g a)), Data a) => Data (ComposeFunc
         _ -> error "gunfold"
     dataTypeOf _ = composeFunctorDataType
     dataCast1 f = gcast1 f
+#endif
 
 -- | The composition of two AD modes is an AD mode in its own right
 newtype ComposeMode f g s a = ComposeMode { runComposeMode :: f (AD s (g a)) }
@@ -117,6 +121,10 @@ instance (Mode (f (AD s (g a))), Mode (g a), Scalar (f (AD s (g a))) ~ AD s (g a
     ComposeMode a ^/ b = ComposeMode (a ^/ auto b)
     ComposeMode a <**> ComposeMode b = ComposeMode (a <**> b)
 
+#if __GLASGOW_HASKELL__ >= 707
+deriving instance Typeable ComposeMode
+deriving instance (Typeable f, Typeable g, Typeable s, Data (f (AD s (g a))), Data a) => Data (ComposeMode f g s a)
+#else
 instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeMode f g s) where
     typeOf1 tfga = mkTyConApp composeModeTyCon [typeOf1 (fa tfga), typeOf1 (ga tfga)]
         where fa :: t f (g :: * -> *) s a -> f a
@@ -151,4 +159,5 @@ instance (Typeable1 f, Typeable1 g, Data (f (AD s (g a))), Data a) => Data (Comp
         _ -> error "gunfold"
     dataTypeOf _ = composeModeDataType
     dataCast1 f = gcast1 f
+#endif
 

@@ -72,8 +72,8 @@ module Numeric.AD
     , hessianF'
 
     -- * Hessian Vector Products (Forward-On-Reverse)
-    , hessianProduct
-    , hessianProduct'
+    -- , hessianProduct
+    -- , hessianProduct'
 
     -- * Derivatives (Forward Mode)
     , diff
@@ -112,8 +112,8 @@ module Numeric.AD
     -- * Gradient Descent
     , gradientDescent
     , gradientAscent
-    , conjugateGradientDescent
-    , conjugateGradientAscent
+    -- , conjugateGradientDescent
+    -- , conjugateGradientAscent
     ) where
 
 import Data.Traversable (Traversable)
@@ -199,6 +199,7 @@ jacobianWith' g f bs
         n = size bs
 {-# INLINE jacobianWith' #-}
 
+{-
 -- | @'hessianProduct' f wv@ computes the product of the hessian @H@ of a non-scalar-to-scalar function @f@ at @w = 'fst' <$> wv@ with a vector @v = snd <$> wv@ using \"Pearlmutter\'s method\" from <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.29.6143>, which states:
 --
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
@@ -215,6 +216,7 @@ hessianProduct f = duF (grad (decomposeMode . f . fmap composeMode))
 -- Or in other words, we return the gradient and the directional derivative of the gradient. The gradient is calculated in reverse mode, then the directional derivative is calculated in forward mode.
 hessianProduct' :: (Traversable f, Num a) => (forall s s'. Reifies s Tape => f (AD s (ComposeMode (Reverse s) Forward s' a)) -> AD s (ComposeMode (Reverse s) Forward s' a)) -> f (a, a) -> f (a, a)
 hessianProduct' f = duF' (grad (decomposeMode . f . fmap composeMode))
+-}
 
 -- | Compute the Hessian via the Jacobian of the gradient. gradient is computed in reverse mode and then the Jacobian is computed in sparse (forward) mode.
 --

@@ -21,7 +21,7 @@ module Numeric.AD.Halley
       findZero
     , inverse
     , fixedPoint
-    , extremum
+    -- , extremum
     ) where
 
 import Prelude hiding (all)
@@ -76,6 +76,7 @@ fixedPoint :: (Fractional a, Eq a) => (forall s. AD s (Tower a) -> AD s (Tower a
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
 
+{-
 -- | The 'extremum' function finds an extremum of a scalar
 -- function using Halley's method; produces a stream of increasingly
 -- accurate results.  (Modulo the usual caveats.) If the stream becomes
@@ -86,3 +87,4 @@ fixedPoint f = findZero (\x -> f x - x)
 extremum :: (Fractional a, Eq a) => (forall s s'. AD s (ComposeMode Forward Tower s' a) -> AD s (ComposeMode Forward Tower s' a)) -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}
+-}

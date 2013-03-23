@@ -12,7 +12,8 @@
 -- benchmarking or more complicated usage patterns.
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Mode.Directed
+module Numeric.AD.Mode.Directed where
+{-
     (
     -- * Gradients
       grad
@@ -92,3 +93,4 @@ grad' Reverse f a = R.grad' f a
 grad' Tower f a   = F.grad' f a -- error "grad' Tower: unimplemented"
 grad' Mixed f a   = M.grad' f a
 {-# INLINE grad' #-}
+-}

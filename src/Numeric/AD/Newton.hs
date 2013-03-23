@@ -16,12 +16,12 @@ module Numeric.AD.Newton
       findZero
     , inverse
     , fixedPoint
-    , extremum
+    -- , extremum
     -- * Gradient Ascent/Descent (Reverse AD)
     , gradientDescent
     , gradientAscent
-    , conjugateGradientDescent
-    , conjugateGradientAscent
+--    , conjugateGradientDescent
+--    , conjugateGradientAscent
     ) where
 
 import Prelude hiding (all, mapM, sum)
@@ -51,7 +51,7 @@ import Numeric.AD.Internal.Reverse (Reverse, Tape)
 -- >>> import Data.Complex
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
-findZero :: (Fractional a, Eq a) => (forall s. AD s (Forward a) -> AD s (Forward a)) -> a -> [a]
+findZero :: (Fractional a, Eq a) => (forall s. Forward s a -> Forward s a) -> a -> [a]
 findZero f = go where
   go x = x : if x == xn then [] else go xn where
     (y,y') = diff' f x
@@ -67,7 +67,7 @@ findZero f = go where
 --
 -- >>> last $ take 10 $ inverse sqrt 1 (sqrt 10)
 -- 10.0
-inverse :: (Fractional a, Eq a) => (forall s. AD s (Forward a) -> AD s (Forward a)) -> a -> a -> [a]
+inverse :: (Fractional a, Eq a) => (forall s. Forward s a -> Forward s a) -> a -> a -> [a]
 inverse f x0 y = findZero (\x -> f x - auto y) x0
 {-# INLINE inverse  #-}
 
@@ -80,10 +80,11 @@ inverse f x0 y = findZero (\x -> f x - auto y) x0
 --
 -- >>> last $ take 10 $ fixedPoint cos 1
 -- 0.7390851332151607
-fixedPoint :: (Fractional a, Eq a) => (forall s. AD s (Forward a) -> AD s (Forward a)) -> a -> [a]
+fixedPoint :: (Fractional a, Eq a) => (forall s. Forward s a -> Forward s a) -> a -> [a]
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
 
+{-
 -- | The 'extremum' function finds an extremum of a scalar
 -- function using Newton's method; produces a stream of increasingly
 -- accurate results.  (Modulo the usual caveats.) If the stream
@@ -94,6 +95,7 @@ fixedPoint f = findZero (\x -> f x - x)
 extremum :: (Fractional a, Eq a) => (forall s s'. AD s (ComposeMode Forward Forward s' a) -> AD s (ComposeMode Forward Forward s' a)) -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}
+-}
 
 -- | The 'gradientDescent' function performs a multivariate
 -- optimization, based on the naive-gradient-descent in the file
@@ -124,6 +126,7 @@ gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. (Reifies s 
 gradientAscent f = gradientDescent (negate . f)
 {-# INLINE gradientAscent #-}
 
+{-
 -- | Perform a conjugate gradient descent using reverse mode automatic differentiation to compute the gradient, and using forward-on-forward mode for computing extrema.
 conjugateGradientDescent :: (Traversable f, Floating a, Ord a) => (forall m s. (Mode m, Num m, a ~ Scalar m) => f (AD s m) -> AD s m) -> f a -> [f a]
 conjugateGradientDescent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0)
@@ -143,3 +146,4 @@ conjugateGradientDescent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0)
 conjugateGradientAscent :: (Traversable f, Floating a, Ord a) => (forall m s. (Mode m, Num m, a ~ Scalar m) => f (AD s m) -> AD s m) -> f a -> [f a]
 conjugateGradientAscent f = conjugateGradientDescent (negate . f)
 {-# INLINE conjugateGradientAscent #-}
+-}

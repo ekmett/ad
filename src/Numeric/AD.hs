@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, PatternGuards #-}
+{-# LANGUAGE FlexibleContexts, Rank2Types, TypeFamilies, PatternGuards #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD
@@ -118,13 +118,14 @@ module Numeric.AD
 
 import Data.Traversable (Traversable)
 import Data.Foldable (Foldable, foldr')
+import Data.Reflection (Reifies)
 import Control.Applicative
 
 import Numeric.AD.Types
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Forward (Forward)
 import Numeric.AD.Internal.Identity
-import Numeric.AD.Internal.Reverse (Reverse)
+import Numeric.AD.Internal.Reverse (Reverse, Tape)
 import Numeric.AD.Internal.Sparse (Sparse)
 
 import Numeric.AD.Mode.Forward
@@ -204,7 +205,7 @@ jacobianWith' g f bs
 --
 -- Or in other words, we take the directional derivative of the gradient. The gradient is calculated in reverse mode, then the directional derivative is calculated in forward mode.
 --
-hessianProduct :: (Traversable f, Num a) => (forall s s'. f (AD (ComposeMode (Reverse s) Forward s') s a) -> AD (ComposeMode (Reverse s) Forward s') s a) -> f (a, a) -> f a
+hessianProduct :: (Traversable f, Num a) => (forall s s'. Reifies s Tape => f (AD (ComposeMode (Reverse s) Forward s') s a) -> AD (ComposeMode (Reverse s) Forward s') s a) -> f (a, a) -> f a
 hessianProduct f = duF (grad (decomposeMode . f . fmap composeMode))
 
 -- | @'hessianProduct'' f wv@ computes both the gradient of a non-scalar-to-scalar @f@ at @w = 'fst' <$> wv@ and the product of the hessian @H@ at @w@ with a vector @v = snd <$> wv@ using \"Pearlmutter's method\". The outputs are returned wrapped in the same functor.
@@ -212,14 +213,20 @@ hessianProduct f = duF (grad (decomposeMode . f . fmap composeMode))
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
 --
 -- Or in other words, we return the gradient and the directional derivative of the gradient. The gradient is calculated in reverse mode, then the directional derivative is calculated in forward mode.
-hessianProduct' :: (Traversable f, Num a) => (forall s s'. f (AD (ComposeMode (Reverse s) Forward s') s a) -> AD (ComposeMode (Reverse s) Forward s') s a) -> f (a, a) -> f (a, a)
+hessianProduct' :: (Traversable f, Num a) => (forall s s'. Reifies s Tape => f (AD (ComposeMode (Reverse s) Forward s') s a) -> AD (ComposeMode (Reverse s) Forward s') s a) -> f (a, a) -> f (a, a)
 hessianProduct' f = duF' (grad (decomposeMode . f . fmap composeMode))
 
 -- | Compute the Hessian via the Jacobian of the gradient. gradient is computed in reverse mode and then the Jacobian is computed in sparse (forward) mode.
-hessian :: (Traversable f, Num a) => (forall s s'. f (AD (ComposeMode (Reverse s) Sparse s') s a) -> AD (ComposeMode (Reverse s) Sparse s') s a) -> f a -> f (f a)
+--
+-- >>> hessian (\[x,y] -> x*y) [1,2]
+-- [[0,1],[1,0]]
+hessian :: (Traversable f, Num a) => (forall s s'. Reifies s Tape => f (AD (ComposeMode (Reverse s) Sparse s') s a) -> AD (ComposeMode (Reverse s) Sparse s') s a) -> f a -> f (f a)
 hessian f = Sparse.jacobian (grad (decomposeMode . f . fmap composeMode))
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function using 'Sparse' or 'Sparse'-on-'Reverse'
+--
+-- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
+-- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
 hessianF :: (Traversable f, Functor g, Num a) => (forall m s. Mode m => f (AD m s a) -> g (AD m s a)) -> f a -> g (f (f a))
 hessianF f as
     | big (size as) = decomposeFunctor $ Sparse.jacobian (ComposeFunctor . Reverse.jacobian (fmap decomposeMode . f . fmap composeMode)) as

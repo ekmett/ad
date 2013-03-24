@@ -62,14 +62,14 @@ data Tape a t
     deriving (Show, Data, Typeable)
 
 -- | @Kahn@ is a 'Mode' using reverse-mode automatic differentiation that provides fast 'diffFU', 'diff2FU', 'grad', 'grad2' and a fast 'jacobian' when you have a significantly smaller number of outputs than inputs.
-newtype Kahn a = Kahn (Tape a (Kahn a)) deriving (Show, Typeable)
+newtype Kahn a s = Kahn (Tape a (Kahn a s)) deriving (Show, Typeable)
 
-type instance Scalar (Kahn a) = a
+type instance Scalar (Kahn a s) = a
 
 -- deriving instance (Data (Tape a (Kahn a)) => Data (Kahn a)
 
-instance MuRef (Kahn a) where
-    type DeRef (Kahn a) = Tape a
+instance MuRef (Kahn a s) where
+    type DeRef (Kahn a s) = Tape a
 
     mapDeRef _ (Kahn Zero) = pure Zero
     mapDeRef _ (Kahn (Lift a)) = pure (Lift a)
@@ -77,7 +77,7 @@ instance MuRef (Kahn a) where
     mapDeRef f (Kahn (Binary a dadb dadc b c)) = Binary a dadb dadc <$> f b <*> f c
     mapDeRef f (Kahn (Unary a dadb b)) = Unary a dadb <$> f b
 
-instance Mode (Kahn a) where
+instance Mode (Kahn a s) where
     isKnownZero (Kahn Zero) = True
     isKnownZero _    = False
 
@@ -97,15 +97,15 @@ instance Mode (Kahn a) where
     x            <**> Kahn (Lift y) = lift1 (**y) (\z -> y *^ z ** Id (y-1)) x
     x            <**> y                = lift2_ (**) (\z xi yi -> (yi * z / xi, z * xi)) x y
 
-instance Primal (Kahn a) where
+instance Primal (Kahn a s) where
     primal (Kahn Zero) = 0
     primal (Kahn (Lift a)) = a
     primal (Kahn (Var a _)) = a
     primal (Kahn (Binary a _ _ _ _)) = a
     primal (Kahn (Unary a _ _)) = a
 
-instance Jacobian (Kahn a) where
-    type D (Kahn a) = Id a
+instance Jacobian (Kahn a s) where
+    type D (Kahn a s) = Id a
 
     unary f _         (Kahn Zero)     = Kahn (Lift (f 0))
     unary f _         (Kahn (Lift a)) = Kahn (Lift (f a))
@@ -138,13 +138,13 @@ instance Jacobian (Kahn a) where
             a = f pb pc
             (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
-deriveNumeric id (ConT ''Kahn)
+let s = VarT (mkName "s") in deriveNumeric' id (ConT ''Kahn) s
 
-derivative :: Num a => AD s (Kahn a) -> a
+derivative :: Num a => Kahn a s -> a
 derivative = sum . map snd . partials
 {-# INLINE derivative #-}
 
-derivative' :: Num a => AD s (Kahn a) -> (a, a)
+derivative' :: Num a => Kahn a s -> (a, a)
 derivative' r = (primal r, derivative r)
 {-# INLINE derivative' #-}
 
@@ -187,9 +187,9 @@ topSortAcyclic g = reverse $ runST $ do
 
 -- | This returns a list of contributions to the partials.
 -- The variable ids returned in the list are likely /not/ unique!
-{-# SPECIALIZE partials :: AD s (Kahn Double) -> [(Int, Double)] #-}
-partials :: forall s a . Num a => AD s (Kahn a) -> [(Int, a)]
-partials (AD tape) = [ let v = sensitivities ! ix in seq v (ident, v) | (ix, Var _ ident) <- xs ]
+{-# SPECIALIZE partials :: Kahn Double s -> [(Int, Double)] #-}
+partials :: forall s a . Num a => Kahn a s -> [(Int, a)]
+partials tape = [ let v = sensitivities ! ix in seq v (ident, v) | (ix, Var _ ident) <- xs ]
     where
         Reified.Graph xs start = unsafePerformIO $ reifyGraph tape
         g = array xsBounds [ (i, successors t) | (i, t) <- xs ]
@@ -213,12 +213,12 @@ partials (AD tape) = [ let v = sensitivities ! ix in seq v (ident, v) | (ix, Var
         successors _ = []
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.
-partialArray :: Num a => (Int, Int) -> AD s (Kahn a) -> Array Int a
+partialArray :: Num a => (Int, Int) -> Kahn a s -> Array Int a
 partialArray vbounds tape = accumArray (+) 0 vbounds (partials tape)
 {-# INLINE partialArray #-}
 
 -- | Return an 'IntMap' of sparse partials
-partialMap :: Num a => AD s (Kahn a) -> IntMap a
+partialMap :: Num a => Kahn a s -> IntMap a
 partialMap = fromListWith (+) . partials
 {-# INLINE partialMap #-}
 
@@ -228,22 +228,22 @@ instance Monad S where
     return a = S (\s -> (a,s))
     S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
 
-instance Var (Kahn a) where
+instance Var (Kahn a s) where
     var a v = Kahn (Var a v)
     varId (Kahn (Var _ v)) = v
     varId _ = error "varId: not a Var"
 
 class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
-    pack :: i -> [AD () (Kahn a)] -> AD () (Kahn a)
+    pack :: i -> [Kahn a ()] -> Kahn a ()
     unpack :: ([a] -> [a]) -> o
     unpack' :: ([a] -> (a, [a])) -> o'
 
-instance Num a => Grad (AD () (Kahn a)) [a] (a, [a]) a where
+instance Num a => Grad (Kahn a ()) [a] (a, [a]) a where
     pack i _ = i
     unpack f = f []
     unpack' f = f []
 
-instance Grad i o o' a => Grad (AD () (Kahn a) -> i) (a -> o) (a -> o') a where
+instance Grad i o o' a => Grad (Kahn a () -> i) (a -> o) (a -> o') a where
     pack f (a:as) = pack (f a) as
     pack _ [] = error "Grad.pack: logic error"
     unpack f a = unpack (f . (a:))

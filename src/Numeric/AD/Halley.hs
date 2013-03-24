@@ -45,7 +45,7 @@ import Numeric.AD.Internal.Composition
 -- >>> import Data.Complex
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
-findZero :: (Fractional a, Eq a) => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
+findZero :: (Fractional a, Eq a) => (forall s. Tower a s -> Tower a s) -> a -> [a]
 findZero f = go where
   go x = x : if x == xn then [] else go xn where
     (y:y':y'':_) = diffs0 f x
@@ -59,7 +59,7 @@ findZero f = go where
 --
 -- Note: the @take 10 $ inverse sqrt 1 (sqrt 10)@ example that works for Newton's method
 -- fails with Halley's method because the preconditions do not hold!
-inverse :: (Fractional a, Eq a) => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> a -> [a]
+inverse :: (Fractional a, Eq a) => (forall s. Tower a s -> Tower a s) -> a -> a -> [a]
 inverse f x0 y = findZero (\x -> f x - auto y) x0
 {-# INLINE inverse  #-}
 
@@ -72,7 +72,7 @@ inverse f x0 y = findZero (\x -> f x - auto y) x0
 --
 -- >>> last $ take 10 $ fixedPoint cos 1
 -- 0.7390851332151607
-fixedPoint :: (Fractional a, Eq a) => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
+fixedPoint :: (Fractional a, Eq a) => (forall s. Tower a s -> Tower a s) -> a -> [a]
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
 

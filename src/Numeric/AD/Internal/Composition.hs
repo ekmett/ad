@@ -31,7 +31,7 @@ import Data.Typeable
 import Data.Foldable (Foldable(foldMap))
 import Data.Traversable (Traversable(traverse))
 import Numeric.AD.Internal.Classes
-import Numeric.AD.Internal.Types
+-- import Numeric.AD.Internal.Types
 
 {-# ANN module "Hlint: ignore Eta reduce" #-}
 {-# ANN module "Hlint: ignore Reduce duplication" #-}
@@ -87,33 +87,33 @@ instance (Typeable1 f, Typeable1 g, Data (f (g a)), Data a) => Data (ComposeFunc
 #endif
 
 -- | The composition of two AD modes is an AD mode in its own right
-newtype ComposeMode f g s a = ComposeMode { runComposeMode :: f (AD s (g a)) }
+newtype ComposeMode f g a s s' = ComposeMode { runComposeMode :: f (g a s) s'}
 
-deriving instance Enum (f (AD s (g a))) => Enum (ComposeMode f g s a)
-deriving instance Eq (f (AD s (g a))) => Eq (ComposeMode f g s a)
-deriving instance Ord (f (AD s (g a))) => Ord (ComposeMode f g s a)
-deriving instance Bounded (f (AD s (g a))) => Bounded (ComposeMode f g s a)
-deriving instance Num (f (AD s (g a))) => Num (ComposeMode f g s a)
-deriving instance Fractional (f (AD s (g a))) => Fractional (ComposeMode f g s a)
-deriving instance Floating (f (AD s (g a))) => Floating (ComposeMode f g s a)
-deriving instance RealFloat (f (AD s (g a))) => RealFloat (ComposeMode f g s a)
-deriving instance RealFrac (f (AD s (g a))) => RealFrac (ComposeMode f g s a)
-deriving instance Real (f (AD s (g a))) => Real (ComposeMode f g s a)
-deriving instance Erf (f (AD s (g a))) => Erf (ComposeMode f g s a)
-deriving instance InvErf (f (AD s (g a))) => InvErf (ComposeMode f g s a)
+deriving instance Enum (f (g a s) s') => Enum (ComposeMode f g a s s')
+deriving instance Eq (f (g a s) s') => Eq (ComposeMode f g a s s')
+deriving instance Ord (f (g a s) s') => Ord (ComposeMode f g a s s')
+deriving instance Bounded (f (g a s) s') => Bounded (ComposeMode f g a s s')
+deriving instance Num (f (g a s) s') => Num (ComposeMode f g a s s')
+deriving instance Fractional (f (g a s) s') => Fractional (ComposeMode f g a s s')
+deriving instance Floating (f (g a s) s') => Floating (ComposeMode f g a s s')
+deriving instance RealFloat (f (g a s) s') => RealFloat (ComposeMode f g a s s')
+deriving instance RealFrac (f (g a s) s') => RealFrac (ComposeMode f g a s s')
+deriving instance Real (f (g a s) s') => Real (ComposeMode f g a s s')
+deriving instance Erf (f (g a s) s') => Erf (ComposeMode f g a s s')
+deriving instance InvErf (f (g a s) s') => InvErf (ComposeMode f g a s s')
 
-type instance Scalar (ComposeMode f g s a) = a
+type instance Scalar (ComposeMode f g a s s') = a
 
-composeMode :: AD s' (f (AD s (g a))) -> AD s' (ComposeMode f g s a)
-composeMode (AD a) = AD (ComposeMode a)
+composeMode :: (f (g a s) s') -> ComposeMode f g a s s'
+composeMode = ComposeMode
 
-decomposeMode :: AD s' (ComposeMode f g s a) -> AD s' (f (AD s (g a)))
-decomposeMode (AD (ComposeMode a)) = AD a
+decomposeMode :: ComposeMode f g a s s' -> f (g a s) s'
+decomposeMode = runComposeMode
 
-instance (Primal (f (AD s (g a))), Mode (g a), Primal (g a), Scalar (f (AD s (g a))) ~ AD s (g a), Num (g a), Scalar (g a) ~ a) => Primal (ComposeMode f g s a) where
+instance (Primal (f (g a s) s'), Mode (g a s), Primal (g a s), Scalar (f (g a s) s') ~ g a s, Num (g a s), Scalar (g a s) ~ a) => Primal (ComposeMode f g a s s') where
     primal = primal . primal . runComposeMode
 
-instance (Mode (f (AD s (g a))), Mode (g a), Scalar (f (AD s (g a))) ~ AD s (g a), Scalar (g a) ~ a, Floating (g a)) => Mode (ComposeMode f g s a) where
+instance (Mode (f (g a s) s'), Mode (g a s), Scalar (f (g a s) s') ~ g a s, Scalar (g a s) ~ a, Floating (g a s)) => Mode (ComposeMode f g a s s') where
     auto = ComposeMode . auto . auto
     ComposeMode a <+> ComposeMode b = ComposeMode (a <+> b)
     a *^ ComposeMode b = ComposeMode (auto a *^ b)
@@ -123,16 +123,16 @@ instance (Mode (f (AD s (g a))), Mode (g a), Scalar (f (AD s (g a))) ~ AD s (g a
 
 #if __GLASGOW_HASKELL__ >= 707
 deriving instance Typeable ComposeMode
-deriving instance (Typeable f, Typeable g, Typeable s, Data (f (AD s (g a))), Data a) => Data (ComposeMode f g s a)
+deriving instance (Typeable f, Typeable g, Typeable s, Data (f (g a s) s'), Data a) => Data (ComposeMode f g a s s')
 #else
-instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeMode f g s) where
-    typeOf1 tfga = mkTyConApp composeModeTyCon [typeOf1 (fa tfga), typeOf1 (ga tfga)]
-        where fa :: t f (g :: * -> *) s a -> f a
+instance (Typeable2 f, Typeable2 g) => Typeable3 (ComposeMode f g) where
+    typeOf3 tfg = mkTyConApp composeModeTyCon [typeOf2 (fa tfg), typeOf2 (ga tfg)]
+        where fa :: t f (g :: * -> * -> *) a s s' -> f a s'
               fa = undefined
-              ga :: t (f :: * -> *) g s a -> g a
+              ga :: t (f :: * -> * -> *) g a s s'-> g a s
               ga = undefined
 
-instance (Typeable1 f, Typeable1 g, Typeable a) => Typeable (ComposeMode f g s a) where
+instance (Typeable2 f, Typeable2 g, Typeable a, Typeable s, Typeable s') => Typeable (ComposeMode f g a s s') where
     typeOf = typeOfDefault
 
 composeModeTyCon :: TyCon
@@ -151,7 +151,7 @@ composeModeDataType :: DataType
 composeModeDataType = mkDataType "Numeric.AD.Internal.Composition.ComposeMode" [composeModeConstr]
 {-# NOINLINE composeModeDataType #-}
 
-instance (Typeable1 f, Typeable1 g, Data (f (AD s (g a))), Data a) => Data (ComposeMode f g s a) where
+instance (Typeable2 f, Typeable2 g, Data (f (g a s) s'), Data a, Typeable s', Typeable s, Data s') => Data (ComposeMode f g a s s') where
     gfoldl f z (ComposeMode a) = z ComposeMode `f` a
     toConstr _ = composeModeConstr
     gunfold k z c = case constrIndex c of

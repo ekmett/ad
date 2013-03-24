@@ -70,7 +70,7 @@ instance Monad Id where
     Id a >>= f = f a
 -}
 
-instance Mode (Id a s) where
+instance Mode (Id a) s where
     auto = Id
     Id a ^* b = Id (a * b)
     a *^ Id b = Id (a * b)

@@ -108,7 +108,7 @@ data Reverse a s where
 
 type instance Scalar (Reverse a s) = a
 
-instance (Reifies s Tape) => Mode (Reverse a s) where
+instance (Reifies s Tape) => Mode (Reverse a) s where
   isKnownZero Zero = True
   isKnownZero _    = False
 
@@ -132,8 +132,8 @@ instance Primal (Reverse a s) where
     primal (Lift a) = a
     primal (Reverse _ a) = a
 
-instance (Reifies s Tape) => Jacobian (Reverse a s) where
-    type D (Reverse a s) = Id a s
+instance (Reifies s Tape) => Jacobian (Reverse a) s where
+    type D (Reverse a) = Id a
 
     unary f _         (Zero)   = Lift (f 0)
     unary f _         (Lift a) = Lift (f a)

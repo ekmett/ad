@@ -149,7 +149,7 @@ instance Primal (Sparse a s) where
     primal (Sparse a _) = a
     primal Zero = 0
 
-instance Mode (Sparse a s) where
+instance Mode (Sparse a) s where
     auto a = Sparse a IntMap.empty
     zero = Zero
     Zero <**> y    = auto (0 ** primal y)
@@ -167,8 +167,8 @@ instance Mode (Sparse a s) where
     Zero        ^/ _ = Zero
     Sparse a as ^/ b = Sparse (a / b) $ fmap (^/ b) as
 
-instance Jacobian (Sparse a s) where
-    type D (Sparse a s) = Sparse a s
+instance Jacobian (Sparse a) s where
+    type D (Sparse a) = Sparse a
     unary f _ Zero = auto (f 0)
     unary f dadb (Sparse pb bs) = Sparse (f pb) $ mapWithKey (times dadb) bs
 

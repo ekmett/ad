@@ -30,6 +30,6 @@ import Numeric.AD.Internal.Classes
 -- numerical tower. Universal quantification is used to limit the actions in user code to
 -- machinery that will return the same answers under all AD modes, allowing us to use modes
 -- interchangeably as both the type level \"brand\" and dictionary, providing a common API.
-newtype AD s a = AD { runAD :: a } deriving (Iso a, Mode, Primal, Typeable, Data, Enum, Eq, Ord, Bounded, Num, Fractional, Floating, RealFloat, RealFrac, Real, Erf, InvErf)
+newtype AD s a = AD { runAD :: a } deriving (Iso a, Typeable, Data, Enum, Eq, Ord, Bounded, Num, Fractional, Floating, RealFloat, RealFrac, Real, Erf, InvErf)
 
 type instance Scalar (AD s f) = Scalar f

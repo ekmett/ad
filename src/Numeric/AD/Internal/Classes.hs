@@ -41,53 +41,53 @@ instance Iso a a where
     iso = id
     osi = id
 
-class Mode t where
+class Mode t s where
     -- | allowed to return False for items with a zero derivative, but we'll give more NaNs than strictly necessary
-    isKnownConstant :: t -> Bool
+    isKnownConstant :: t s -> Bool
     isKnownConstant _ = False
 
     -- | allowed to return False for zero, but we give more NaN's than strictly necessary then
-    isKnownZero :: Num (Scalar t) => t -> Bool
+    isKnownZero :: Num (Scalar (t s)) => t s -> Bool
     isKnownZero _ = False
 
     -- | Embed a constant
-    auto  :: Num (Scalar t) => Scalar t -> t
+    auto  :: Num (Scalar (t s)) => Scalar (t s) -> t s
 
     -- | Vector sum
-    (<+>) :: Num (Scalar t) => t -> t -> t
+    (<+>) :: Num (Scalar (t s)) => t s -> t s -> t s
 
     -- | Scalar-vector multiplication
-    (*^) :: Num (Scalar t) => Scalar t -> t -> t
+    (*^) :: Num (Scalar (t s)) => Scalar (t s) -> t s -> t s
 
     -- | Vector-scalar multiplication
-    (^*) :: Num (Scalar t) => t -> Scalar t -> t
+    (^*) :: Num (Scalar (t s)) => t s -> Scalar (t s) -> t s
 
     -- | Scalar division
-    (^/) :: Fractional (Scalar t) => t -> Scalar t -> t
+    (^/) :: Fractional (Scalar (t s)) => t s -> Scalar (t s) -> t s
 
     -- | Exponentiation, this should be overloaded if you can figure out anything about what is constant!
-    (<**>) :: Floating (Scalar t) => t -> t -> t
+    (<**>) :: Floating (Scalar (t s)) => t s -> t s -> t s
 
     -- default (<**>) :: (Jacobian t, Floating (D t), Floating (Scalar t)) => t -> t -> t
     -- x <**> y = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
     -- | > 'zero' = 'lift' 0
-    zero :: Num (Scalar t) => t
+    zero :: Num (Scalar (t s)) => t s
 
-    default (*^) :: (Num t, Num (Scalar t)) => Scalar t -> t -> t
+    default (*^) :: (Num (t s), Num (Scalar (t s))) => Scalar (t s) -> t s -> t s
     a *^ b = auto a * b
-    default (^*) :: (Num t, Num (Scalar t)) => t -> Scalar t -> t
+    default (^*) :: (Num (t s), Num (Scalar (t s))) => t s -> Scalar (t s) -> t s
     a ^* b = a * auto b
 
     a ^/ b = a ^* recip b
 
     zero = auto 0
 
-one :: (Mode t, Num (Scalar t)) => t
+one :: (Mode t s, Num (Scalar (t s))) => t s
 one = auto 1
 {-# INLINE one #-}
 
-negOne :: (Mode t, Num (Scalar t)) => t
+negOne :: (Mode t s, Num (Scalar (t s))) => t s
 negOne = auto (-1)
 {-# INLINE negOne #-}
 
@@ -106,22 +106,22 @@ class Primal t where
 -- | 'Jacobian' is used by 'deriveMode' but is not exposed
 -- via 'Mode' to prevent its abuse by end users
 -- via the 'AD' data type.
-class (Scalar t ~ Scalar (D t), Mode t, Mode (D t)) => Jacobian t where
-    type D t :: *
+class (Mode t s, Mode (D t) s) => Jacobian t s where
+    type D t :: * -> *
 
-    unary  :: (Num a, a ~ Scalar t) => (a -> a) -> D t -> t -> t
-    lift1  :: (Num a, a ~ Scalar t) => (a -> a) -> (D t -> D t) -> t -> t
-    lift1_ :: (Num a, a ~ Scalar t) => (a -> a) -> (D t -> D t -> D t) -> t -> t
+    unary  :: (Num a, a ~ Scalar (t s)) => (a -> a) -> D t s -> t s -> t s
+    lift1  :: (Num a, a ~ Scalar (t s)) => (a -> a) -> (D t s -> D t s) -> t s -> t s
+    lift1_ :: (Num a, a ~ Scalar (t s)) => (a -> a) -> (D t s -> D t s -> D t s) -> t s -> t s
 
-    binary :: (Num a, a ~ Scalar t) => (a -> a -> a) -> D t -> D t -> t -> t -> t
-    lift2  :: (Num a, a ~ Scalar t) => (a -> a -> a) -> (D t -> D t -> (D t, D t)) -> t -> t -> t
-    lift2_ :: (Num a, a ~ Scalar t) => (a -> a -> a) -> (D t -> D t -> D t -> (D t, D t)) -> t -> t -> t
+    binary :: (Num a, a ~ Scalar (t s)) => (a -> a -> a) -> D t s -> D t s -> t s -> t s -> t s
+    lift2  :: (Num a, a ~ Scalar (t s)) => (a -> a -> a) -> (D t s -> D t s -> (D t s, D t s)) -> t s -> t s -> t s
+    lift2_ :: (Num a, a ~ Scalar (t s)) => (a -> a -> a) -> (D t s -> D t s -> D t s -> (D t s, D t s)) -> t s -> t s -> t s
 
-withPrimal :: (Jacobian t, Num a, a ~ Scalar t) => t -> a -> t
+withPrimal :: (Jacobian t s, Num a, a ~ Scalar (t s), Scalar (t s) ~ Scalar (D t s)) => t s -> a -> t s
 withPrimal t a = unary (const a) one t
 {-# INLINE withPrimal #-}
 
-fromBy :: (Jacobian t, Num a, Num (D t), a ~ Scalar t) => t -> t -> Int -> a -> t
+fromBy :: (Jacobian t s, Num a, Num (D t s), a ~ Scalar (t s), Scalar (t s) ~ Scalar (D t s)) => t s -> t s -> Int -> a -> t s
 fromBy a delta n x = binary (\_ _ -> x) one (fromIntegral n) a delta
 
 discrete1 :: (Primal t, Num a, a ~ Scalar t) => (a -> c) -> t -> c

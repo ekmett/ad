@@ -35,9 +35,11 @@ class Primal v => Var v where
     var   :: Scalar v -> Int -> v
     varId :: v -> Int
 
+{-
 instance Var f => Var (AD s f) where
     var a v = AD (var a v)
     varId (AD v) = varId v
+-}
 
 -- A simple fresh variable supply monad
 newtype S a = S { runS :: Int -> (a,Int) }

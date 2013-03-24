@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleContexts, UndecidableInstances, TemplateHaskell, DeriveDataTypeable, BangPatterns #-}
+{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TemplateHaskell, DeriveDataTypeable, BangPatterns #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
@@ -80,7 +80,7 @@ instance Primal (Dense f a s) where
     primal (Lift a) = a
     primal (Dense a _) = a
 
-instance (Traversable f) => Mode (Dense f a s) where
+instance (Traversable f) => Mode (Dense f a) s where
     auto = Lift
     zero = Zero
 
@@ -106,8 +106,8 @@ instance (Traversable f) => Mode (Dense f a s) where
     Lift a     ^/ b = Lift (a / b)
     Dense a da ^/ b = Dense (a / b) $ fmap (/b) da
 
-instance (Traversable f) => Jacobian (Dense f a s) where
-    type D (Dense f a s) = Id a s
+instance (Traversable f) => Jacobian (Dense f a) s where
+    type D (Dense f a) = Id a
     unary f _         Zero        = Lift (f 0)
     unary f _         (Lift b)    = Lift (f b)
     unary f (Id dadb) (Dense b db) = Dense (f b) (fmap (dadb *) db)

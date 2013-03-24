@@ -110,10 +110,10 @@ composeMode = ComposeMode
 decomposeMode :: ComposeMode f g a s s' -> f (g a s) s'
 decomposeMode = runComposeMode
 
-instance (Primal (f (g a s) s'), Mode (g a s), Primal (g a s), Scalar (f (g a s) s') ~ g a s, Num (g a s), Scalar (g a s) ~ a) => Primal (ComposeMode f g a s s') where
+instance (Primal (f (g a s) s'), Mode (g a) s, Primal (g a s), Scalar (f (g a s) s') ~ g a s, Num (g a s), Scalar (g a s) ~ a) => Primal (ComposeMode f g a s s') where
     primal = primal . primal . runComposeMode
 
-instance (Mode (f (g a s) s'), Mode (g a s), Scalar (f (g a s) s') ~ g a s, Scalar (g a s) ~ a, Floating (g a s)) => Mode (ComposeMode f g a s s') where
+instance (Mode (f (g a s)) s', Mode (g a) s, Scalar (f (g a s) s') ~ g a s, Scalar (g a s) ~ a, Floating (g a s)) => Mode (ComposeMode f g a s) s' where
     auto = ComposeMode . auto . auto
     ComposeMode a <+> ComposeMode b = ComposeMode (a <+> b)
     a *^ ComposeMode b = ComposeMode (auto a *^ b)

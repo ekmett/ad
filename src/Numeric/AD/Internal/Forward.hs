@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, DeriveDataTypeable, TemplateHaskell, UndecidableInstances, BangPatterns #-}
+{-# LANGUAGE Rank2Types, TypeFamilies, DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, TemplateHaskell, UndecidableInstances, BangPatterns #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
@@ -73,7 +73,7 @@ instance Primal (Forward a s) where
     primal (Lift a) = a
     primal Zero = 0
 
-instance Mode (Forward a s) where
+instance Mode (Forward a) s where
     auto = Lift
     zero = Zero
 
@@ -107,8 +107,8 @@ instance Mode (Forward a s) where
     Lift a ^/ b = Lift (a / b)
     Zero ^/ _ = Zero
 
-instance Jacobian (Forward a s) where
-    type D (Forward a s) = Id a s
+instance Jacobian (Forward a) s where
+    type D (Forward a) = Id a
 
     unary f (Id dadb) (Forward b db) = Forward (f b) (dadb * db)
     unary f _         (Lift b)       = Lift (f b)

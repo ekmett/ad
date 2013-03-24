@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleContexts, UndecidableInstances, TemplateHaskell, DeriveDataTypeable #-}
+{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TemplateHaskell, DeriveDataTypeable #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
@@ -104,7 +104,7 @@ instance Primal (Tower a s) where
     primal (Tower (x:_)) = x
     primal _ = 0
 
-instance Mode (Tower a s) where
+instance Mode (Tower a) s where
     auto a = Tower [a]
     zero = Tower []
     Tower [] <**> y         = auto (0 ** primal y)
@@ -123,8 +123,8 @@ instance Mode (Tower a s) where
     Tower as ^* b = Tower (map (*b) as)
     Tower as ^/ b = Tower (map (/b) as)
 
-instance Jacobian (Tower a s) where
-    type D (Tower a s) = Tower a s
+instance Jacobian (Tower a) s where
+    type D (Tower a) = Tower a
     unary f dadb b = bundle (f (primal b)) (tangents b * dadb)
     lift1 f df b   = bundle (f (primal b)) (tangents b * df b)
     lift1_ f df b = a where

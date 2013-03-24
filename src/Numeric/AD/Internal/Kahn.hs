@@ -77,7 +77,7 @@ instance MuRef (Kahn a s) where
     mapDeRef f (Kahn (Binary a dadb dadc b c)) = Binary a dadb dadc <$> f b <*> f c
     mapDeRef f (Kahn (Unary a dadb b)) = Unary a dadb <$> f b
 
-instance Mode (Kahn a s) where
+instance Mode (Kahn a) s where
     isKnownZero (Kahn Zero) = True
     isKnownZero _    = False
 
@@ -104,8 +104,8 @@ instance Primal (Kahn a s) where
     primal (Kahn (Binary a _ _ _ _)) = a
     primal (Kahn (Unary a _ _)) = a
 
-instance Jacobian (Kahn a s) where
-    type D (Kahn a s) = Id a s
+instance Jacobian (Kahn a) s where
+    type D (Kahn a) = Id a
 
     unary f _         (Kahn Zero)     = Kahn (Lift (f 0))
     unary f _         (Kahn (Lift a)) = Kahn (Lift (f a))

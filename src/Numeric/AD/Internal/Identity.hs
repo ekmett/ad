@@ -18,39 +18,40 @@ module Numeric.AD.Internal.Identity
     , unprobed
     ) where
 
-import Control.Applicative
+-- import Control.Applicative
 import Data.Data (Data)
-import Data.Foldable (Foldable, foldMap)
+-- import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
 import Data.Number.Erf
 import Data.Typeable (Typeable)
-import Data.Traversable (Traversable, traverse)
+-- import Data.Traversable (Traversable, traverse)
 import Numeric.AD.Internal.Classes
-import Numeric.AD.Internal.Types
+-- import Numeric.AD.Internal.Types
 
-newtype Id a = Id { runId :: a } deriving
+newtype Id a s = Id { runId :: a } deriving
     (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable, Erf, InvErf)
 
-type instance Scalar (Id a) = a
+type instance Scalar (Id a s) = a
 
-probe :: a -> AD s (Id a)
-probe a = AD (Id a)
+probe :: a -> Id a s
+probe = Id
 
-unprobe :: AD s (Id a) -> a
-unprobe (AD (Id a)) = a
+unprobe :: Id a s -> a
+unprobe = runId
 
-pid :: f a -> f (Id a)
+pid :: f a -> f (Id a s)
 pid = iso
 
-unpid :: f (Id a) -> f a
+unpid :: f (Id a s) -> f a
 unpid = osi
 
-probed :: f a -> f (AD s (Id a))
-probed = iso . pid
+probed :: f a -> f (Id a s)
+probed = pid
 
-unprobed :: f (AD s (Id a)) -> f a
-unprobed = unpid . osi
+unprobed :: f (Id a s) -> f a
+unprobed = unpid
 
+{-
 instance Functor Id where
     fmap f (Id a) = Id (f a)
 
@@ -67,15 +68,16 @@ instance Applicative Id where
 instance Monad Id where
     return = Id
     Id a >>= f = f a
+-}
 
-instance Mode (Id a) where
+instance Mode (Id a s) where
     auto = Id
     Id a ^* b = Id (a * b)
     a *^ Id b = Id (a * b)
     Id a <+> Id b = Id (a + b)
     Id a <**> Id b = Id (a ** b)
 
-instance Primal (Id a) where
+instance Primal (Id a s) where
     primal (Id a) = a
 
 -- instance Erf a => Erf (Id a) where

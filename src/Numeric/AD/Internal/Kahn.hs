@@ -105,7 +105,7 @@ instance Primal (Kahn a s) where
     primal (Kahn (Unary a _ _)) = a
 
 instance Jacobian (Kahn a s) where
-    type D (Kahn a s) = Id a
+    type D (Kahn a s) = Id a s
 
     unary f _         (Kahn Zero)     = Kahn (Lift (f 0))
     unary f _         (Kahn (Lift a)) = Kahn (Lift (f a))

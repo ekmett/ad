@@ -108,7 +108,7 @@ instance Mode (Forward a s) where
     Zero ^/ _ = Zero
 
 instance Jacobian (Forward a s) where
-    type D (Forward a s) = Id a
+    type D (Forward a s) = Id a s
 
     unary f (Id dadb) (Forward b db) = Forward (f b) (dadb * db)
     unary f _         (Lift b)       = Lift (f b)

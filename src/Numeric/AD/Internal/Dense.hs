@@ -107,7 +107,7 @@ instance (Traversable f) => Mode (Dense f a s) where
     Dense a da ^/ b = Dense (a / b) $ fmap (/b) da
 
 instance (Traversable f) => Jacobian (Dense f a s) where
-    type D (Dense f a s) = Id a
+    type D (Dense f a s) = Id a s
     unary f _         Zero        = Lift (f 0)
     unary f _         (Lift b)    = Lift (f b)
     unary f (Id dadb) (Dense b db) = Dense (f b) (fmap (dadb *) db)

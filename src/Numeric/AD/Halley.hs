@@ -76,7 +76,7 @@ fixedPoint :: (Fractional a, Eq a) => (forall s. Tower a s -> Tower a s) -> a ->
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
 
-{-
+
 -- | The 'extremum' function finds an extremum of a scalar
 -- function using Halley's method; produces a stream of increasingly
 -- accurate results.  (Modulo the usual caveats.) If the stream becomes
@@ -84,7 +84,6 @@ fixedPoint f = findZero (\x -> f x - x)
 --
 -- >>> take 10 $ extremum cos 1
 -- [1.0,0.29616942658570555,4.59979519460002e-3,1.6220740159042513e-8,0.0]
-extremum :: (Fractional a, Eq a) => (forall s s'. AD s (ComposeMode Forward Tower s' a) -> AD s (ComposeMode Forward Tower s' a)) -> a -> [a]
+extremum :: (Fractional a, Eq a) => (forall s s'. ComposeMode Forward Tower a s s' -> ComposeMode Forward Tower a s s') -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}
--}

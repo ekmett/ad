@@ -16,7 +16,7 @@ module Numeric.AD.Newton
       findZero
     , inverse
     , fixedPoint
-    -- , extremum
+    , extremum
     -- * Gradient Ascent/Descent (Reverse AD)
     , gradientDescent
     , gradientAscent
@@ -84,7 +84,7 @@ fixedPoint :: (Fractional a, Eq a) => (forall s. Forward a s -> Forward a s) -> 
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
 
-{-
+
 -- | The 'extremum' function finds an extremum of a scalar
 -- function using Newton's method; produces a stream of increasingly
 -- accurate results.  (Modulo the usual caveats.) If the stream
@@ -92,10 +92,10 @@ fixedPoint f = findZero (\x -> f x - x)
 --
 -- >>> last $ take 10 $ extremum cos 1
 -- 0.0
-extremum :: (Fractional a, Eq a) => (forall s s'. AD s (ComposeMode Forward Forward s' a) -> AD s (ComposeMode Forward Forward s' a)) -> a -> [a]
+extremum :: (Fractional a, Eq a) => (forall s s'. ComposeMode Forward Forward a s s' -> ComposeMode Forward Forward a s s') -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . composeMode))
 {-# INLINE extremum #-}
--}
+
 
 -- | The 'gradientDescent' function performs a multivariate
 -- optimization, based on the naive-gradient-descent in the file

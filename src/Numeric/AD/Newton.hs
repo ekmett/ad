@@ -51,7 +51,7 @@ import Numeric.AD.Internal.Reverse (Reverse, Tape)
 -- >>> import Data.Complex
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
-findZero :: (Fractional a, Eq a) => (forall s. Forward s a -> Forward s a) -> a -> [a]
+findZero :: (Fractional a, Eq a) => (forall s. Forward a s -> Forward a s) -> a -> [a]
 findZero f = go where
   go x = x : if x == xn then [] else go xn where
     (y,y') = diff' f x
@@ -67,7 +67,7 @@ findZero f = go where
 --
 -- >>> last $ take 10 $ inverse sqrt 1 (sqrt 10)
 -- 10.0
-inverse :: (Fractional a, Eq a) => (forall s. Forward s a -> Forward s a) -> a -> a -> [a]
+inverse :: (Fractional a, Eq a) => (forall s. Forward a s -> Forward a s) -> a -> a -> [a]
 inverse f x0 y = findZero (\x -> f x - auto y) x0
 {-# INLINE inverse  #-}
 
@@ -80,7 +80,7 @@ inverse f x0 y = findZero (\x -> f x - auto y) x0
 --
 -- >>> last $ take 10 $ fixedPoint cos 1
 -- 0.7390851332151607
-fixedPoint :: (Fractional a, Eq a) => (forall s. Forward s a -> Forward s a) -> a -> [a]
+fixedPoint :: (Fractional a, Eq a) => (forall s. Forward a s -> Forward a s) -> a -> [a]
 fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
 

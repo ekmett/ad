@@ -41,19 +41,19 @@ main = defaultMain
         ]
     , bgroup "Kahn"
         [ bench "greeks Double" $ nf (runDouble $ \r s v t k -> Kahn.jacobian (fromPair . bs) [r, s, v, t, k]) 2
-        -- , bench "higherGreeks Double" $ nf (runDouble $ \r s v t k -> (Kahn.hessian (fst . bs) [r, s, v, t, k], Kahn.hessian (snd . bs) [r, s, v, t, k])) 2
-        -- , bench "highererGreeks Double" $ nf (runDouble $ \r s v t k -> Kahn.hessianF (fromPair . bs) [r, s, v, t, k]) 2
+        , bench "higherGreeks Double" $ nf (runDouble $ \r s v t k -> (Kahn.hessian (fst . bs) [r, s, v, t, k], Kahn.hessian (snd . bs) [r, s, v, t, k])) 2
+        , bench "highererGreeks Double" $ nf (runDouble $ \r s v t k -> Kahn.hessianF (fromPair . bs) [r, s, v, t, k]) 2
         , bench "greeks Float" $ nf (runFloat $ \r s v t k -> Kahn.jacobian (fromPair . bs) [r, s, v, t, k]) 2
-        -- , bench "higherGreeks Float" $ nf (runFloat $ \r s v t k -> (Kahn.hessian (fst . bs) [r, s, v, t, k], Kahn.hessian (snd . bs) [r, s, v, t, k])) 2
-        -- , bench "highererGreeks Float" $ nf (runFloat $ \r s v t k -> Kahn.hessianF (fromPair . bs) [r, s, v, t, k]) 2
+        , bench "higherGreeks Float" $ nf (runFloat $ \r s v t k -> (Kahn.hessian (fst . bs) [r, s, v, t, k], Kahn.hessian (snd . bs) [r, s, v, t, k])) 2
+        , bench "highererGreeks Float" $ nf (runFloat $ \r s v t k -> Kahn.hessianF (fromPair . bs) [r, s, v, t, k]) 2
         ]
     , bgroup "Reverse"
         [ bench "greeks Double" $ nf (runDouble $ \r s v t k -> Reverse.jacobian (fromPair . bs) [r, s, v, t, k]) 2
-        -- , bench "higherGreeks Double" $ nf (runDouble $ \r s v t k -> (Reverse.hessian (fst . bs) [r, s, v, t, k], Reverse.hessian (snd . bs) [r, s, v, t, k])) 2
-        -- , bench "highererGreeks Double" $ nf (runDouble $ \r s v t k -> Reverse.hessianF (fromPair . bs) [r, s, v, t, k]) 2
+        , bench "higherGreeks Double" $ nf (runDouble $ \r s v t k -> (Reverse.hessian (fst . bs) [r, s, v, t, k], Reverse.hessian (snd . bs) [r, s, v, t, k])) 2
+        , bench "highererGreeks Double" $ nf (runDouble $ \r s v t k -> Reverse.hessianF (fromPair . bs) [r, s, v, t, k]) 2
         , bench "greeks Float" $ nf (runFloat $ \r s v t k -> Reverse.jacobian (fromPair . bs) [r, s, v, t, k]) 2
-        -- , bench "higherGreeks Float" $ nf (runFloat $ \r s v t k -> (Reverse.hessian (fst . bs) [r, s, v, t, k], Reverse.hessian (snd . bs) [r, s, v, t, k])) 2
-        -- , bench "highererGreeks Float" $ nf (runFloat $ \r s v t k -> Reverse.hessianF (fromPair . bs) [r, s, v, t, k]) 2
+        , bench "higherGreeks Float" $ nf (runFloat $ \r s v t k -> (Reverse.hessian (fst . bs) [r, s, v, t, k], Reverse.hessian (snd . bs) [r, s, v, t, k])) 2
+        , bench "highererGreeks Float" $ nf (runFloat $ \r s v t k -> Reverse.hessianF (fromPair . bs) [r, s, v, t, k]) 2
         ]
     , bgroup "Sparse"
         [ bench "greeks Double" $ nf (runDouble $ \r s v t k -> Sparse.jacobian (fromPair . bs) [r, s, v, t, k]) 2

@@ -28,8 +28,8 @@ module Numeric.AD.Mode.Reverse
     , jacobianWith'
 
     -- * Hessian
-    -- , hessian
-    -- , hessianF
+    , hessian
+    , hessianF
 
     -- * Derivatives
     , diff
@@ -44,7 +44,7 @@ import Data.Traversable (Traversable)
 
 -- import Numeric.AD.Types
 import Numeric.AD.Internal.Classes
--- import Numeric.AD.Internal.Composition
+import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Reverse
 import Numeric.AD.Internal.Var
 
@@ -177,14 +177,14 @@ diffF' :: (Functor f, Num a) => (forall s. Reifies s Tape => Reverse a s -> f (R
 diffF' f a = reifyTape 1 $ \p -> derivativeOf' p <$> f (var a 0)
 {-# INLINE diffF' #-}
 
-{-
+
 -- | Compute the hessian via the jacobian of the gradient. gradient is computed in reverse mode and then the jacobian is computed in reverse mode.
 --
 -- However, since the @'grad' f :: f a -> f a@ is square this is not as fast as using the forward-mode Jacobian of a reverse mode gradient provided by 'Numeric.AD.hessian'.
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
 -- [[0,1],[1,0]]
-hessian :: (Traversable f, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (AD s (ComposeMode (Reverse s) (Reverse s') s' a)) -> AD s (ComposeMode (Reverse s) (Reverse s') s' a)) -> f a -> f (f a)
+hessian :: (Traversable f, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (ComposeMode Reverse Reverse a s s') -> (ComposeMode Reverse Reverse a s s')) -> f a -> f (f a)
 hessian f = jacobian (grad (decomposeMode . f . fmap composeMode))
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the reverse-mode Jacobian of the reverse-mode Jacobian of the function.
@@ -193,6 +193,6 @@ hessian f = jacobian (grad (decomposeMode . f . fmap composeMode))
 --
 -- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
-hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (AD s (ComposeMode (Reverse s) (Reverse s') s' a)) -> g (AD s (ComposeMode (Reverse s) (Reverse s') s' a))) -> f a -> g (f (f a))
+hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (ComposeMode Reverse Reverse a s s') -> g (ComposeMode Reverse Reverse a s s')) -> f a -> g (f (f a))
 hessianF f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))
--}
+

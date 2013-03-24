@@ -28,8 +28,8 @@ module Numeric.AD.Mode.Forward
     , jacobianT
     , jacobianWithT
     -- * Hessian Product
---    , hessianProduct
---    , hessianProduct'
+   , hessianProduct
+   , hessianProduct'
     -- * Derivatives
     , diff
     , diff'
@@ -46,7 +46,7 @@ import Data.Traversable (Traversable)
 import Control.Applicative
 -- import Numeric.AD.Types
 import Numeric.AD.Internal.Classes
--- import Numeric.AD.Internal.Composition
+import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Forward
 
 -- | Compute the directional derivative of a function given a zipped up 'Functor' of the input values and their derivatives
@@ -192,16 +192,16 @@ gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (Forward a 
 gradWith' g f as = (primal $ f (Lift <$> as), bindWith g (tangent . f) as)
 {-# INLINE gradWith' #-}
 
-{-
+
 -- | Compute the product of a vector with the Hessian using forward-on-forward-mode AD.
 --
-hessianProduct :: (Traversable f, Num a) => (forall s s'. f (AD s (ComposeMode Forward Forward s' a)) -> AD s (ComposeMode Forward Forward s' a)) -> f (a, a) -> f a
+hessianProduct :: (Traversable f, Num a) => (forall s s'. f (ComposeMode Forward Forward a s s') -> ComposeMode Forward Forward a s s') -> f (a, a) -> f a
 hessianProduct f = duF $ grad $ decomposeMode . f . fmap composeMode
 
 -- | Compute the gradient and hessian product using forward-on-forward-mode AD.
-hessianProduct' :: (Traversable f, Num a) => (forall s s'. f (AD s (ComposeMode Forward Forward s' a)) -> AD s (ComposeMode Forward Forward s' a)) -> f (a, a) -> f (a, a)
+hessianProduct' :: (Traversable f, Num a) => (forall s s'. f (ComposeMode Forward Forward a s s') -> ComposeMode Forward Forward a s s') -> f (a, a) -> f (a, a)
 hessianProduct' f = duF' $ grad $ decomposeMode . f . fmap composeMode
--}
+
 
 -- * Experimental
 

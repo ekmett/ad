@@ -32,8 +32,8 @@ module Numeric.AD.Mode.Kahn
     , jacobianWith
     , jacobianWith'
     -- * Hessian
-    -- , hessian
-    -- , hessianF
+    , hessian
+    , hessianF
     -- * Derivatives
     , diff
     , diff'
@@ -47,7 +47,7 @@ module Numeric.AD.Mode.Kahn
 import Control.Applicative ((<$>))
 import Data.Traversable (Traversable)
 
-import Numeric.AD.Types
+-- import Numeric.AD.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Kahn
@@ -184,14 +184,14 @@ diffF' :: (Functor f, Num a) => (forall s. Kahn a s -> f (Kahn a s)) -> a -> f (
 diffF' f a = derivative' <$> f (var a 0)
 {-# INLINE diffF' #-}
 
-{-
+
 -- | Compute the 'hessian' via the 'jacobian' of the gradient. gradient is computed in kahn mode and then the 'jacobian' is computed in kahn mode.
 --
 -- However, since the @'grad' f :: f a -> f a@ is square this is not as fast as using the forward-mode 'jacobian' of a reverse mode gradient provided by 'Numeric.AD.hessian'.
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
 -- [[0,1],[1,0]]
-hessian :: (Traversable f, Num a) => (forall s s'. f (AD s (ComposeMode Kahn Kahn s' a)) -> AD s (ComposeMode Kahn Kahn s' a)) -> f a -> f (f a)
+hessian :: (Traversable f, Num a) => (forall s s'. f (ComposeMode Kahn Kahn a s s') -> (ComposeMode Kahn Kahn a s s')) -> f a -> f (f a)
 hessian f = jacobian (grad (decomposeMode . f . fmap composeMode))
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the kahn-mode Jacobian of the kahn-mode Jacobian of the function.
@@ -200,6 +200,6 @@ hessian f = jacobian (grad (decomposeMode . f . fmap composeMode))
 --
 -- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
-hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. f (AD s (ComposeMode Kahn Kahn s' a)) -> g (AD s (ComposeMode Kahn Kahn s' a))) -> f a -> g (f (f a))
+hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. f (ComposeMode Kahn Kahn a s s') -> g (ComposeMode Kahn Kahn a s s')) -> f a -> g (f (f a))
 hessianF f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))
--}
+

@@ -244,22 +244,22 @@ deriveNumeric f tCon = map fudgeCxt <$> lifted
         invnormcdf = lift1 invnormcdf $ \x -> recip $ (fromInteger (-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt (fromInteger 2))
        |]
 
-deriveNumeric' :: ([Pred] -> [Pred]) -> Type -> Q [Dec]
-deriveNumeric' f tCon = map fudgeCxt <$> lifted
+deriveNumeric' :: ([Pred] -> [Pred]) -> Type -> Type -> Q [Dec]
+deriveNumeric' f tCon s' = map fudgeCxt <$> lifted
     where
-      s = VarT (mkName "s")
       t = pure tCon
+      s = pure s'
       fudgeCxt (InstanceD cxt typ dec) = InstanceD (f cxt) typ dec
       fudgeCxt _ = error "Numeric.AD.Internal.Classes.deriveNumeric_fudgeCxt: Not InstanceD"
       lifted = [d|
-       instance (Num a, Eq a) => Eq ($t a s) where
+       instance (Num a, Eq a) => Eq ($t a $s) where
         (==)          = discrete2 (==)
-       instance (Num a, Ord a) => Ord ($t a s) where
+       instance (Num a, Ord a) => Ord ($t a $s) where
         compare       = discrete2 compare
-       instance (Num a, Bounded a) => Bounded ($t a s) where
+       instance (Num a, Bounded a) => Bounded ($t a $s) where
         maxBound      = auto maxBound
         minBound      = auto minBound
-       instance Num a => Num ($t a s) where
+       instance Num a => Num ($t a $s) where
         fromInteger 0  = zero
         fromInteger n = auto (fromInteger n)
         (+)          = (<+>) -- binary (+) one one
@@ -268,12 +268,12 @@ deriveNumeric' f tCon = map fudgeCxt <$> lifted
         negate       = lift1 negate (const (auto (-1)))
         abs          = lift1 abs signum
         signum a     = lift1 signum (const zero) a
-       instance Fractional a => Fractional ($t a s) where
+       instance Fractional a => Fractional ($t a $s) where
         fromRational 0 = zero
         fromRational r = auto (fromRational r)
         x / y        = x * recip y
         recip        = lift1_ recip (const . negate . join (*))
-       instance Floating a => Floating ($t a s) where
+       instance Floating a => Floating ($t a $s) where
         pi       = auto pi
         exp      = lift1_ exp const
         log      = lift1 log recip
@@ -296,7 +296,7 @@ deriveNumeric' f tCon = map fudgeCxt <$> lifted
         asinh    = lift1 asinh $ \x -> recip (sqrt (one + join (*) x))
         acosh    = lift1 acosh $ \x -> recip (sqrt (join (*) x - one))
         atanh    = lift1 atanh $ \x -> recip (one - join (*) x)
-       instance (Num a, Enum a) => Enum ($t a s) where
+       instance (Num a, Enum a) => Enum ($t a $s) where
         succ                 = lift1 succ (const one)
         pred                 = lift1 pred (const one)
         toEnum               = auto . toEnum
@@ -305,9 +305,9 @@ deriveNumeric' f tCon = map fudgeCxt <$> lifted
         enumFromTo a b       = withPrimal a <$> discrete2 enumFromTo a b
         enumFromThen a b     = zipWith (fromBy a delta) [0..] $ discrete2 enumFromThen a b where delta = b - a
         enumFromThenTo a b c = zipWith (fromBy a delta) [0..] $ discrete3 enumFromThenTo a b c where delta = b - a
-       instance Real a => Real ($t a s) where
+       instance Real a => Real ($t a $s) where
         toRational      = discrete1 toRational
-       instance RealFloat a => RealFloat ($t a s) where
+       instance RealFloat a => RealFloat ($t a $s) where
         floatRadix      = discrete1 floatRadix
         floatDigits     = discrete1 floatDigits
         floatRange      = discrete1 floatRange
@@ -322,7 +322,7 @@ deriveNumeric' f tCon = map fudgeCxt <$> lifted
         scaleFloat n = unary (scaleFloat n) (scaleFloat n one)
         significand x =  unary significand (scaleFloat (- floatDigits x) one) x
         atan2 = lift2 atan2 $ \vx vy -> let r = recip (join (*) vx + join (*) vy) in (vy * r, negate vx * r)
-       instance RealFrac a => RealFrac ($t a s) where
+       instance RealFrac a => RealFrac ($t a $s) where
         properFraction a = (w, a `withPrimal` pb) where
              pa = primal a
              (w, pb) = properFraction pa
@@ -330,11 +330,11 @@ deriveNumeric' f tCon = map fudgeCxt <$> lifted
         round    = discrete1 round
         ceiling  = discrete1 ceiling
         floor    = discrete1 floor
-       instance Erf a => Erf ($t a s) where
+       instance Erf a => Erf ($t a $s) where
         erf = lift1 erf $ \x -> (fromInteger 2 / sqrt pi) * exp (negate x * x)
         erfc = lift1 erfc $ \x -> (fromInteger (-2) / sqrt pi) * exp (negate x * x)
         normcdf = lift1 normcdf $ \x -> (fromInteger (-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt (fromInteger 2))
-       instance InvErf a => InvErf ($t a s) where
+       instance InvErf a => InvErf ($t a $s) where
         inverf = lift1 inverfc $ \x -> recip $ (fromInteger 2 / sqrt pi) * exp (negate x * x)
         inverfc = lift1 inverfc $ \x -> recip $ negate (fromInteger 2 / sqrt pi) * exp (negate x * x)
         invnormcdf = lift1 invnormcdf $ \x -> recip $ (fromInteger (-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt (fromInteger 2))

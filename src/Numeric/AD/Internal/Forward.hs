@@ -165,7 +165,8 @@ instance Jacobian (Forward a s) where
             (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
             da = dadb * db + dc * dadc
 
-deriveNumeric' id (ConT ''Forward)
+let s = VarT (mkName "s") in
+  deriveNumeric' id (ConT ''Forward) s
 
 bind :: (Traversable f, Num a) => (f (Forward a s) -> b) -> f a -> f b
 bind f as = snd $ mapAccumL outer (0 :: Int) as

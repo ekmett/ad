@@ -139,4 +139,4 @@ instance Jacobian (Tower a) s where
         (dadb, dadc) = df a b c
 
 let s = VarT (mkName "s") in
-  deriveNumeric' id (ConT ''Tower) s
+  deriveNumeric id (ConT ''Tower) s

@@ -205,7 +205,7 @@ instance Jacobian (Sparse a) s where
             (mapWithKey (times dadb) db)
             (mapWithKey (times dadc) dc)
 
-let s = VarT (mkName "s") in deriveNumeric' id (ConT ''Sparse) s
+let s = VarT (mkName "s") in deriveNumeric id (ConT ''Sparse) s
 
 class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
     pack :: i -> [Sparse a ()] -> Sparse a ()

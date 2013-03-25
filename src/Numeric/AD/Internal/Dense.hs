@@ -183,7 +183,7 @@ instance (Traversable f) => Jacobian (Dense f a) s where
 
 let s = VarT (mkName "s")
     f = VarT (mkName "f") in
-    deriveNumeric'
+    deriveNumeric
         (ClassP ''Traversable [f]:)
         (ConT ''Dense `AppT` f)
         s

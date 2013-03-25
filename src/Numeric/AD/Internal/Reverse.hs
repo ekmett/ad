@@ -168,7 +168,7 @@ instance (Reifies s Tape) => Jacobian (Reverse a) s where
             (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
 let s = VarT (mkName "s") in
-  deriveNumeric' (ClassP ''Reifies [s, ConT ''Tape] :) (ConT ''Reverse) s
+  deriveNumeric (ClassP ''Reifies [s, ConT ''Tape] :) (ConT ''Reverse) s
 
 -- | Helper that extracts the derivative of a chain when the chain was constructed with one variable.
 derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> Reverse a s -> a

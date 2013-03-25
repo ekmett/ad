@@ -137,7 +137,7 @@ instance Jacobian (Kahn a) s where
             a = f pb pc
             (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
-let s = VarT (mkName "s") in deriveNumeric' id (ConT ''Kahn) s
+let s = VarT (mkName "s") in deriveNumeric id (ConT ''Kahn) s
 
 derivative :: Num a => Kahn a s -> a
 derivative = sum . map snd . partials

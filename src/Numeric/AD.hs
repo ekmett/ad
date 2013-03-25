@@ -122,6 +122,7 @@ import Data.Reflection (Reifies)
 import Control.Applicative
 
 import Numeric.AD.Types
+import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Forward (Forward)
 import Numeric.AD.Internal.Identity
@@ -153,7 +154,7 @@ import Numeric.AD.Newton
 -- | Calculate the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between sparse and reverse mode AD based on the number of inputs and outputs.
 --
 -- If you know the relative number of inputs and outputs, consider 'Numeric.AD.Reverse.jacobian' or 'Nuneric.AD.Sparse.jacobian'.
-jacobian :: (Traversable f, Functor g, Num a) => (forall m s. Mode m s => f (m s) -> g (m s)) -> f a -> g (f a)
+jacobian :: (Traversable f, Functor g, Num a) => (forall m s. (Mode m s, Scalar (m s) ~ a) => f (m s) -> g (m s)) -> f a -> g (f a)
 jacobian f bs = snd <$> jacobian' f bs
 {-# INLINE jacobian #-}
 
@@ -169,7 +170,7 @@ big _ = False
 -- | Calculate both the answer and Jacobian of a non-scalar-to-non-scalar function, automatically choosing between sparse- and reverse- mode AD based on the relative, based on the number of inputs
 --
 -- If you know the relative number of inputs and outputs, consider 'Numeric.AD.Reverse.jacobian'' or 'Nuneric.AD.Sparse.jacobian''.
-jacobian' :: (Traversable f, Functor g, Num a) => (forall m s. Mode m s => f (m s) -> g (m s)) -> f a -> g (a, f a)
+jacobian' :: (Traversable f, Functor g, Num a) => (forall m s. (Mode m s, Scalar (m s) ~ a) => f (m s) -> g (m s)) -> f a -> g (a, f a)
 jacobian' f bs | Z <- n = fmap (\x -> (unprobe x, bs)) (f (probed bs))
                | big n  = Reverse.jacobian' f bs
                | otherwise = Sparse.jacobian' f bs

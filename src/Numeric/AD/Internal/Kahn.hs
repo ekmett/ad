@@ -47,7 +47,6 @@ import System.IO.Unsafe (unsafePerformIO)
 import Language.Haskell.TH
 import Data.Data (Data)
 import Data.Typeable (Typeable)
-import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Internal.Var

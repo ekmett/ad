@@ -13,8 +13,6 @@ module Numeric.AD.Types
     (
     -- * AD modes
       Mode(..)
-    -- * AD variables
-    , AD(..)
     -- * Jets
     , Jet(..)
     , headJet
@@ -25,7 +23,6 @@ module Numeric.AD.Types
     ) where
 
 import Numeric.AD.Internal.Identity
-import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Jet
 import Numeric.AD.Internal.Classes
 

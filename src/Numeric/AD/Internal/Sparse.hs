@@ -23,7 +23,6 @@ import Prelude hiding (lookup)
 import Control.Applicative hiding ((<**>))
 import Numeric.AD.Internal.Classes
 import Control.Comonad.Cofree
-import Numeric.AD.Internal.Types
 import Data.Data
 import Data.Typeable ()
 import qualified Data.IntMap as IntMap

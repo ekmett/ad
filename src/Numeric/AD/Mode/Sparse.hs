@@ -13,9 +13,9 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Sparse
-    (
+    ( Sparse
     -- * Sparse Gradients
-      grad
+    , grad
     , grad'
     , gradWith
     , gradWith'

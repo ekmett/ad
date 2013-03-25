@@ -13,9 +13,9 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Forward
-    (
+    ( Forward
     -- * Gradient
-      grad
+    , grad
     , grad'
     , gradWith
     , gradWith'

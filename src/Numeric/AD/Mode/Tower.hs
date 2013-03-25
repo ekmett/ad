@@ -13,9 +13,9 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Tower
-    (
+    ( Tower
     -- * Taylor Series
-      taylor
+    , taylor
     , taylor0
     -- * Maclaurin Series
     , maclaurin

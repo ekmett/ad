@@ -14,9 +14,9 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Reverse
-    (
+    ( Reverse
     -- * Gradient
-      grad
+    , grad
     , grad'
     , gradWith
     , gradWith'

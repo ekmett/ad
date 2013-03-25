@@ -19,9 +19,9 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Kahn
-    (
+    ( Kahn
     -- * Gradient
-      grad
+    , grad
     , grad'
     , gradWith
     , gradWith'

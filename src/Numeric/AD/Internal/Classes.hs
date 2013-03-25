@@ -19,6 +19,7 @@ module Numeric.AD.Internal.Classes
       Mode(..)
     , one
     -- * Automatically Deriving AD
+    , Lifted(..)
     , Jacobian(..)
     , Primal(..)
     , deriveNumeric
@@ -29,9 +30,55 @@ module Numeric.AD.Internal.Classes
 import Control.Applicative ((<$>), pure)
 import Control.Monad
 import Data.Number.Erf
+import Data.Proxy
 import Language.Haskell.TH.Syntax
 
 type family Scalar t
+
+class Lifted f where
+  liftBounded    :: Bounded a    => p (f a) -> (Bounded (f a)    => r) -> r
+  liftEnum       :: Enum a       => p (f a) -> (Enum (f a)       => r) -> r
+  liftEq         :: Eq   a       => p (f a) -> (Eq (f a)         => r) -> r
+  liftOrd        :: Ord  a       => p (f a) -> (Ord (f a)        => r) -> r
+  liftNum        :: Num a        => p (f a) -> (Num (f a)        => r) -> r
+  liftFractional :: Fractional a => p (f a) -> (Fractional (f a) => r) -> r
+  liftFloating   :: Floating a   => p (f a) -> (Floating (f a)   => r) -> r
+  liftRealFloat  :: RealFloat a  => p (f a) -> (RealFloat (f a)  => r) -> r
+  liftRealFrac   :: RealFrac a   => p (f a) -> (RealFrac (f a)   => r) -> r
+  liftReal       :: Real a       => p (f a) -> (Real (f a)       => r) -> r
+  liftErf        :: Erf a        => p (f a) -> (Erf (f a)        => r) -> r
+  liftInvErf     :: InvErf a     => p (f a) -> (InvErf (f a)     => r) -> r
+  liftMode       :: Mode a       => p (f a) -> ((Scalar (f a) ~ a, Mode (f a)) => r) -> r
+  liftPrimal     :: Primal a     => p (f a) -> ((Scalar (f a) ~ a, Primal (f a)) => r) -> r
+  liftJacobian   :: Jacobian a   => p (f a) -> ((Scalar (f a) ~ a, Jacobian (f a)) => r) -> r
+  -- liftScalar     ::                 p (f a) -> (Scalar (f a) ~ a => r) -> r
+
+  liftedBounded :: forall a. Bounded a => (Bounded (f a) => f a) -> f a
+  liftedBounded = liftBounded (Proxy :: Proxy (f a))
+
+  liftedNum :: forall a. Num a => (Num (f a) => f a) -> f a
+  liftedNum = liftNum (Proxy :: Proxy (f a))
+
+  liftedEnum :: forall a. Enum a => (Enum (f a) => f a) -> f a
+  liftedEnum = liftEnum (Proxy :: Proxy (f a))
+
+  liftedFractional :: forall a. Fractional a => (Fractional (f a) => f a) -> f a
+  liftedFractional = liftFractional (Proxy :: Proxy (f a))
+
+  liftedFloating :: forall a. Floating a => (Floating (f a) => f a) -> f a
+  liftedFloating = liftFloating (Proxy :: Proxy (f a))
+
+  liftedRealFloat :: forall a. RealFloat a => (RealFloat (f a) => f a) -> f a
+  liftedRealFloat = liftRealFloat (Proxy :: Proxy (f a))
+
+  liftedErf :: forall a. Erf a => (Erf (f a) => f a) -> f a
+  liftedErf = liftErf (Proxy :: Proxy (f a))
+
+  liftedInvErf :: forall a. InvErf a => (InvErf (f a) => f a) -> f a
+  liftedInvErf = liftInvErf (Proxy :: Proxy (f a))
+
+  liftedMode :: forall a. Mode a => ((Scalar (f a) ~ a, Mode (f a)) => f a) -> f a
+  liftedMode = liftMode (Proxy :: Proxy (f a))
 
 class Iso a b where
     iso :: f a -> f b

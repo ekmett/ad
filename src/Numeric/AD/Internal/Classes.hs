@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DefaultSignatures, Rank2Types, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, PatternGuards, CPP #-}
 {-# LANGUAGE FlexibleContexts, FunctionalDependencies, UndecidableInstances, GeneralizedNewtypeDeriving, TemplateHaskell #-}
 -- {-# OPTIONS_HADDOCK hide #-}
@@ -73,10 +74,12 @@ class Mode t s where
     -- | > 'zero' = 'lift' 0
     zero :: Num (Scalar (t s)) => t s
 
+#ifndef HLINT
     default (*^) :: (Num (t s), Num (Scalar (t s))) => Scalar (t s) -> t s -> t s
     a *^ b = auto a * b
     default (^*) :: (Num (t s), Num (Scalar (t s))) => t s -> Scalar (t s) -> t s
     a ^* b = a * auto b
+#endif
 
     a ^/ b = a ^* recip b
 

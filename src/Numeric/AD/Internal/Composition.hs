@@ -85,20 +85,20 @@ instance (Typeable1 f, Typeable1 g, Data (f (g a)), Data a) => Data (ComposeFunc
 #endif
 
 -- | The composition of two AD modes is an AD mode in its own right
-newtype ComposeMode f g a s s' = ComposeMode { runComposeMode :: f (g a s) s'}
+newtype ComposeMode f g a s = ComposeMode { runComposeMode :: f (g a s) s}
 
-deriving instance Enum (f (g a s) s') => Enum (ComposeMode f g a s s')
-deriving instance Eq (f (g a s) s') => Eq (ComposeMode f g a s s')
-deriving instance Ord (f (g a s) s') => Ord (ComposeMode f g a s s')
-deriving instance Bounded (f (g a s) s') => Bounded (ComposeMode f g a s s')
-deriving instance Num (f (g a s) s') => Num (ComposeMode f g a s s')
-deriving instance Fractional (f (g a s) s') => Fractional (ComposeMode f g a s s')
-deriving instance Floating (f (g a s) s') => Floating (ComposeMode f g a s s')
-deriving instance RealFloat (f (g a s) s') => RealFloat (ComposeMode f g a s s')
-deriving instance RealFrac (f (g a s) s') => RealFrac (ComposeMode f g a s s')
-deriving instance Real (f (g a s) s') => Real (ComposeMode f g a s s')
-deriving instance Erf (f (g a s) s') => Erf (ComposeMode f g a s s')
-deriving instance InvErf (f (g a s) s') => InvErf (ComposeMode f g a s s')
+deriving instance Enum (f (g a s) s) => Enum (ComposeMode f g a s)
+deriving instance Eq (f (g a s) s) => Eq (ComposeMode f g a s)
+deriving instance Ord (f (g a s) s) => Ord (ComposeMode f g a s)
+deriving instance Bounded (f (g a s) s) => Bounded (ComposeMode f g a s)
+deriving instance Num (f (g a s) s) => Num (ComposeMode f g a s)
+deriving instance Fractional (f (g a s) s) => Fractional (ComposeMode f g a s)
+deriving instance Floating (f (g a s) s) => Floating (ComposeMode f g a s)
+deriving instance RealFloat (f (g a s) s) => RealFloat (ComposeMode f g a s)
+deriving instance RealFrac (f (g a s) s) => RealFrac (ComposeMode f g a s)
+deriving instance Real (f (g a s) s) => Real (ComposeMode f g a s)
+deriving instance Erf (f (g a s) s) => Erf (ComposeMode f g a s)
+deriving instance InvErf (f (g a s) s) => InvErf (ComposeMode f g a s)
 
 type instance Scalar (ComposeMode f g a s s') = a
 

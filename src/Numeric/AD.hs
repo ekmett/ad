@@ -154,7 +154,7 @@ import Numeric.AD.Newton
 -- | Calculate the Jacobian of a non-scalar-to-non-scalar function, automatically choosing between sparse and reverse mode AD based on the number of inputs and outputs.
 --
 -- If you know the relative number of inputs and outputs, consider 'Numeric.AD.Reverse.jacobian' or 'Nuneric.AD.Sparse.jacobian'.
-jacobian :: (Traversable f, Functor g, Num a) => (forall m s. (Mode m s, Scalar (m s) ~ a) => f (m s) -> g (m s)) -> f a -> g (f a)
+jacobian :: (Traversable f, Functor g, Num a) => (forall m s. (Mode m s, Scalar (m s) ~ a) => f (AD m s) -> g (AD m s)) -> f a -> g (f a)
 jacobian f bs = snd <$> jacobian' f bs
 {-# INLINE jacobian #-}
 

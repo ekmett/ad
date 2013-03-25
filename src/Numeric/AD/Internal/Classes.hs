@@ -25,6 +25,12 @@ module Numeric.AD.Internal.Classes
     , deriveNumeric
     , Iso(..)
     , Scalar
+
+    , discrete1
+    , discrete2
+    , discrete3
+    , withPrimal
+    , fromBy
     ) where
 
 import Control.Applicative ((<$>), pure)

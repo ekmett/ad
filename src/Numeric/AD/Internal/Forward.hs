@@ -33,7 +33,6 @@ import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)
 import Data.Data
 import Control.Applicative
--- import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 
@@ -203,4 +202,3 @@ transposeWith f as = snd . mapAccumL go xss0
     where
         go xss b = (tail <$> xss, f b (head <$> xss))
         xss0 = toList <$> as
-

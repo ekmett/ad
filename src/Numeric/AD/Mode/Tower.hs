@@ -39,7 +39,6 @@ module Numeric.AD.Mode.Tower
     ) where
 
 import Control.Applicative ((<$>))
-import Numeric.AD.Types
 import Numeric.AD.Internal.Tower
 
 diffs :: Num a => (forall s. Tower a s -> Tower a s) -> a -> [a]

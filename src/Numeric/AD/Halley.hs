@@ -21,7 +21,7 @@ module Numeric.AD.Halley
       findZero
     , inverse
     , fixedPoint
-    -- , extremum
+    , extremum
     ) where
 
 import Prelude hiding (all)

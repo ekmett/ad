@@ -18,15 +18,11 @@ module Numeric.AD.Internal.Identity
     , unprobed
     ) where
 
--- import Control.Applicative
 import Data.Data (Data)
--- import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
 import Data.Number.Erf
 import Data.Typeable (Typeable)
--- import Data.Traversable (Traversable, traverse)
 import Numeric.AD.Internal.Classes
--- import Numeric.AD.Internal.Types
 
 newtype Id a s = Id { runId :: a } deriving
     (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable, Erf, InvErf)
@@ -50,25 +46,6 @@ probed = pid
 
 unprobed :: f (Id a s) -> f a
 unprobed = unpid
-
-{-
-instance Functor Id where
-    fmap f (Id a) = Id (f a)
-
-instance Foldable Id where
-    foldMap f (Id a) = f a
-
-instance Traversable Id where
-    traverse f (Id a) = Id <$> f a
-
-instance Applicative Id where
-    pure = Id
-    Id f <*> Id a = Id (f a)
-
-instance Monad Id where
-    return = Id
-    Id a >>= f = f a
--}
 
 instance Mode (Id a) s where
     auto = Id

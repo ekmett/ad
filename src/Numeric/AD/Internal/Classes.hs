@@ -20,7 +20,6 @@ module Numeric.AD.Internal.Classes
     -- * Automatically Deriving AD
     , Jacobian(..)
     , Primal(..)
-    -- , deriveNumeric
     , deriveNumeric
     , Iso(..)
     , Scalar

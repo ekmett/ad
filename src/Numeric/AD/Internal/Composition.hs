@@ -27,11 +27,9 @@ module Numeric.AD.Internal.Composition
 import Control.Applicative hiding ((<**>))
 import Data.Number.Erf
 import Data.Data
-import Data.Typeable
 import Data.Foldable (Foldable(foldMap))
 import Data.Traversable (Traversable(traverse))
 import Numeric.AD.Internal.Classes
--- import Numeric.AD.Internal.Types
 
 {-# ANN module "Hlint: ignore Eta reduce" #-}
 {-# ANN module "Hlint: ignore Reduce duplication" #-}

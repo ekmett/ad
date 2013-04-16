@@ -80,16 +80,12 @@ tangents (Tower []) = Tower []
 tangents (Tower (_:xs)) = Tower xs
 {-# INLINE tangents #-}
 
-<<<<<<< HEAD
-truncated :: Tower a -> Bool
+truncated :: Tower a s -> Bool
 truncated (Tower []) = True
 truncated _ = False
 {-# INLINE truncated #-}
 
-bundle :: a -> Tower a -> Tower a
-=======
 bundle :: a -> Tower a s -> Tower a s
->>>>>>> upstream/master
 bundle a (Tower as) = Tower (a:as)
 {-# INLINE bundle #-}
 

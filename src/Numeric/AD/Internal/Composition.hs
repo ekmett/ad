@@ -1,4 +1,7 @@
-{-# LANGUAGE CPP, Rank2Types, TypeFamilies, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, UndecidableInstances, TypeOperators #-}
+{-# LANGUAGE CPP, GeneralizedNewtypeDeriving, Rank2Types, StandaloneDeriving, TypeFamilies, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, UndecidableInstances, TypeOperators #-}
+#if __GLASGOW_HASKELL__ >= 707
+{-# LANGUAGE DeriveDataTypeable, StandaloneDeriving #-}
+#endif
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Composition
@@ -22,16 +25,11 @@ module Numeric.AD.Internal.Composition
 #endif
 
 import Control.Applicative hiding ((<**>))
-import Data.Data (Data(..), mkDataType, DataType, mkConstr, Constr, constrIndex, Fixity(..))
-#if MIN_VERSION_base(4,4,0)
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon3, mkTyConApp, typeOfDefault, gcast1)
-#else
-import Data.Typeable (Typeable1(..), Typeable(..), TyCon, mkTyCon, mkTyConApp, typeOfDefault, gcast1)
-#endif
+import Data.Number.Erf
+import Data.Data
 import Data.Foldable (Foldable(foldMap))
 import Data.Traversable (Traversable(traverse))
 import Numeric.AD.Internal.Classes
-import Numeric.AD.Internal.Types
 
 {-# ANN module "Hlint: ignore Eta reduce" #-}
 {-# ANN module "Hlint: ignore Reduce duplication" #-}
@@ -48,6 +46,10 @@ instance (Foldable f, Foldable g) => Foldable (ComposeFunctor f g) where
 instance (Traversable f, Traversable g) => Traversable (ComposeFunctor f g) where
     traverse f (ComposeFunctor a) = ComposeFunctor <$> traverse (traverse f) a
 
+#if __GLASGOW_HASKELL__ >= 707
+deriving instance Typeable ComposeFunctor
+deriving instance (Typeable f, Typeable a, Typeable g, Data (f (g a))) => Data (ComposeFunctor f g a)
+#else
 instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeFunctor f g) where
     typeOf1 tfga = mkTyConApp composeFunctorTyCon [typeOf1 (fa tfga), typeOf1 (ga tfga)]
         where fa :: t f (g :: * -> *) a -> f a
@@ -80,20 +82,36 @@ instance (Typeable1 f, Typeable1 g, Data (f (g a)), Data a) => Data (ComposeFunc
         _ -> error "gunfold"
     dataTypeOf _ = composeFunctorDataType
     dataCast1 f = gcast1 f
+#endif
 
 -- | The composition of two AD modes is an AD mode in its own right
-newtype ComposeMode f g s a = ComposeMode { runComposeMode :: f (AD g s a) }
+newtype ComposeMode f g a s s' = ComposeMode { runComposeMode :: f (g a s) s'}
 
-composeMode :: AD f s' (AD g s a) -> AD (ComposeMode f g s) s' a
-composeMode (AD a) = AD (ComposeMode a)
+deriving instance Enum (f (g a s) s') => Enum (ComposeMode f g a s s')
+deriving instance Eq (f (g a s) s') => Eq (ComposeMode f g a s s')
+deriving instance Ord (f (g a s) s') => Ord (ComposeMode f g a s s')
+deriving instance Bounded (f (g a s) s') => Bounded (ComposeMode f g a s s')
+deriving instance Num (f (g a s) s') => Num (ComposeMode f g a s s')
+deriving instance Fractional (f (g a s) s') => Fractional (ComposeMode f g a s s')
+deriving instance Floating (f (g a s) s') => Floating (ComposeMode f g a s s')
+deriving instance RealFloat (f (g a s) s') => RealFloat (ComposeMode f g a s s')
+deriving instance RealFrac (f (g a s) s') => RealFrac (ComposeMode f g a s s')
+deriving instance Real (f (g a s) s') => Real (ComposeMode f g a s s')
+deriving instance Erf (f (g a s) s') => Erf (ComposeMode f g a s s')
+deriving instance InvErf (f (g a s) s') => InvErf (ComposeMode f g a s s')
 
-decomposeMode :: AD (ComposeMode f g s) s' a -> AD f s' (AD g s a)
-decomposeMode (AD (ComposeMode a)) = AD a
+type instance Scalar (ComposeMode f g a s s') = a
 
-instance (Primal f, Mode g, Primal g) => Primal (ComposeMode f g s) where
+composeMode :: (f (g a s) s') -> ComposeMode f g a s s'
+composeMode = ComposeMode
+
+decomposeMode :: ComposeMode f g a s s' -> f (g a s) s'
+decomposeMode = runComposeMode
+
+instance (Primal (f (g a s) s'), Mode (g a) s, Primal (g a s), Scalar (f (g a s) s') ~ g a s, Num (g a s), Scalar (g a s) ~ a) => Primal (ComposeMode f g a s s') where
     primal = primal . primal . runComposeMode
 
-instance (Mode f, Mode g) => Mode (ComposeMode f g s) where
+instance (Mode (f (g a s)) s', Mode (g a) s, Scalar (f (g a s) s') ~ g a s, Scalar (g a s) ~ a, Floating (g a s)) => Mode (ComposeMode f g a s) s' where
     auto = ComposeMode . auto . auto
     ComposeMode a <+> ComposeMode b = ComposeMode (a <+> b)
     a *^ ComposeMode b = ComposeMode (auto a *^ b)
@@ -101,84 +119,18 @@ instance (Mode f, Mode g) => Mode (ComposeMode f g s) where
     ComposeMode a ^/ b = ComposeMode (a ^/ auto b)
     ComposeMode a <**> ComposeMode b = ComposeMode (a <**> b)
 
-instance (Mode f, Mode g) => Lifted (ComposeMode f g s) where
-    showsPrec1 n (ComposeMode a) = showsPrec1 n a
-    ComposeMode a ==! ComposeMode b  = a ==! b
-    compare1 (ComposeMode a) (ComposeMode b) = compare1 a b
-    fromInteger1 = ComposeMode . auto . fromInteger1
-    ComposeMode a +! ComposeMode b = ComposeMode (a +! b)
-    ComposeMode a -! ComposeMode b = ComposeMode (a -! b)
-    ComposeMode a *! ComposeMode b = ComposeMode (a *! b)
-    negate1 (ComposeMode a) = ComposeMode (negate1 a)
-    abs1 (ComposeMode a) = ComposeMode (abs1 a)
-    signum1 (ComposeMode a) = ComposeMode (signum1 a)
-    ComposeMode a /! ComposeMode b = ComposeMode (a /! b)
-    recip1 (ComposeMode a) = ComposeMode (recip1 a)
-    fromRational1 = ComposeMode . auto . fromRational1
-    toRational1 (ComposeMode a) = toRational1 a
-    pi1 = ComposeMode pi1
-    exp1 (ComposeMode a) = ComposeMode (exp1 a)
-    log1 (ComposeMode a) = ComposeMode (log1 a)
-    sqrt1 (ComposeMode a) = ComposeMode (sqrt1 a)
-    ComposeMode a **! ComposeMode b = ComposeMode (a **! b)
-    logBase1 (ComposeMode a) (ComposeMode b) = ComposeMode (logBase1 a b)
-    sin1 (ComposeMode a) = ComposeMode (sin1 a)
-    cos1 (ComposeMode a) = ComposeMode (cos1 a)
-    tan1 (ComposeMode a) = ComposeMode (tan1 a)
-    asin1 (ComposeMode a) = ComposeMode (asin1 a)
-    acos1 (ComposeMode a) = ComposeMode (acos1 a)
-    atan1 (ComposeMode a) = ComposeMode (atan1 a)
-    sinh1 (ComposeMode a) = ComposeMode (sinh1 a)
-    cosh1 (ComposeMode a) = ComposeMode (cosh1 a)
-    tanh1 (ComposeMode a) = ComposeMode (tanh1 a)
-    asinh1 (ComposeMode a) = ComposeMode (asinh1 a)
-    acosh1 (ComposeMode a) = ComposeMode (acosh1 a)
-    atanh1 (ComposeMode a) = ComposeMode (atanh1 a)
-    properFraction1 (ComposeMode a) = (b, ComposeMode c) where
-        (b, c) = properFraction1 a
-    truncate1 (ComposeMode a) = truncate1 a
-    round1 (ComposeMode a) = round1 a
-    ceiling1 (ComposeMode a) = ceiling1 a
-    floor1 (ComposeMode a) = floor1 a
-    floatRadix1 (ComposeMode a) = floatRadix1 a
-    floatDigits1 (ComposeMode a) = floatDigits1 a
-    floatRange1 (ComposeMode a) = floatRange1 a
-    decodeFloat1 (ComposeMode a) = decodeFloat1 a
-    encodeFloat1 m e = ComposeMode (encodeFloat1 m e)
-    exponent1 (ComposeMode a) = exponent1 a
-    significand1 (ComposeMode a) = ComposeMode (significand1 a)
-    scaleFloat1 n (ComposeMode a) = ComposeMode (scaleFloat1 n a)
-    isNaN1 (ComposeMode a) = isNaN1 a
-    isInfinite1 (ComposeMode a) = isInfinite1 a
-    isDenormalized1 (ComposeMode a) = isDenormalized1 a
-    isNegativeZero1 (ComposeMode a) = isNegativeZero1 a
-    isIEEE1 (ComposeMode a) = isIEEE1 a
-    atan21 (ComposeMode a) (ComposeMode b) = ComposeMode (atan21 a b)
-    succ1 (ComposeMode a) = ComposeMode (succ1 a)
-    pred1 (ComposeMode a) = ComposeMode (pred1 a)
-    toEnum1 n = ComposeMode (toEnum1 n)
-    fromEnum1 (ComposeMode a) = fromEnum1 a
-    enumFrom1 (ComposeMode a) = map ComposeMode $ enumFrom1 a
-    enumFromThen1 (ComposeMode a) (ComposeMode b) = map ComposeMode $ enumFromThen1 a b
-    enumFromTo1 (ComposeMode a) (ComposeMode b) = map ComposeMode $ enumFromTo1 a b
-    enumFromThenTo1 (ComposeMode a) (ComposeMode b) (ComposeMode c) = map ComposeMode $ enumFromThenTo1 a b c
-    minBound1 = ComposeMode minBound1
-    maxBound1 = ComposeMode maxBound1
-    erf1 (ComposeMode a) = ComposeMode (erf1 a)
-    erfc1 (ComposeMode a) = ComposeMode (erfc1 a)
-    normcdf1 (ComposeMode a) = ComposeMode (normcdf1 a)
-    inverf1 (ComposeMode a) = ComposeMode (inverf1 a)
-    inverfc1 (ComposeMode a) = ComposeMode (inverfc1 a)
-    invnormcdf1 (ComposeMode a) = ComposeMode (invnormcdf1 a)
-
-instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeMode f g s) where
-    typeOf1 tfga = mkTyConApp composeModeTyCon [typeOf1 (fa tfga), typeOf1 (ga tfga)]
-        where fa :: t f (g :: * -> *) s a -> f a
+#if __GLASGOW_HASKELL__ >= 707
+deriving instance Typeable ComposeMode
+deriving instance (Typeable f, Typeable g, Typeable s, Data (f (g a s) s'), Data a) => Data (ComposeMode f g a s s')
+#else
+instance (Typeable2 f, Typeable2 g) => Typeable3 (ComposeMode f g) where
+    typeOf3 tfg = mkTyConApp composeModeTyCon [typeOf2 (fa tfg), typeOf2 (ga tfg)]
+        where fa :: t f (g :: * -> * -> *) a s s' -> f a s'
               fa = undefined
-              ga :: t (f :: * -> *) g s a -> g a
+              ga :: t (f :: * -> * -> *) g a s s'-> g a s
               ga = undefined
 
-instance (Typeable1 f, Typeable1 g, Typeable a) => Typeable (ComposeMode f g s a) where
+instance (Typeable2 f, Typeable2 g, Typeable a, Typeable s, Typeable s') => Typeable (ComposeMode f g a s s') where
     typeOf = typeOfDefault
 
 composeModeTyCon :: TyCon
@@ -197,7 +149,7 @@ composeModeDataType :: DataType
 composeModeDataType = mkDataType "Numeric.AD.Internal.Composition.ComposeMode" [composeModeConstr]
 {-# NOINLINE composeModeDataType #-}
 
-instance (Typeable1 f, Typeable1 g, Data (f (AD g s a)), Data a) => Data (ComposeMode f g s a) where
+instance (Typeable2 f, Typeable2 g, Data (f (g a s) s'), Data a, Typeable s', Typeable s, Data s') => Data (ComposeMode f g a s s') where
     gfoldl f z (ComposeMode a) = z ComposeMode `f` a
     toConstr _ = composeModeConstr
     gunfold k z c = case constrIndex c of
@@ -205,4 +157,5 @@ instance (Typeable1 f, Typeable1 g, Data (f (AD g s a)), Data a) => Data (Compos
         _ -> error "gunfold"
     dataTypeOf _ = composeModeDataType
     dataCast1 f = gcast1 f
+#endif
 

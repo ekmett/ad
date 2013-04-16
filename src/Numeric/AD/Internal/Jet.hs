@@ -1,4 +1,7 @@
 {-# LANGUAGE CPP, TypeOperators, ScopedTypeVariables, FlexibleContexts #-}
+#if __GLASGOW_HASKELL__ >= 707
+{-# LANGUAGE DeriveDataTypeable, StandaloneDeriving #-}
+#endif
 {-# OPTIONS_HADDOCK hide #-}
 -----------------------------------------------------------------------------
 -- |
@@ -25,11 +28,7 @@ import Control.Applicative
 import Data.Foldable
 import Data.Traversable
 import Data.Monoid
-#if MIN_VERSION_base(4,4,0)
-import Data.Typeable (Typeable1(..), TyCon, mkTyCon3, mkTyConApp)
-#else
-import Data.Typeable (Typeable1(..), TyCon, mkTyCon, mkTyConApp)
-#endif
+import Data.Typeable
 import Control.Comonad.Cofree
 
 infixl 3 :-
@@ -83,6 +82,9 @@ jet (a :< as) = a :- dist (jet <$> as)
         dist :: Functor f => f (Jet f a) -> Jet f (f a)
         dist x = (headJet <$> x) :- dist (tailJet <$> x)
 
+#if __GLASGOW_HASKELL__ >= 707
+deriving instance Typeable Jet
+#else
 instance Typeable1 f => Typeable1 (Jet f) where
     typeOf1 tfa = mkTyConApp jetTyCon [typeOf1 (undefined `asArgsType` tfa)]
         where asArgsType :: f a -> t f a -> f a
@@ -95,3 +97,4 @@ jetTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Jet" "Jet"
 jetTyCon = mkTyCon "Numeric.AD.Internal.Jet.Jet"
 #endif
 {-# NOINLINE jetTyCon #-}
+#endif

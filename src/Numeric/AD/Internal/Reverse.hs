@@ -43,7 +43,6 @@ import Data.Proxy
 import Data.Reflection
 import Data.Typeable
 import Language.Haskell.TH hiding (reify)
-import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Internal.Var
@@ -89,25 +88,27 @@ modifyTape p = atomicModifyIORef (getTape (reflect p))
 
 -- | This is used to create a new entry on the chain given a unary function, its derivative with respect to its input,
 -- the variable ID of its input, and the value of its input. Used by 'unary' and 'binary' internally.
-unarily :: forall s a. Reifies s Tape => (a -> a) -> a -> Int -> a -> Reverse s a
+unarily :: forall s a. Reifies s Tape => (a -> a) -> a -> Int -> a -> Reverse a s
 unarily f di i b = Reverse (unsafePerformIO (modifyTape (Proxy :: Proxy s) (un i di))) $! f b
 {-# INLINE unarily #-}
 
 -- | This is used to create a new entry on the chain given a binary function, its derivatives with respect to its inputs,
 -- their variable IDs and values. Used by 'binary' internally.
-binarily :: forall s a. Reifies s Tape => (a -> a -> a) -> a -> a -> Int -> a -> Int -> a -> Reverse s a
+binarily :: forall s a. Reifies s Tape => (a -> a -> a) -> a -> a -> Int -> a -> Int -> a -> Reverse a s
 binarily f di dj i b j c = Reverse (unsafePerformIO (modifyTape (Proxy :: Proxy s) (bin i j di dj))) $! f b c
 {-# INLINE binarily #-}
 
 #ifndef HLINT
-data Reverse s a where
-  Zero :: Reverse s a
-  Lift :: a -> Reverse s a
-  Reverse :: {-# UNPACK #-} !Int -> a -> Reverse s a
+data Reverse a s where
+  Zero :: Reverse a s
+  Lift :: a -> Reverse a s
+  Reverse :: {-# UNPACK #-} !Int -> a -> Reverse a s
   deriving (Show, Typeable)
 #endif
 
-instance (Reifies s Tape, Lifted (Reverse s)) => Mode (Reverse s) where
+type instance Scalar (Reverse a s) = a
+
+instance (Reifies s Tape) => Mode (Reverse a) s where
   isKnownZero Zero = True
   isKnownZero _    = False
 
@@ -124,15 +125,15 @@ instance (Reifies s Tape, Lifted (Reverse s)) => Mode (Reverse s) where
   Zero <**> y      = auto (0 ** primal y)
   _    <**> Zero   = auto 1
   x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
-  x    <**> y      = lift2_ (**) (\z xi yi -> (yi *! z /! xi, z *! log1 xi)) x y
+  x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
-instance Primal (Reverse s) where
+instance Primal (Reverse a s) where
     primal Zero = 0
     primal (Lift a) = a
     primal (Reverse _ a) = a
 
-instance (Reifies s Tape, Lifted (Reverse s)) => Jacobian (Reverse s) where
-    type D (Reverse s) = Id
+instance (Reifies s Tape) => Jacobian (Reverse a) s where
+    type D (Reverse a) = Id a
 
     unary f _         (Zero)   = Lift (f 0)
     unary f _         (Lift a) = Lift (f a)
@@ -166,16 +167,16 @@ instance (Reifies s Tape, Lifted (Reverse s)) => Jacobian (Reverse s) where
             a = f pb pc
             (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
-let s = varT (mkName "s") in
-  deriveLifted (classP ''Reifies [s, conT ''Tape] :) (conT ''Reverse `appT` s)
+let s = VarT (mkName "s") in
+  deriveNumeric (ClassP ''Reifies [s, ConT ''Tape] :) (ConT ''Reverse) s
 
 -- | Helper that extracts the derivative of a chain when the chain was constructed with one variable.
-derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Reverse s) r a -> a
+derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> Reverse a s -> a
 derivativeOf _ = sum . partials
 {-# INLINE derivativeOf #-}
 
 -- | Helper that extracts both the primal and derivative of a chain when the chain was constructed with one variable.
-derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> AD (Reverse s) r a -> (a, a)
+derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> Reverse a s -> (a, a)
 derivativeOf' p r = (primal r, derivativeOf p r)
 {-# INLINE derivativeOf' #-}
 
@@ -196,11 +197,11 @@ backPropagate k (Binary i j g h xs) ss = do
   (backPropagate $! k - 1) xs ss
 
 -- | Extract the partials from the current chain for a given AD variable.
-{-# SPECIALIZE partials :: Reifies s Tape => AD (Reverse s) r Double -> [Double] #-}
-partials :: forall r s a. (Reifies s Tape, Num a) => AD (Reverse s) r a -> [a]
-partials (AD Zero)        = []
-partials (AD (Lift _))    = []
-partials (AD (Reverse k _)) = map (sensitivities !) [0..vs] where
+{-# SPECIALIZE partials :: Reifies s Tape => Reverse Double s -> [Double] #-}
+partials :: forall s a. (Reifies s Tape, Num a) => Reverse a s -> [a]
+partials Zero        = []
+partials (Lift _)    = []
+partials (Reverse k _) = map (sensitivities !) [0..vs] where
    Head n t = unsafePerformIO $ readIORef (getTape (reflect (Proxy :: Proxy s)))
    tk = dropCells (n - k) t
    (vs,sensitivities) = runST $ do
@@ -211,12 +212,12 @@ partials (AD (Reverse k _)) = map (sensitivities !) [0..vs] where
      return (v, as)
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.
-partialArrayOf :: (Reifies s Tape, Num a) => Proxy s -> (Int, Int) -> AD (Reverse s) r a -> Array Int a
+partialArrayOf :: (Reifies s Tape, Num a) => Proxy s -> (Int, Int) -> Reverse a s -> Array Int a
 partialArrayOf _ vbounds = accumArray (+) 0 vbounds . zip [0..] . partials
 {-# INLINE partialArrayOf #-}
 
 -- | Return an 'IntMap' of sparse partials
-partialMapOf :: (Reifies s Tape, Num a) => Proxy s -> AD (Reverse s) r a -> IntMap a
+partialMapOf :: (Reifies s Tape, Num a) => Proxy s -> Reverse a s -> IntMap a
 partialMapOf _ = fromDistinctAscList . zip [0..] . partials
 {-# INLINE partialMapOf #-}
 
@@ -227,7 +228,7 @@ reifyTape vs k = unsafePerformIO $ do
   return (reify (Tape h) k)
 {-# NOINLINE reifyTape #-}
 
-instance Var (Reverse s) where
+instance Var (Reverse a s) where
     var a v = Reverse v a
     varId (Reverse v _) = v
     varId _ = error "varId: not a Var"

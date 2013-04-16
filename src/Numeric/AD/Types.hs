@@ -13,8 +13,6 @@ module Numeric.AD.Types
     (
     -- * AD modes
       Mode(..)
-    -- * AD variables
-    , AD(..)
     -- * Jets
     , Jet(..)
     , headJet
@@ -25,26 +23,25 @@ module Numeric.AD.Types
     ) where
 
 import Numeric.AD.Internal.Identity
-import Numeric.AD.Internal.Types
 import Numeric.AD.Internal.Jet
 import Numeric.AD.Internal.Classes
 
 -- | Evaluate a scalar-to-scalar function in the trivial identity AD mode.
-lowerUU :: (forall s. AD Id s a -> AD Id s a) -> a -> a
+lowerUU :: (forall s. Id a s -> Id a s) -> a -> a
 lowerUU f = unprobe . f . probe
 {-# INLINE lowerUU #-}
 
 -- | Evaluate a scalar-to-nonscalar function in the trivial identity AD mode.
-lowerUF :: (forall s. AD Id s a -> f (AD Id s a)) -> a -> f a
+lowerUF :: (forall s. Id a s -> f (Id a s)) -> a -> f a
 lowerUF f = unprobed . f . probe
 {-# INLINE lowerUF #-}
 
 -- | Evaluate a nonscalar-to-scalar function in the trivial identity AD mode.
-lowerFU :: (forall s. f (AD Id s a) -> AD Id s a) -> f a -> a
+lowerFU :: (forall s. f (Id a s) -> Id a s) -> f a -> a
 lowerFU f = unprobe . f . probed
 {-# INLINE lowerFU #-}
 
 -- | Evaluate a nonscalar-to-nonscalar function in the trivial identity AD mode.
-lowerFF :: (forall s. f (AD Id s a) -> g (AD Id s a)) -> f a -> g a
+lowerFF :: (forall s. f (Id a s) -> g (Id a s)) -> f a -> g a
 lowerFF f = unprobed . f . probed
 {-# INLINE lowerFF #-}

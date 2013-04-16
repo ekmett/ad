@@ -1,5 +1,5 @@
 name:         ad
-version:      3.4
+version:      4.0
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2013,
@@ -141,7 +141,6 @@ library
     Numeric.AD.Internal.Composition
 
   other-modules:
-    Numeric.AD.Internal.Types
     Numeric.AD.Internal.Jet
     Numeric.AD.Internal.Identity
 
@@ -166,3 +165,10 @@ test-suite doctests
   if impl(ghc<7.6)
     ghc-options: -Werror
   hs-source-dirs: tests
+
+benchmark blackscholes
+  type: exitcode-stdio-1.0
+  main-is: BlackScholes.hs
+  hs-source-dirs: bench
+  build-depends: base, ad, erf, criterion
+  ghc-options: -fspec-constr -fdicts-cheap -O2

@@ -79,6 +79,11 @@ tangents (Tower []) = Tower []
 tangents (Tower (_:xs)) = Tower xs
 {-# INLINE tangents #-}
 
+truncated :: Tower a -> Bool
+truncated (Tower []) = True
+truncated _ = False
+{-# INLINE truncated #-}
+
 bundle :: a -> Tower a -> Tower a
 bundle a (Tower as) = Tower (a:as)
 {-# INLINE bundle #-}
@@ -129,8 +134,16 @@ instance Lifted Tower => Jacobian Tower where
         a = bundle (f (primal b)) (tangents b *! df a b)
 
     binary f dadb dadc b c = bundle (f (primal b) (primal c)) (tangents b *! dadb +! tangents c *! dadc)
-    lift2 f df b c = bundle (f (primal b) (primal c)) (tangents b *! dadb +! tangents c *! dadc) where
-        (dadb, dadc) = df b c
+    lift2 f df b c =
+      bundle (f (primal b) (primal c)) tana
+      where (dadb, dadc) = df b c
+            tanb = tangents b
+            tanc = tangents c
+            tana = case (truncated tanb, truncated tanc) of
+              (False, False) -> tanb *! dadb +! tanc *! dadc
+              (True, False) -> tanc *! dadc
+              (False, True) -> tanb *! dadb
+              (True, True) -> zero
     lift2_ f df b c = a where
         a0 = f (primal b) (primal c)
         da = tangents b *! dadb +! tangents c *! dadc

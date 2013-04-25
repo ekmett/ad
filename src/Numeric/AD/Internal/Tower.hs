@@ -1,7 +1,4 @@
 {-# LANGUAGE CPP, Rank2Types, TypeFamilies, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TemplateHaskell, DeriveDataTypeable #-}
-#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 706
-{-# LANGUAGE InstanceSigs #-}
-#endif
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
@@ -119,23 +116,16 @@ instance (Num a) => Mode (Tower s a) where
     x        <**> Tower [y] = lift1 (**y) (\z -> y *^ z <**> Tower [y-1]) x
     x        <**> y         = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
-    (<+>) = towerPlus
-    -- Tower [] <+> bs = bs
-    -- as <+> Tower [] = as
-    -- Tower (a:as) <+> Tower (b:bs) = Tower (c:cs)
-    --     where
-    --         c = a + b
-    --         Tower cs = Tower as <+> Tower bs
+    Tower [] <+> bs = bs
+    as <+> Tower [] = as
+    Tower (a:as) <+> Tower (b:bs) = Tower (c:cs)
+        where
+            c = a + b
+            Tower cs = Tower as <+> Tower bs
 
     a *^ Tower bs = Tower (map (a*) bs)
     Tower as ^* b = Tower (map (*b) as)
     Tower as ^/ b = Tower (map (/b) as)
-
-towerPlus :: Num a => Tower s a -> Tower s a -> Tower s a
-towerPlus (Tower []) bs = bs
-towerPlus as (Tower []) = as
-towerPlus (Tower (a : as)) (Tower (b : bs)) =
-    Tower ((a + b) : getTower (Tower as <+> Tower bs))
 
 instance Num a => Jacobian (Tower s a) where
     type D (Tower s a) = Tower s a

@@ -48,10 +48,10 @@ newtype ComposeMode f a = ComposeMode { decomposeMode :: f a }
 
 type instance Scalar (ComposeMode f a) = Scalar a
 
-instance (Lifted f, Eq a) => Eq (ComposeMode f a) where
+instance (Lifted (f a), Eq a, Num a, Scalar (f a) ~ a) => Eq (ComposeMode f a) where
   ComposeMode a == ComposeMode b = liftEq [a] $ a == b
 
-instance (Lifted f, Enum a) => Enum (ComposeMode f a) where
+instance (Lifted (f a), Enum a, Num a, Scalar (f a) ~ a) => Enum (ComposeMode f a) where
   succ (ComposeMode a) = ComposeMode $ liftedEnum (succ a)
   pred (ComposeMode a) = ComposeMode $ liftedEnum (succ a)
   fromEnum (ComposeMode a) = liftEnum [a] (fromEnum a)
@@ -61,14 +61,14 @@ instance (Lifted f, Enum a) => Enum (ComposeMode f a) where
   enumFromThen (ComposeMode a) (ComposeMode b) = ComposeMode <$> liftEnum [a] (enumFromThen a b)
   enumFromThenTo (ComposeMode a) (ComposeMode b) (ComposeMode c) = ComposeMode <$> liftEnum [a] (enumFromThenTo a b c)
 
-instance (Lifted f, Ord a) => Ord (ComposeMode f a) where
+instance (Lifted (f a), Ord a, Num a, Scalar (f a) ~ a) => Ord (ComposeMode f a) where
   compare (ComposeMode a) (ComposeMode b) = liftOrd [a] $ compare a b
 
-instance (Lifted f, Bounded a) => Bounded (ComposeMode f a) where
+instance (Lifted (f a), Bounded a, Num a, Scalar (f a) ~ a) => Bounded (ComposeMode f a) where
   minBound = ComposeMode $ liftedBounded minBound
   maxBound = ComposeMode $ liftedBounded minBound
 
-instance (Lifted f, Num a) => Num (ComposeMode f a) where
+instance (Lifted (f a), Num a, Scalar (f a) ~ a) => Num (ComposeMode f a) where
   ComposeMode a + ComposeMode b = ComposeMode $ liftedNum (a + b)
   ComposeMode a - ComposeMode b = ComposeMode $ liftedNum (a - b)
   ComposeMode a * ComposeMode b = ComposeMode $ liftedNum (a * b)
@@ -76,15 +76,15 @@ instance (Lifted f, Num a) => Num (ComposeMode f a) where
   signum (ComposeMode a) = ComposeMode $ liftedNum (signum a)
   fromInteger i = ComposeMode $ liftedNum $ fromInteger i
 
-instance (Lifted f, Real a) => Real (ComposeMode f a) where
+instance (Lifted (f a), Real a, Scalar (f a) ~ a) => Real (ComposeMode f a) where
   toRational (ComposeMode a) = liftReal [a] $ toRational a
 
-instance (Lifted f, Fractional a) => Fractional (ComposeMode f a) where
+instance (Lifted (f a), Fractional a, Scalar (f a) ~ a) => Fractional (ComposeMode f a) where
   ComposeMode a / ComposeMode b = ComposeMode $ liftedFractional (a / b)
   recip (ComposeMode a) = ComposeMode $ liftedFractional (recip a)
   fromRational r = ComposeMode $ liftedFractional $ fromRational r
 
-instance (Lifted f, RealFrac a) => RealFrac (ComposeMode f a) where
+instance (Lifted (f a), RealFrac a, Scalar (f a) ~ a) => RealFrac (ComposeMode f a) where
   properFraction (ComposeMode a) = liftRealFrac [a] $ case properFraction a of
     (i, b) -> (i, ComposeMode b)
   truncate (ComposeMode a) = liftRealFrac [a] (truncate a)
@@ -92,7 +92,7 @@ instance (Lifted f, RealFrac a) => RealFrac (ComposeMode f a) where
   ceiling  (ComposeMode a) = liftRealFrac [a] (ceiling a)
   floor    (ComposeMode a) = liftRealFrac [a] (floor a)
 
-instance (Lifted f, Floating a) => Floating (ComposeMode f a) where
+instance (Lifted (f a), Floating a, Scalar (f a) ~ a) => Floating (ComposeMode f a) where
   pi = ComposeMode $ liftedFloating pi
   exp (ComposeMode a) = ComposeMode $ liftedFloating (exp a)
   sqrt (ComposeMode a) = ComposeMode $ liftedFloating (sqrt a)
@@ -112,14 +112,19 @@ instance (Lifted f, Floating a) => Floating (ComposeMode f a) where
   atanh (ComposeMode a) = ComposeMode $ liftedFloating (atanh a)
   acosh (ComposeMode a) = ComposeMode $ liftedFloating (acosh a)
 
-instance (Lifted f, Erf a) => Erf (ComposeMode f a) where
+instance (Lifted (f a), Erf a, Scalar (f a) ~ a) => Erf (ComposeMode f a) where
   erf (ComposeMode a) = ComposeMode $ liftedErf (erf a)
   erfc (ComposeMode a) = ComposeMode $ liftedErf (erfc a)
 
-instance (Lifted f, Primal a) => Primal (ComposeMode f a) where
+instance (Lifted (f a), InvErf a, Scalar (f a) ~ a) => InvErf (ComposeMode f a) where
+  inverf (ComposeMode a) = ComposeMode $ liftedInvErf (inverf a)
+  inverfc (ComposeMode a) = ComposeMode $ liftedInvErf (inverfc a)
+  invnormcdf (ComposeMode a) = ComposeMode $ liftedInvErf (invnormcdf a)
+
+instance (Lifted (f a), Primal a, Num a, Scalar (f a) ~ a) => Primal (ComposeMode f a) where
   primal (ComposeMode a) = liftPrimal [a] $ primal $ primal a
 
-instance (Lifted f, RealFloat a) => RealFloat (ComposeMode f a) where
+instance (Lifted (f a), RealFloat a, Scalar (f a) ~ a) => RealFloat (ComposeMode f a) where
   floatRadix (ComposeMode a) = liftRealFloat [a] (floatRadix a)
   floatDigits (ComposeMode a) = liftRealFloat [a] (floatDigits a)
   floatRange (ComposeMode a) = liftRealFloat [a] (floatRange a)
@@ -136,13 +141,13 @@ instance (Lifted f, RealFloat a) => RealFloat (ComposeMode f a) where
   atan2 (ComposeMode a) (ComposeMode b) = ComposeMode $ liftedRealFloat (atan2 a b)
 
 
-instance (Lifted f, Mode a) => Mode (ComposeMode f a) where
+instance (Lifted (f a), Lifted a, Mode a, Num a, Scalar (f a) ~ a, Num (Scalar a)) => Mode (ComposeMode f a) where
   auto a = ComposeMode $ liftedMode $ auto (auto a)
   ComposeMode a <+> ComposeMode b = ComposeMode $ liftedMode (a <+> b)
   a *^ ComposeMode b = ComposeMode $ liftedMode (auto a *^ b)
   ComposeMode a ^* b = ComposeMode $ liftedMode (a ^* auto b)
---  ComposeMode a ^/ b = ComposeMode $ liftedMode (a ^/ auto b)
---  ComposeMode a <**> ComposeMode b = ComposeMode $ liftedMode $ liftedFloating $ a <**> b
+  -- ComposeMode a ^/ b = ComposeMode $ liftedMode (a ^/ auto b)
+  ComposeMode a <**> ComposeMode b = ComposeMode $ liftedMode $ liftedFloating' $ a <**> b
 
 {-
 instance (Primal (f a), Primal a, a ~ Scalar (f a)) => Primal (ComposeMode f a) where

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts, TypeFamilies, UndecidableInstances #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |
@@ -61,11 +61,11 @@ data Variable a = Variable a {-# UNPACK #-} !Int
 
 type instance Scalar (Variable a) = a
 
-instance Var (Variable a) where
+instance (Num a) => Var (Variable a) where
   var = Variable
   varId (Variable _ i) = i
 
-instance Primal (Variable a) where
+instance (Num a) => Primal (Variable a) where
   primal (Variable a _) = a
 
 vary :: Var f => Variable (Scalar f) -> f

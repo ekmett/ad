@@ -58,7 +58,7 @@ import Numeric.AD.Internal.Var
 -- >>> grad (\[x,y,z] -> x*y+z) [1,2,3]
 -- [2,1,1]
 
-grad :: (Traversable f, Num a) => (forall s. f (Kahn a s) -> Kahn a s) -> f a -> f a
+grad :: (Traversable f, Num a) => (forall s. f (Kahn s a) -> Kahn s a) -> f a -> f a
 grad f as = unbind vs (partialArray bds $ f vs)
     where (vs,bds) = bind as
 {-# INLINE grad #-}
@@ -67,7 +67,7 @@ grad f as = unbind vs (partialArray bds $ f vs)
 --
 -- >>> grad' (\[x,y,z] -> 4*x*exp y+cos z) [1,2,3]
 -- (28.566231899122155,[29.5562243957226,29.5562243957226,-0.1411200080598672])
-grad' :: (Traversable f, Num a) => (forall s. f (Kahn a s) -> Kahn a s) -> f a -> (a, f a)
+grad' :: (Traversable f, Num a) => (forall s. f (Kahn s a) -> Kahn s a) -> f a -> (a, f a)
 grad' f as = (primal r, unbind vs $ partialArray bds r)
     where (vs, bds) = bind as
           r = f vs
@@ -82,7 +82,7 @@ grad' f as = (primal r, unbind vs $ partialArray bds r)
 -- @
 --
 --
-gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (Kahn a s) -> Kahn a s) -> f a -> f b
+gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (Kahn s a) -> Kahn s a) -> f a -> f b
 gradWith g f as = unbindWith g vs (partialArray bds $ f vs)
     where (vs,bds) = bind as
 {-# INLINE gradWith #-}
@@ -91,7 +91,7 @@ gradWith g f as = unbindWith g vs (partialArray bds $ f vs)
 -- the gradient is combined element-wise with the argument using the function @g@.
 --
 -- @'grad'' == 'gradWith'' (\_ dx -> dx)@
-gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (Kahn a s) -> Kahn a s) -> f a -> (a, f b)
+gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (Kahn s a) -> Kahn s a) -> f a -> (a, f b)
 gradWith' g f as = (primal r, unbindWith g vs $ partialArray bds r)
     where (vs, bds) = bind as
           r = f vs
@@ -104,7 +104,7 @@ gradWith' g f as = (primal r, unbindWith g vs $ partialArray bds r)
 --
 -- >>> jacobian (\[x,y] -> [exp y,cos x,x+y]) [1,2]
 -- [[0.0,7.38905609893065],[-0.8414709848078965,0.0],[1.0,1.0]]
-jacobian :: (Traversable f, Functor g, Num a) => (forall s. f (Kahn a s) -> g (Kahn a s)) -> f a -> g (f a)
+jacobian :: (Traversable f, Functor g, Num a) => (forall s. f (Kahn s a) -> g (Kahn s a)) -> f a -> g (f a)
 jacobian f as = unbind vs . partialArray bds <$> f vs where
     (vs, bds) = bind as
 {-# INLINE jacobian #-}
@@ -115,7 +115,7 @@ jacobian f as = unbind vs . partialArray bds <$> f vs where
 --
 -- ghci> jacobian' (\[x,y] -> [y,x,x*y]) [2,1]
 -- [(1,[0,1]),(2,[1,0]),(2,[1,2])]
-jacobian' :: (Traversable f, Functor g, Num a) => (forall s. f (Kahn a s) -> g (Kahn a s)) -> f a -> g (a, f a)
+jacobian' :: (Traversable f, Functor g, Num a) => (forall s. f (Kahn s a) -> g (Kahn s a)) -> f a -> g (a, f a)
 jacobian' f as = row <$> f vs where
     (vs, bds) = bind as
     row a = (primal a, unbind vs (partialArray bds a))
@@ -129,7 +129,7 @@ jacobian' f as = row <$> f vs where
 -- 'jacobian' = 'jacobianWith' (\_ dx -> dx)
 -- 'jacobianWith' 'const' = (\f x -> 'const' x '<$>' f x)
 -- @
-jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. f (Kahn a s) -> g (Kahn a s)) -> f a -> g (f b)
+jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. f (Kahn s a) -> g (Kahn s a)) -> f a -> g (f b)
 jacobianWith g f as = unbindWith g vs . partialArray bds <$> f vs where
     (vs, bds) = bind as
 {-# INLINE jacobianWith #-}
@@ -140,7 +140,7 @@ jacobianWith g f as = unbindWith g vs . partialArray bds <$> f vs where
 -- Instead of returning the Jacobian matrix, the elements of the matrix are combined with the input using the @g@.
 --
 -- @'jacobian'' == 'jacobianWith'' (\_ dx -> dx)@
-jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. f (Kahn a s) -> g (Kahn a s)) -> f a -> g (a, f b)
+jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. f (Kahn s a) -> g (Kahn s a)) -> f a -> g (a, f b)
 jacobianWith' g f as = row <$> f vs where
     (vs, bds) = bind as
     row a = (primal a, unbindWith g vs (partialArray bds a))
@@ -153,7 +153,7 @@ jacobianWith' g f as = row <$> f vs where
 --
 -- >>> cos 0
 -- 1.0
-diff :: Num a => (forall s. Kahn a s -> Kahn a s) -> a -> a
+diff :: Num a => (forall s. Kahn s a -> Kahn s a) -> a -> a
 diff f a = derivative $ f (var a 0)
 {-# INLINE diff #-}
 
@@ -163,7 +163,7 @@ diff f a = derivative $ f (var a 0)
 --
 -- >>> diff' sin 0
 -- (0.0,1.0)
-diff' :: Num a => (forall s. Kahn a s -> Kahn a s) -> a -> (a, a)
+diff' :: Num a => (forall s. Kahn s a -> Kahn s a) -> a -> (a, a)
 diff' f a = derivative' $ f (var a 0)
 {-# INLINE diff' #-}
 
@@ -171,7 +171,7 @@ diff' f a = derivative' $ f (var a 0)
 --
 -- >>> diffF (\a -> [sin a, cos a]) 0
 -- [1.0,0.0]
-diffF :: (Functor f, Num a) => (forall s. Kahn a s -> f (Kahn a s)) -> a -> f a
+diffF :: (Functor f, Num a) => (forall s. Kahn s a -> f (Kahn s a)) -> a -> f a
 diffF f a = derivative <$> f (var a 0)
 {-# INLINE diffF #-}
 
@@ -180,7 +180,7 @@ diffF f a = derivative <$> f (var a 0)
 --
 -- >>> diffF' (\a -> [sin a, cos a]) 0
 -- [(0.0,1.0),(1.0,0.0)]
-diffF' :: (Functor f, Num a) => (forall s. Kahn a s -> f (Kahn a s)) -> a -> f (a, a)
+diffF' :: (Functor f, Num a) => (forall s. Kahn s a -> f (Kahn s a)) -> a -> f (a, a)
 diffF' f a = derivative' <$> f (var a 0)
 {-# INLINE diffF' #-}
 
@@ -191,8 +191,8 @@ diffF' f a = derivative' <$> f (var a 0)
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
 -- [[0,1],[1,0]]
-hessian :: (Traversable f, Num a) => (forall s s'. f (ComposeMode Kahn Kahn a s s') -> (ComposeMode Kahn Kahn a s s')) -> f a -> f (f a)
-hessian f = jacobian (grad (decomposeMode . f . fmap composeMode))
+hessian :: (Traversable f, Num a) => (forall s s'. f (ComposeMode (Kahn s) (Kahn s' a)) -> (ComposeMode (Kahn s) (Kahn s' a))) -> f a -> f (f a)
+hessian f = jacobian (grad (decomposeMode . f . fmap ComposeMode))
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the kahn-mode Jacobian of the kahn-mode Jacobian of the function.
 --
@@ -200,6 +200,6 @@ hessian f = jacobian (grad (decomposeMode . f . fmap composeMode))
 --
 -- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
-hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. f (ComposeMode Kahn Kahn a s s') -> g (ComposeMode Kahn Kahn a s s')) -> f a -> g (f (f a))
-hessianF f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap composeMode))
+hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. f (ComposeMode (Kahn s) (Kahn s' a)) -> g (ComposeMode (Kahn s) (Kahn s' a))) -> f a -> g (f (f a))
+hessianF f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap ComposeMode))
 

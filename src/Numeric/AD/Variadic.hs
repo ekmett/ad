@@ -21,8 +21,8 @@ module Numeric.AD.Variadic
     -- * Reverse-mode variadic gradient
       Grad , vgrad, vgrad'
     -- * Sparse forward mode variadic jet
-    , Grads, vgrads
+    , Grads, -- vgrads
     ) where
 
 import Numeric.AD.Variadic.Kahn
-import Numeric.AD.Variadic.Sparse (Grads, vgrads)
+import Numeric.AD.Variadic.Sparse (Grads, {-vgrads-})

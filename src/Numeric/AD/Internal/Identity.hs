@@ -24,37 +24,37 @@ import Data.Number.Erf
 import Data.Typeable (Typeable)
 import Numeric.AD.Internal.Classes
 
-newtype Id a s = Id { runId :: a } deriving
+newtype Id s a = Id { runId :: a } deriving
     (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable, Erf, InvErf)
 
-type instance Scalar (Id a s) = a
+type instance Scalar (Id s a) = a
 
-probe :: a -> Id a s
+probe :: a -> Id s a
 probe = Id
 
-unprobe :: Id a s -> a
+unprobe :: Id s a -> a
 unprobe = runId
 
-pid :: f a -> f (Id a s)
+pid :: f a -> f (Id s a)
 pid = iso
 
-unpid :: f (Id a s) -> f a
+unpid :: f (Id s a) -> f a
 unpid = osi
 
-probed :: f a -> f (Id a s)
+probed :: f a -> f (Id s a)
 probed = pid
 
-unprobed :: f (Id a s) -> f a
+unprobed :: f (Id s a) -> f a
 unprobed = unpid
 
-instance Mode (Id a) s where
+instance Num a => Mode (Id s a) where
     auto = Id
     Id a ^* b = Id (a * b)
     a *^ Id b = Id (a * b)
     Id a <+> Id b = Id (a + b)
     Id a <**> Id b = Id (a ** b)
 
-instance Primal (Id a s) where
+instance Num a => Primal (Id s a) where
     primal (Id a) = a
 
 -- instance Erf a => Erf (Id a) where

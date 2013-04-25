@@ -19,8 +19,8 @@
 module Numeric.AD.Variadic.Sparse
     (
     -- * Unsafe Variadic Gradient
-      Grad , vgrad, vgrad'
-    , Grads, vgrads
+      Grad -- , vgrad, vgrad'
+    , Grads -- , vgrads
     ) where
 
 import Numeric.AD.Internal.Sparse

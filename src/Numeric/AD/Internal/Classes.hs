@@ -19,6 +19,7 @@ module Numeric.AD.Internal.Classes
       Mode(..)
     , one
     -- * Automatically Deriving AD
+    , Lifted(..)
     , Jacobian(..)
     , Primal(..)
     , deriveNumeric
@@ -29,9 +30,58 @@ module Numeric.AD.Internal.Classes
 import Control.Applicative ((<$>), pure)
 import Control.Monad
 import Data.Number.Erf
+import Data.Proxy
 import Language.Haskell.TH.Syntax
 
-type family Scalar t :: *
+type family Scalar t
+
+class Lifted g where
+  liftBounded    :: (a ~ Scalar g, Bounded a, Num a) => p (g) -> (Bounded g    => r) -> r
+  liftEnum       :: (a ~ Scalar g, Enum a, Num a) => p (g) -> (Enum (g)       => r) -> r
+  liftEq         :: (a ~ Scalar g, Eq   a, Num a) => p (g) -> (Eq (g)         => r) -> r
+  liftOrd        :: (a ~ Scalar g, Ord  a, Num a) => p (g) -> (Ord (g)        => r) -> r
+  liftNum        :: (a ~ Scalar g, Num a)        => p (g) -> (Num (g)        => r) -> r
+  liftFractional :: (a ~ Scalar g, Fractional a) => p (g) -> (Fractional (g) => r) -> r
+  liftFloating   :: (a ~ Scalar g, Floating a)   => p (g) -> (Floating (g)   => r) -> r
+  liftRealFloat  :: (a ~ Scalar g, RealFloat a)  => p (g) -> (RealFloat (g)  => r) -> r
+  liftRealFrac   :: (a ~ Scalar g, RealFrac a)   => p (g) -> (RealFrac (g)   => r) -> r
+  liftReal       :: (a ~ Scalar g, Real a)       => p (g) -> (Real (g)       => r) -> r
+  liftErf        :: (a ~ Scalar g, Erf a)        => p (g) -> (Erf (g)        => r) -> r
+  liftInvErf     :: (a ~ Scalar g, InvErf a)     => p (g) -> (InvErf (g)     => r) -> r
+  liftMode       :: (a ~ Scalar g, Mode a, Num a)       => p (g) -> (Mode (g) => r) -> r
+  liftPrimal     :: (a ~ Scalar g, Primal a, Num a)     => p (g) -> (Primal (g) => r) -> r
+  liftJacobian   :: (a ~ Scalar g, Jacobian a, Num a)   => p (g) -> (Jacobian (g) => r) -> r
+  -- liftScalar     ::                 p (f a) -> (Scalar (f a) ~ a => r) -> r
+
+  liftedBounded :: forall a. (a ~ Scalar g, Bounded a, Num a) => (Bounded (g) => g) -> g
+  liftedBounded = liftBounded (Proxy :: Proxy (g))
+
+  liftedNum :: forall a. (Num a, a ~ Scalar g) => (Num (g) => g) -> g
+  liftedNum = liftNum (Proxy :: Proxy (g))
+
+  liftedEnum :: forall a. (a ~ Scalar g, Enum a, Num a) => (Enum (g) => g) -> g
+  liftedEnum = liftEnum (Proxy :: Proxy (g))
+
+  liftedFractional :: forall a. (a ~ Scalar g, Fractional a) => (Fractional (g) => g) -> g
+  liftedFractional = liftFractional (Proxy :: Proxy (g))
+
+  liftedFloating :: forall a. (a ~ Scalar g, Floating a) => (Floating (g) => g) -> g
+  liftedFloating = liftFloating (Proxy :: Proxy (g))
+
+  liftedFloating' :: forall a h. (a ~ Scalar g, Floating a) => (Floating (g) => h g) -> h g
+  liftedFloating' = liftFloating (Proxy :: Proxy (g))
+
+  liftedRealFloat :: forall a. (a ~ Scalar g, RealFloat a) => (RealFloat (g) => g) -> g
+  liftedRealFloat = liftRealFloat (Proxy :: Proxy (g))
+
+  liftedErf :: forall a. (a ~ Scalar g, Erf a) => (Erf (g) => g) -> g
+  liftedErf = liftErf (Proxy :: Proxy (g))
+
+  liftedInvErf :: forall a. (a ~ Scalar g, InvErf a) => (InvErf (g) => g) -> g
+  liftedInvErf = liftInvErf (Proxy :: Proxy (g))
+
+  liftedMode :: forall a. (a ~ Scalar g, Mode a, Num a) => (Mode (g) => g) -> g
+  liftedMode = liftMode (Proxy :: Proxy (g))
 
 class Iso a b where
     iso :: f a -> f b
@@ -47,43 +97,43 @@ infixl 7 ^*
 infixr 7 ^/
 infixr 8 <**>
 
-class Mode t s where
+class (Num (Scalar t)) => Mode t where
     -- | allowed to return False for items with a zero derivative, but we'll give more NaNs than strictly necessary
-    isKnownConstant :: t s -> Bool
+    isKnownConstant :: t -> Bool
     isKnownConstant _ = False
 
     -- | allowed to return False for zero, but we give more NaN's than strictly necessary then
-    isKnownZero :: Num (Scalar (t s)) => t s -> Bool
+    isKnownZero :: t -> Bool
     isKnownZero _ = False
 
     -- | Embed a constant
-    auto  :: Num (Scalar (t s)) => Scalar (t s) -> t s
+    auto  :: Scalar t -> t
 
     -- | Vector sum
-    (<+>) :: Num (Scalar (t s)) => t s -> t s -> t s
+    (<+>) :: Num (Scalar t) => t -> t -> t
 
     -- | Scalar-vector multiplication
-    (*^) :: Num (Scalar (t s)) => Scalar (t s) -> t s -> t s
+    (*^) :: Scalar t -> t -> t
 
     -- | Vector-scalar multiplication
-    (^*) :: Num (Scalar (t s)) => t s -> Scalar (t s) -> t s
+    (^*) :: t -> Scalar t -> t
 
     -- | Scalar division
-    (^/) :: Fractional (Scalar (t s)) => t s -> Scalar (t s) -> t s
+    (^/) :: (Num t, Fractional (Scalar t)) => t -> Scalar t -> t
 
     -- | Exponentiation, this should be overloaded if you can figure out anything about what is constant!
-    (<**>) :: Floating (Scalar (t s)) => t s -> t s -> t s
+    (<**>) :: (Floating (Scalar t)) => t -> t -> t
 
     -- default (<**>) :: (Jacobian t, Floating (D t), Floating (Scalar t)) => t -> t -> t
     -- x <**> y = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
     -- | > 'zero' = 'lift' 0
-    zero :: Num (Scalar (t s)) => t s
+    zero :: t
 
 #ifndef HLINT
-    default (*^) :: (Num (t s), Num (Scalar (t s))) => Scalar (t s) -> t s -> t s
+    default (*^) :: Num t => Scalar t -> t -> t
     a *^ b = auto a * b
-    default (^*) :: (Num (t s), Num (Scalar (t s))) => t s -> Scalar (t s) -> t s
+    default (^*) :: Num t => t -> Scalar t -> t
     a ^* b = a * auto b
 #endif
 
@@ -91,11 +141,11 @@ class Mode t s where
 
     zero = auto 0
 
-one :: (Mode t s, Num (Scalar (t s))) => t s
+one :: Mode t => t
 one = auto 1
 {-# INLINE one #-}
 
-negOne :: (Mode t s, Num (Scalar (t s))) => t s
+negOne :: Mode t => t
 negOne = auto (-1)
 {-# INLINE negOne #-}
 
@@ -109,38 +159,38 @@ negOne = auto (-1)
 -- by the universal quantification on the various combinators we expose.
 
 class Primal t where
-    primal :: Num (Scalar t) => t -> Scalar t
+    primal :: t -> Scalar t
 
 -- | 'Jacobian' is used by 'deriveMode' but is not exposed
 -- via 'Mode' to prevent its abuse by end users
 -- via the 'AD' data type.
-class (Mode t s, Mode (D t) s) => Jacobian t s where
-    type D t :: * -> *
+class (Mode t, Mode (D t), Num (D t)) => Jacobian t where
+    type D t :: *
 
-    unary  :: (Num a, a ~ Scalar (t s)) => (a -> a) -> D t s -> t s -> t s
-    lift1  :: (Num a, a ~ Scalar (t s)) => (a -> a) -> (D t s -> D t s) -> t s -> t s
-    lift1_ :: (Num a, a ~ Scalar (t s)) => (a -> a) -> (D t s -> D t s -> D t s) -> t s -> t s
+    unary  :: (Scalar t -> Scalar t) -> D t -> t -> t
+    lift1  :: (Scalar t -> Scalar t) -> (D t -> D t) -> t -> t
+    lift1_ :: (Scalar t -> Scalar t) -> (D t -> D t -> D t) -> t -> t
 
-    binary :: (Num a, a ~ Scalar (t s)) => (a -> a -> a) -> D t s -> D t s -> t s -> t s -> t s
-    lift2  :: (Num a, a ~ Scalar (t s)) => (a -> a -> a) -> (D t s -> D t s -> (D t s, D t s)) -> t s -> t s -> t s
-    lift2_ :: (Num a, a ~ Scalar (t s)) => (a -> a -> a) -> (D t s -> D t s -> D t s -> (D t s, D t s)) -> t s -> t s -> t s
+    binary :: (Scalar t -> Scalar t -> Scalar t) -> D t -> D t -> t -> t -> t
+    lift2  :: (Scalar t -> Scalar t -> Scalar t) -> (D t -> D t -> (D t, D t)) -> t -> t -> t
+    lift2_ :: (Scalar t -> Scalar t -> Scalar t) -> (D t -> D t -> D t -> (D t, D t)) -> t -> t -> t
 
-withPrimal :: (Jacobian t s, Num a, a ~ Scalar (t s), Scalar (t s) ~ Scalar (D t s)) => t s -> a -> t s
+withPrimal :: (Jacobian t, Scalar t ~ Scalar (D t)) => t -> Scalar t -> t
 withPrimal t a = unary (const a) one t
 {-# INLINE withPrimal #-}
 
-fromBy :: (Jacobian t s, Num a, Num (D t s), a ~ Scalar (t s), Scalar (t s) ~ Scalar (D t s)) => t s -> t s -> Int -> a -> t s
+fromBy :: (Jacobian t, Scalar t ~ Scalar (D t)) => t -> t -> Int -> Scalar t -> t
 fromBy a delta n x = binary (\_ _ -> x) one (fromIntegral n) a delta
 
-discrete1 :: (Primal t, Num a, a ~ Scalar t) => (a -> c) -> t -> c
+discrete1 :: Primal t => (Scalar t -> c) -> t -> c
 discrete1 f x = f (primal x)
 {-# INLINE discrete1 #-}
 
-discrete2 :: (Primal t, Num a, a ~ Scalar t) => (a -> a -> c) -> t -> t -> c
+discrete2 :: Primal t => (Scalar t -> Scalar t -> c) -> t -> t -> c
 discrete2 f x y = f (primal x) (primal y)
 {-# INLINE discrete2 #-}
 
-discrete3 :: (Primal t, Num a, a ~ Scalar t) => (a -> a -> a -> d) -> t -> t -> t -> d
+discrete3 :: Primal t => (Scalar t -> Scalar t -> Scalar t -> d) -> t -> t -> t -> d
 discrete3 f x y z = f (primal x) (primal y) (primal z)
 {-# INLINE discrete3 #-}
 
@@ -161,18 +211,34 @@ deriveNumeric :: ([Pred] -> [Pred]) -> Type -> Type -> Q [Dec]
 deriveNumeric f tCon s' = map fudgeCxt <$> lifted
     where
       t = pure tCon
-      s = pure s'
+      -- s = pure s'
       fudgeCxt (InstanceD cxt typ dec) = InstanceD (f cxt) typ dec
       fudgeCxt _ = error "Numeric.AD.Internal.Classes.deriveNumeric_fudgeCxt: Not InstanceD"
       lifted = [d|
-       instance (Num a, Eq a) => Eq ($t a $s) where
+       instance Lifted ($t a) where
+        liftBounded    _ a = a
+        liftEnum       _ a = a
+        liftEq         _ a = a
+        liftOrd        _ a = a
+        liftNum        _ a = a
+        liftFractional _ a = a
+        liftFloating   _ a = a
+        liftRealFloat  _ a = a
+        liftRealFrac   _ a = a
+        liftReal       _ a = a
+        liftErf        _ a = a
+        liftInvErf     _ a = a
+        liftMode       _ a = a
+        liftPrimal     _ a = a
+        liftJacobian   _ a = a
+       instance (Eq a, Num a) => Eq ($t a) where
         (==)          = discrete2 (==)
-       instance (Num a, Ord a) => Ord ($t a $s) where
+       instance (Ord a, Num a) => Ord ($t a) where
         compare       = discrete2 compare
-       instance (Num a, Bounded a) => Bounded ($t a $s) where
+       instance (Bounded a, Num a) => Bounded ($t a) where
         maxBound      = auto maxBound
         minBound      = auto minBound
-       instance Num a => Num ($t a $s) where
+       instance Num a => Num ($t a) where
         fromInteger 0  = zero
         fromInteger n = auto (fromInteger n)
         (+)          = (<+>) -- binary (+) one one
@@ -181,12 +247,12 @@ deriveNumeric f tCon s' = map fudgeCxt <$> lifted
         negate       = lift1 negate (const (auto (-1)))
         abs          = lift1 abs signum
         signum a     = lift1 signum (const zero) a
-       instance Fractional a => Fractional ($t a $s) where
+       instance Fractional a => Fractional ($t a) where
         fromRational 0 = zero
         fromRational r = auto (fromRational r)
         x / y        = x * recip y
         recip        = lift1_ recip (const . negate . join (*))
-       instance Floating a => Floating ($t a $s) where
+       instance Floating a => Floating ($t a) where
         pi       = auto pi
         exp      = lift1_ exp const
         log      = lift1 log recip
@@ -209,7 +275,7 @@ deriveNumeric f tCon s' = map fudgeCxt <$> lifted
         asinh    = lift1 asinh $ \x -> recip (sqrt (one + join (*) x))
         acosh    = lift1 acosh $ \x -> recip (sqrt (join (*) x - one))
         atanh    = lift1 atanh $ \x -> recip (one - join (*) x)
-       instance (Num a, Enum a) => Enum ($t a $s) where
+       instance (Num a, Enum a) => Enum ($t a) where
         succ                 = lift1 succ (const one)
         pred                 = lift1 pred (const one)
         toEnum               = auto . toEnum
@@ -218,9 +284,9 @@ deriveNumeric f tCon s' = map fudgeCxt <$> lifted
         enumFromTo a b       = withPrimal a <$> discrete2 enumFromTo a b
         enumFromThen a b     = zipWith (fromBy a delta) [0..] $ discrete2 enumFromThen a b where delta = b - a
         enumFromThenTo a b c = zipWith (fromBy a delta) [0..] $ discrete3 enumFromThenTo a b c where delta = b - a
-       instance Real a => Real ($t a $s) where
+       instance Real a => Real ($t a) where
         toRational      = discrete1 toRational
-       instance RealFloat a => RealFloat ($t a $s) where
+       instance RealFloat a => RealFloat ($t a) where
         floatRadix      = discrete1 floatRadix
         floatDigits     = discrete1 floatDigits
         floatRange      = discrete1 floatRange
@@ -235,7 +301,7 @@ deriveNumeric f tCon s' = map fudgeCxt <$> lifted
         scaleFloat n = unary (scaleFloat n) (scaleFloat n one)
         significand x =  unary significand (scaleFloat (- floatDigits x) one) x
         atan2 = lift2 atan2 $ \vx vy -> let r = recip (join (*) vx + join (*) vy) in (vy * r, negate vx * r)
-       instance RealFrac a => RealFrac ($t a $s) where
+       instance RealFrac a => RealFrac ($t a) where
         properFraction a = (w, a `withPrimal` pb) where
              pa = primal a
              (w, pb) = properFraction pa
@@ -243,11 +309,11 @@ deriveNumeric f tCon s' = map fudgeCxt <$> lifted
         round    = discrete1 round
         ceiling  = discrete1 ceiling
         floor    = discrete1 floor
-       instance Erf a => Erf ($t a $s) where
+       instance Erf a => Erf ($t a) where
         erf = lift1 erf $ \x -> (fromInteger 2 / sqrt pi) * exp (negate x * x)
         erfc = lift1 erfc $ \x -> (fromInteger (-2) / sqrt pi) * exp (negate x * x)
         normcdf = lift1 normcdf $ \x -> (fromInteger (-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt (fromInteger 2))
-       instance InvErf a => InvErf ($t a $s) where
+       instance InvErf a => InvErf ($t a) where
         inverf = lift1 inverfc $ \x -> recip $ (fromInteger 2 / sqrt pi) * exp (negate x * x)
         inverfc = lift1 inverfc $ \x -> recip $ negate (fromInteger 2 / sqrt pi) * exp (negate x * x)
         invnormcdf = lift1 invnormcdf $ \x -> recip $ (fromInteger (-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt (fromInteger 2))

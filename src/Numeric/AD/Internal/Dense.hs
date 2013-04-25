@@ -40,47 +40,47 @@ import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 
-data Dense f a s
+data Dense f s a
     = Lift !a
     | Dense !a (f a)
     | Zero
 
-type instance Scalar (Dense f a s) = a
+type instance Scalar (Dense f s a) = a
 
-instance Show a => Show (Dense f a s) where
+instance Show a => Show (Dense f s a) where
     showsPrec d (Lift a)    = showsPrec d a
     showsPrec d (Dense a _) = showsPrec d a
     showsPrec _ Zero        = showString "0"
 
-ds :: f a -> Dense f a s -> f a
+ds :: f a -> Dense f s a -> f a
 ds _ (Dense _ da) = da
 ds z _ = z
 {-# INLINE ds #-}
 
-ds' :: Num a => f a -> Dense f a s -> (a, f a)
+ds' :: Num a => f a -> Dense f s a -> (a, f a)
 ds' _ (Dense a da) = (a, da)
 ds' z (Lift a) = (a, z)
 ds' z Zero = (0, z)
 {-# INLINE ds' #-}
 
 -- Bind variables and count inputs
-vars :: (Traversable f, Num a) => f a -> f (Dense f a s)
+vars :: (Traversable f, Num a) => f a -> f (Dense f s a)
 vars as = snd $ mapAccumL outer (0 :: Int) as
     where
         outer !i a = (i + 1, Dense a $ snd $ mapAccumL (inner i) 0 as)
         inner !i !j _ = (j + 1, if i == j then 1 else 0)
 {-# INLINE vars #-}
 
-apply :: (Traversable f, Num a) => (f (Dense f a s) -> b) -> f a -> b
+apply :: (Traversable f, Num a) => (f (Dense f s a) -> b) -> f a -> b
 apply f as = f (vars as)
 {-# INLINE apply #-}
 
-instance Primal (Dense f a s) where
+instance (Num a, Traversable f) => Primal (Dense f s a) where
     primal Zero = 0
     primal (Lift a) = a
     primal (Dense a _) = a
 
-instance (Traversable f) => Mode (Dense f a) s where
+instance (Num a, Traversable f) => Mode (Dense f s a) where
     auto = Lift
     zero = Zero
 
@@ -106,8 +106,8 @@ instance (Traversable f) => Mode (Dense f a) s where
     Lift a     ^/ b = Lift (a / b)
     Dense a da ^/ b = Dense (a / b) $ fmap (/b) da
 
-instance (Traversable f) => Jacobian (Dense f a) s where
-    type D (Dense f a) = Id a
+instance (Num a, Traversable f) => Jacobian (Dense f s a) where
+    type D (Dense f s a) = Id s a
     unary f _         Zero        = Lift (f 0)
     unary f _         (Lift b)    = Lift (f b)
     unary f (Id dadb) (Dense b db) = Dense (f b) (fmap (dadb *) db)
@@ -185,5 +185,5 @@ let s = VarT (mkName "s")
     f = VarT (mkName "f") in
     deriveNumeric
         (ClassP ''Traversable [f]:)
-        (ConT ''Dense `AppT` f)
+        (ConT ''Dense `AppT` f `AppT` s)
         s

@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TemplateHaskell, DeriveDataTypeable #-}
+{-# LANGUAGE Rank2Types, TypeFamilies, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TemplateHaskell, DeriveDataTypeable, InstanceSigs #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
@@ -36,11 +36,11 @@ import Language.Haskell.TH
 import Numeric.AD.Internal.Classes
 
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'
-newtype Tower a s = Tower { getTower :: [a] } deriving (Data, Typeable)
+newtype Tower s a = Tower { getTower :: [a] } deriving (Data, Typeable)
 
-type instance Scalar (Tower a s) = a
+type instance Scalar (Tower s a) = a
 
-instance Show a => Show (Tower a s) where
+instance Show a => Show (Tower s a) where
     showsPrec n (Tower as) = showParen (n > 10) $ showString "Tower " . showList as
 
 -- Local combinators
@@ -75,40 +75,40 @@ d' (a:_)    = (a, 0)
 d' _        = (0, 0)
 {-# INLINE d' #-}
 
-tangents :: Tower a s -> Tower a s
+tangents :: Tower s a -> Tower s a
 tangents (Tower []) = Tower []
 tangents (Tower (_:xs)) = Tower xs
 {-# INLINE tangents #-}
 
-truncated :: Tower a s -> Bool
+truncated :: Tower s a -> Bool
 truncated (Tower []) = True
 truncated _ = False
 {-# INLINE truncated #-}
 
-bundle :: a -> Tower a s -> Tower a s
+bundle :: a -> Tower s a -> Tower s a
 bundle a (Tower as) = Tower (a:as)
 {-# INLINE bundle #-}
 
-withD :: (a, a) -> Tower a s
+withD :: (a, a) -> Tower s a
 withD (a, da) = Tower [a,da]
 {-# INLINE withD #-}
 
-apply :: Num a => (Tower a s -> b) -> a -> b
+apply :: Num a => (Tower s a -> b) -> a -> b
 apply f a = f (Tower [a,1])
 {-# INLINE apply #-}
 
-getADTower :: Tower a s -> [a]
+getADTower :: Tower s a -> [a]
 getADTower = getTower
 {-# INLINE getADTower #-}
 
-tower :: [a] -> Tower a s
+tower :: [a] -> Tower s a
 tower = Tower
 
-instance Primal (Tower a s) where
+instance Num a => Primal (Tower s a) where
     primal (Tower (x:_)) = x
     primal _ = 0
 
-instance Mode (Tower a) s where
+instance (Num a) => Mode (Tower s a) where
     auto a = Tower [a]
     zero = Tower []
     Tower [] <**> y         = auto (0 ** primal y)
@@ -116,19 +116,26 @@ instance Mode (Tower a) s where
     x        <**> Tower [y] = lift1 (**y) (\z -> y *^ z <**> Tower [y-1]) x
     x        <**> y         = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
-    Tower [] <+> bs = bs
-    as <+> Tower [] = as
-    Tower (a:as) <+> Tower (b:bs) = Tower (c:cs)
-        where
-            c = a + b
-            Tower cs = Tower as <+> Tower bs
+    (<+>) = towerPlus
+    -- Tower [] <+> bs = bs
+    -- as <+> Tower [] = as
+    -- Tower (a:as) <+> Tower (b:bs) = Tower (c:cs)
+    --     where
+    --         c = a + b
+    --         Tower cs = Tower as <+> Tower bs
 
     a *^ Tower bs = Tower (map (a*) bs)
     Tower as ^* b = Tower (map (*b) as)
     Tower as ^/ b = Tower (map (/b) as)
 
-instance Jacobian (Tower a) s where
-    type D (Tower a) = Tower a
+towerPlus :: Num a => Tower s a -> Tower s a -> Tower s a
+towerPlus (Tower []) bs = bs
+towerPlus as (Tower []) = as
+towerPlus (Tower (a : as)) (Tower (b : bs)) =
+    Tower ((a + b) : getTower (Tower as <+> Tower bs))
+
+instance Num a => Jacobian (Tower s a) where
+    type D (Tower s a) = Tower s a
     unary f dadb b = bundle (f (primal b)) (tangents b * dadb)
     lift1 f df b   = bundle (f (primal b)) (tangents b * df b)
     lift1_ f df b = a where
@@ -152,4 +159,4 @@ instance Jacobian (Tower a) s where
         (dadb, dadc) = df a b c
 
 let s = VarT (mkName "s") in
-  deriveNumeric id (ConT ''Tower) s
+  deriveNumeric id (ConT ''Tower `AppT` s) s

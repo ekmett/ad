@@ -91,6 +91,12 @@ instance Iso a a where
     iso = id
     osi = id
 
+infixr 6 <+>
+infixr 7 *^
+infixl 7 ^*
+infixr 7 ^/
+infixr 8 <**>
+
 class (Num (Scalar t)) => Mode t where
     -- | allowed to return False for items with a zero derivative, but we'll give more NaNs than strictly necessary
     isKnownConstant :: t -> Bool

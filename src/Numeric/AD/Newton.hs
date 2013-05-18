@@ -126,23 +126,32 @@ gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s T
 gradientAscent f = gradientDescent (negate . f)
 {-# INLINE gradientAscent #-}
 
-
 -- | Perform a conjugate gradient descent using reverse mode automatic differentiation to compute the gradient, and using forward-on-forward mode for computing extrema.
+-- 
+-- >>> let sq x = x * x
+-- >>> let rosenbrock [x,y] = sq (1 - x) + 100 * sq (y - sq x)
+-- >>> rosenbrock [0,0]
+-- 1
+-- >>> rosenbrock (conjugateGradientDescent f [0, 0] !! 5) < 0.1
+-- True
 conjugateGradientDescent :: (Traversable f, Ord a, Fractional a) => (forall t. (Mode t, a ~ Scalar t, Num t) => f t -> t) -> f a -> [f a]
-conjugateGradientDescent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0)
-  where
-    dot x y = sum $ zipWithT (*) x y
-    d0 = negate <$> grad f x0
-    go xi ri di = xi : go xi1 ri1 di1
-      where
-        ai  = last $ take 20 $ extremum (\a -> f $ zipWithT (\x d -> auto x + a * auto d) xi di) 0
-        xi1 = zipWithT (\x d -> x + ai*d) xi di
-        ri1 = negate <$> grad f xi1
-        bi1 = max 0 $ dot ri1 (zipWithT (-) ri1 ri) / dot ri1 ri1
-        di1 = zipWithT (\r d -> r * bi1*d) ri1 di
+conjugateGradientDescent f = conjugateGradientAscent (negate . f) 
 {-# INLINE conjugateGradientDescent #-}
+
 
 -- | Perform a conjugate gradient ascent using reverse mode automatic differentiation to compute the gradient.
 conjugateGradientAscent :: (Traversable f, Ord a, Fractional a) => (forall t. (Mode t, a ~ Scalar t, Num t) => f t -> t) -> f a -> [f a]
-conjugateGradientAscent f = conjugateGradientDescent (negate . f)
+conjugateGradientAscent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0 delta0)
+  where
+    dot x y = sum $ zipWithT (*) x y
+    d0 = grad f x0
+    delta0 = dot d0 d0
+    go xi ri di deltai = xi : go xi1 ri1 di1 deltai1
+      where
+        ai = last $ take 20 $ extremum (\a -> f $ zipWithT (\x d -> auto x + a * auto d) xi di) 0
+        xi1 = zipWithT (\x d -> x + ai*d) xi di
+        ri1 = grad f xi1
+        deltai1 = dot ri1 ri1
+        bi1 = deltai1 / deltai
+        di1 = zipWithT (\r d -> r + bi1 * d) ri1 di
 {-# INLINE conjugateGradientAscent #-}

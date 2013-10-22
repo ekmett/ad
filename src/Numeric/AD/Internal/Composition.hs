@@ -29,8 +29,10 @@ import Data.Foldable (Foldable(foldMap))
 import Data.Traversable (Traversable(traverse))
 import Numeric.AD.Internal.Classes
 
+#ifdef HLINT
 {-# ANN module "Hlint: ignore Eta reduce" #-}
 {-# ANN module "Hlint: ignore Reduce duplication" #-}
+#endif
 
 ------------------------------------------------------------------------------
 -- ComposeMode

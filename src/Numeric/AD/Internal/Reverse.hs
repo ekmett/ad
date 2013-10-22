@@ -50,7 +50,9 @@ import Prelude hiding (mapM)
 import System.IO.Unsafe (unsafePerformIO)
 import Unsafe.Coerce
 
+#ifdef HLINT
 {-# ANN module "HLint: ignore Reduce duplication" #-}
+#endif
 
 -- evil untyped tape
 #ifndef HLINT

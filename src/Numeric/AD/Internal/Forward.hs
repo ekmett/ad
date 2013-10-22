@@ -36,7 +36,9 @@ import Control.Applicative
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 
+#ifdef HLINT
 {-# ANN module "HLint: ignore Reduce duplication" #-}
+#endif
 
 -- | 'Forward' mode AD
 data Forward s a

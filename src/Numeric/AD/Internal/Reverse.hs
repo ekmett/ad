@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP, Rank2Types, MultiParamTypeClasses, FlexibleInstances, UndecidableInstances, ScopedTypeVariables, TemplateHaskell, GADTs, TypeFamilies, DeriveDataTypeable, FlexibleContexts #-}
+{-# OPTIONS_GHC -fno-full-laziness #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |

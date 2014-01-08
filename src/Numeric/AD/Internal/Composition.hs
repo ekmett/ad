@@ -55,7 +55,7 @@ instance (Lifted (f a), Eq a, Num a, Scalar (f a) ~ a) => Eq (ComposeMode f a) w
 
 instance (Lifted (f a), Enum a, Num a, Scalar (f a) ~ a) => Enum (ComposeMode f a) where
   succ (ComposeMode a) = ComposeMode $ liftedEnum (succ a)
-  pred (ComposeMode a) = ComposeMode $ liftedEnum (succ a)
+  pred (ComposeMode a) = ComposeMode $ liftedEnum (pred a)
   fromEnum (ComposeMode a) = liftEnum [a] (fromEnum a)
   toEnum i = ComposeMode $ liftedEnum $ toEnum i
   enumFrom (ComposeMode a) = ComposeMode <$> liftEnum [a] (enumFrom a)

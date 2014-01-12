@@ -65,22 +65,22 @@ inspect lazily. Somewhat more intuitive answers can be obtained by converting th
 
 The answer:
 
-    Prelude Numeric.AD> headJet $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
+    Prelude Numeric.AD Numeric.AD.Types> headJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
     7.38905609893065
 
 The gradient:
 
-    Prelude Numeric.AD> headJet $ tailJet $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
+    Prelude Numeric.AD Numeric.AD.Types> headJet $ tailJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
     [14.7781121978613,7.38905609893065]
 
 The hessian (n * n matrix of 2nd derivatives)
 
-    Prelude Numeric.AD> headJet $ tailJet $ tailJet $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
+    Prelude Numeric.AD Numeric.AD.Types> headJet $ tailJet $ tailJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
     [[29.5562243957226,22.16716829679195],[22.16716829679195,7.38905609893065]]
 
 Or even higher order tensors of derivatives.
 
-    Prelude Numeric.AD> headJet $ tailJet $ tailJet $ tailJet $ tensors $  grads (\[x,y] -> exp (x * y)) [1,2]
+    Prelude Numeric.AD Numeric.AD.Types> headJet $ tailJet $ tailJet $ tailJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
     [[[59.1124487914452,44.3343365935839],[44.3343365935839,14.7781121978613]],[[44.3343365935839,14.7781121978613],[14.7781121978613,7.38905609893065]]]
 
 Note the redundant values caused by the various symmetries in the tensors. The `ad` library is careful to compute 

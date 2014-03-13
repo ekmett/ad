@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TypeFamilies, DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, TemplateHaskell, UndecidableInstances, BangPatterns #-}
+{-# LANGUAGE CPP, Rank2Types, TypeFamilies, DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, TemplateHaskell, UndecidableInstances, BangPatterns #-}
 -- {-# OPTIONS_HADDOCK hide, prune #-}
 -----------------------------------------------------------------------------
 -- |

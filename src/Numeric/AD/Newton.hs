@@ -25,7 +25,6 @@ module Numeric.AD.Newton
     ) where
 
 import Prelude hiding (all, mapM, sum)
-import Data.Functor
 import Data.Foldable (all, sum)
 import Data.Reflection (Reifies)
 import Data.Traversable
@@ -132,7 +131,7 @@ gradientAscent f = gradientDescent (negate . f)
 -- >>> let rosenbrock [x,y] = sq (1 - x) + 100 * sq (y - sq x)
 -- >>> rosenbrock [0,0]
 -- 1
--- >>> rosenbrock (conjugateGradientDescent f [0, 0] !! 5) < 0.1
+-- >>> rosenbrock (conjugateGradientDescent rosenbrock [0, 0] !! 5) < 0.1
 -- True
 conjugateGradientDescent :: (Traversable f, Ord a, Fractional a) => (forall t. (Mode t, a ~ Scalar t, Num t) => f t -> t) -> f a -> [f a]
 conjugateGradientDescent f = conjugateGradientAscent (negate . f) 

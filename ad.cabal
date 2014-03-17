@@ -120,6 +120,7 @@ library
 
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward
+    Numeric.AD.Mode.Forward.Double
     Numeric.AD.Mode.Kahn
     Numeric.AD.Mode.Reverse
     Numeric.AD.Mode.Tower
@@ -132,6 +133,7 @@ library
     Numeric.AD.Internal.Classes
     Numeric.AD.Internal.Combinators
     Numeric.AD.Internal.Forward
+    Numeric.AD.Internal.Forward.Double
     Numeric.AD.Internal.Tower
     Numeric.AD.Internal.Kahn
     Numeric.AD.Internal.Reverse

@@ -66,7 +66,7 @@ instance Mode (ForwardDouble s) where
     ForwardDouble a da ^/ b = ForwardDouble (a / b) (da / b)
 
 instance Jacobian (ForwardDouble s) where
-    type D (ForwardDouble s) = Id s Double
+    type D (ForwardDouble s) = Id Double s
 
 
     unary f (Id dadb) (ForwardDouble b db) = ForwardDouble (f b) (dadb * db)

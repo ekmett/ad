@@ -152,14 +152,14 @@ import Numeric.AD.Newton
 --
 -- >>> jacobian (\[x,y] -> [y,x,x+y,x*y,exp x * sin y]) [pi,1]
 -- [[0.0,1.0],[1.0,0.0],[1.0,1.0],[1.0,3.141592653589793],[19.472221418841606,12.502969588876512]]
-jacobian :: (Traversable f, Functor g, Num a) => (forall s. Reifies s Tape => f (Reverse s a) -> g (Reverse s a)) -> f a -> g (f a)
+jacobian :: (Traversable f, Functor g, Num a) => (forall s. Reifies s Tape => f (Reverse a s) -> g (Reverse a s)) -> f a -> g (f a)
 jacobian f bs = snd <$> jacobian' f bs
 {-# INLINE jacobian #-}
 
 -- | Calculate both the answer and Jacobian of a non-scalar-to-non-scalar function, using reverse-mode AD.
 --
 -- If you have relatively many outputs per input, consider using 'Numeric.AD.Sparse.jacobian''.
-jacobian' :: (Traversable f, Functor g, Num a) => (forall s. Reifies s Tape => f (Reverse s a) -> g (Reverse s a)) -> f a -> g (a, f a)
+jacobian' :: (Traversable f, Functor g, Num a) => (forall s. Reifies s Tape => f (Reverse a s) -> g (Reverse a s)) -> f a -> g (a, f a)
 jacobian' = Reverse.jacobian'
 {-# INLINE jacobian' #-}
 
@@ -168,7 +168,7 @@ jacobian' = Reverse.jacobian'
 -- The resulting Jacobian matrix is then recombined element-wise with the input using @g@.
 --
 -- If you know that you have relatively many outputs per input, consider using 'Numeric.AD.Sparse.jacobianWith'.
-jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse s a) -> g (Reverse s a)) -> f a -> g (f b)
+jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse a s) -> g (Reverse a s)) -> f a -> g (f b)
 jacobianWith g f bs = snd <$> jacobianWith' g f bs
 {-# INLINE jacobianWith #-}
 
@@ -177,7 +177,7 @@ jacobianWith g f bs = snd <$> jacobianWith' g f bs
 -- The resulting Jacobian matrix is then recombined element-wise with the input using @g@.
 --
 -- If you know that you have relatively many outputs per input, consider using 'Numeric.AD.Sparse.jacobianWith''.
-jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse s a) -> g (Reverse s a)) -> f a -> g (a, f b)
+jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse a s) -> g (Reverse a s)) -> f a -> g (a, f b)
 jacobianWith' = Reverse.jacobianWith'
 {-# INLINE jacobianWith' #-}
 
@@ -187,7 +187,7 @@ jacobianWith' = Reverse.jacobianWith'
 --
 -- Or in other words, we take the directional derivative of the gradient. The gradient is calculated in reverse mode, then the directional derivative is calculated in forward mode.
 --
-hessianProduct :: (Traversable f, Num a) => (forall s s'. Reifies s Tape => f (ComposeMode (Reverse s) (Forward s' a)) -> ComposeMode (Reverse s) (Forward s' a)) -> f (a, a) -> f a
+hessianProduct :: (Traversable f, Num a) => (forall s s'. Reifies s Tape => f (ComposeMode Reverse (Forward a s') s) -> ComposeMode Reverse (Forward a s') s) -> f (a, a) -> f a
 hessianProduct f = duF (grad (decomposeMode . f . fmap ComposeMode))
 
 -- | @'hessianProduct'' f wv@ computes both the gradient of a non-scalar-to-scalar @f@ at @w = 'fst' <$> wv@ and the product of the hessian @H@ at @w@ with a vector @v = snd <$> wv@ using \"Pearlmutter's method\". The outputs are returned wrapped in the same functor.
@@ -195,20 +195,20 @@ hessianProduct f = duF (grad (decomposeMode . f . fmap ComposeMode))
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
 --
 -- Or in other words, we return the gradient and the directional derivative of the gradient. The gradient is calculated in reverse mode, then the directional derivative is calculated in forward mode.
-hessianProduct' :: (Traversable f, Num a) => (forall s s'. Reifies s Tape => f (ComposeMode (Reverse s) (Forward s' a)) -> ComposeMode (Reverse s) (Forward s' a)) -> f (a, a) -> f (a, a)
+hessianProduct' :: (Traversable f, Num a) => (forall s s'. Reifies s Tape => f (ComposeMode Reverse  (Forward a s') s) -> ComposeMode Reverse (Forward a s') s) -> f (a, a) -> f (a, a)
 hessianProduct' f = duF' (grad (decomposeMode . f . fmap ComposeMode))
 
 -- | Compute the Hessian via the Jacobian of the gradient. gradient is computed in reverse mode and then the Jacobian is computed in sparse (forward) mode.
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
 -- [[0,1],[1,0]]
-hessian :: (Traversable f, Num a) => (forall s s'. Reifies s Tape => f (ComposeMode (Reverse s) (Sparse s' a)) -> ComposeMode (Reverse s) (Sparse s' a)) -> f a -> f (f a)
+hessian :: (Traversable f, Num a) => (forall s s'. Reifies s Tape => f (ComposeMode Reverse (Sparse a s') s) -> ComposeMode Reverse (Sparse a s') s) -> f a -> f (f a)
 hessian f = Sparse.jacobian (grad (decomposeMode . f . fmap ComposeMode))
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function using 'Sparse'-on-'Reverse'
 --
 -- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
-hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. Reifies s Tape => f (ComposeMode (Reverse s) (Sparse s' a)) -> g (ComposeMode (Reverse s) (Sparse s' a))) -> f a -> g (f (f a))
+hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. Reifies s Tape => f (ComposeMode Reverse (Sparse a s') s) -> g (ComposeMode Reverse (Sparse a s') s)) -> f a -> g (f (f a))
 hessianF f as = decomposeFunctor $ Sparse.jacobian (ComposeFunctor . Reverse.jacobian (fmap decomposeMode . f . fmap ComposeMode)) as
 

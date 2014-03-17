@@ -1,6 +1,7 @@
 4.0
 ---
 * An overhaul permitting monomorphic modes was completed by @alang9.
+* Add a ForwardDouble monomorphic mode
 
 3.4
 ---

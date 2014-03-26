@@ -1,7 +1,9 @@
-{-# LANGUAGE FlexibleContexts, Rank2Types, TypeFamilies, PatternGuards #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE PatternGuards #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD
 -- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com

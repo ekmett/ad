@@ -224,30 +224,32 @@ partialMap = fromListWith (+) . partials
 
 -- A simple fresh variable supply monad
 newtype S a = S { runS :: Int -> (a,Int) }
+
+
 instance Monad S where
-    return a = S (\s -> (a,s))
-    S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
+  return a = S (\s -> (a,s))
+  S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
 
 instance Num a => Var (Kahn a s) where
-    var a v = Kahn (Var a v)
-    varId (Kahn (Var _ v)) = v
-    varId _ = error "varId: not a Var"
+  var a v = Kahn (Var a v)
+  varId (Kahn (Var _ v)) = v
+  varId _ = error "varId: not a Var"
 
 class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
-    pack :: i -> [Kahn a ()] -> Kahn a ()
-    unpack :: ([a] -> [a]) -> o
-    unpack' :: ([a] -> (a, [a])) -> o'
+  pack :: i -> [Kahn a ()] -> Kahn a ()
+  unpack :: ([a] -> [a]) -> o
+  unpack' :: ([a] -> (a, [a])) -> o'
 
 instance Num a => Grad (Kahn a ()) [a] (a, [a]) a where
-    pack i _ = i
-    unpack f = f []
-    unpack' f = f []
+  pack i _ = i
+  unpack f = f []
+  unpack' f = f []
 
 instance Grad i o o' a => Grad (Kahn a () -> i) (a -> o) (a -> o') a where
-    pack f (a:as) = pack (f a) as
-    pack _ [] = error "Grad.pack: logic error"
-    unpack f a = unpack (f . (a:))
-    unpack' f a = unpack' (f . (a:))
+  pack f (a:as) = pack (f a) as
+  pack _ [] = error "Grad.pack: logic error"
+  unpack f a = unpack (f . (a:))
+  unpack' f a = unpack' (f . (a:))
 
 vgrad :: Grad i o o' a => i -> o
 vgrad i = unpack (unsafeGrad (pack i))

@@ -6,6 +6,18 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+-----------------------------------------------------------------------------
+---- |
+---- Copyright   :  (c) Edward Kmett 2010-2014
+---- License     :  BSD3
+---- Maintainer  :  ekmett@gmail.com
+---- Stability   :  experimental
+---- Portability :  GHC only
+----
+---- Unsafe and often partial combinators intended for internal usage.
+----
+---- Handle with care.
+-------------------------------------------------------------------------------
 module Numeric.AD.Internal.Forward.Double
   ( ForwardDouble(..)
   , tangent

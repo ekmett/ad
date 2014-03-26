@@ -9,7 +9,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Jet
--- Copyright   :  (c) Edward Kmett 2010
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -17,11 +17,11 @@
 --
 -----------------------------------------------------------------------------
 module Numeric.AD.Internal.Jet
-    ( Jet(..)
-    , headJet
-    , tailJet
-    , jet
-    ) where
+  ( Jet(..)
+  , headJet
+  , tailJet
+  , jet
+  ) where
 
 #ifndef MIN_VERSION_base
 #define MIN_VERSION_base(x,y,z) 1
@@ -60,13 +60,13 @@ instance (Functor f, Show (f Showable), Show a) => Show (Jet f a) where
     showsPrec 4 a . showString " :- " . showsPrec 3 (fmap showable <$> as)
 
 instance Functor f => Functor (Jet f) where
-    fmap f (a :- as) = f a :- fmap (fmap f) as
+  fmap f (a :- as) = f a :- fmap (fmap f) as
 
 instance Foldable f => Foldable (Jet f) where
-    foldMap f (a :- as) = f a `mappend` foldMap (foldMap f) as
+  foldMap f (a :- as) = f a `mappend` foldMap (foldMap f) as
 
 instance Traversable f => Traversable (Jet f) where
-    traverse f (a :- as) = (:-) <$> f a <*> traverse (traverse f) as
+  traverse f (a :- as) = (:-) <$> f a <*> traverse (traverse f) as
 
 -- | Take the tail of a 'Jet'.
 tailJet :: Jet f a -> Jet f (f a)
@@ -80,18 +80,17 @@ headJet (a :- _) = a
 
 -- | Construct a 'Jet' by unzipping the layers of a 'Cofree' 'Comonad'.
 jet :: Functor f => Cofree f a -> Jet f a
-jet (a :< as) = a :- dist (jet <$> as)
-    where
-        dist :: Functor f => f (Jet f a) -> Jet f (f a)
-        dist x = (headJet <$> x) :- dist (tailJet <$> x)
+jet (a :< as) = a :- dist (jet <$> as) where
+  dist :: Functor f => f (Jet f a) -> Jet f (f a)
+  dist x = (headJet <$> x) :- dist (tailJet <$> x)
 
 #if __GLASGOW_HASKELL__ >= 707
 deriving instance Typeable Jet
 #else
 instance Typeable1 f => Typeable1 (Jet f) where
-    typeOf1 tfa = mkTyConApp jetTyCon [typeOf1 (undefined `asArgsType` tfa)]
-        where asArgsType :: f a -> t f a -> f a
-              asArgsType = const
+  typeOf1 tfa = mkTyConApp jetTyCon [typeOf1 (undefined `asArgsType` tfa)] where
+    asArgsType :: f a -> t f a -> f a
+    asArgsType = const
 
 jetTyCon :: TyCon
 #if MIN_VERSION_base(4,4,0)

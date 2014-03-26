@@ -14,15 +14,15 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Internal.Var
-    ( Var(..)
-    , bind
-    , unbind
-    , unbindMap
-    , unbindWith
-    , unbindMapWithDefault
-    , Variable(..)
-    , vary
-    ) where
+  ( Var(..)
+  , bind
+  , unbind
+  , unbindMap
+  , unbindWith
+  , unbindMapWithDefault
+  , Variable(..)
+  , vary
+  ) where
 
 import Prelude hiding (mapM)
 import Control.Applicative

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Variadic
--- Copyright   :  (c) Edward Kmett 2010-2012
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -17,12 +17,12 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Variadic
-    (
-    -- * Reverse-mode variadic gradient
-      Grad , vgrad, vgrad'
-    -- * Sparse forward mode variadic jet
-    , Grads, -- vgrads
-    ) where
+  (
+  -- * Reverse-mode variadic gradient
+    Grad , vgrad, vgrad'
+  -- * Sparse forward mode variadic jet
+  , Grads, vgrads
+  ) where
 
 import Numeric.AD.Variadic.Kahn
-import Numeric.AD.Variadic.Sparse (Grads, {-vgrads-})
+import Numeric.AD.Variadic.Sparse (Grads, vgrads)

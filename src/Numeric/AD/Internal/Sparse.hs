@@ -12,9 +12,9 @@ module Numeric.AD.Internal.Sparse
     , skeleton
     , spartial
     , partial
-    -- , vgrad
-    -- , vgrad'
-    -- , vgrads
+    , vgrad
+    , vgrad'
+    , vgrads
     , Grad(..)
     , Grads(..)
     ) where
@@ -223,17 +223,17 @@ instance Grad i o o' a => Grad (Sparse a () -> i) (a -> o) (a -> o') a where
     unpack f a = unpack (f . (a:))
     unpack' f a = unpack' (f . (a:))
 
--- vgrad :: Grad i o o' a => i -> o
--- vgrad i = unpack (unsafeGrad (pack i))
---     where
---         unsafeGrad f as = d as $ apply f as
--- {-# INLINE vgrad #-}
+vgrad :: Grad i o o' a => i -> o
+vgrad i = unpack (unsafeGrad (pack i))
+  where
+    unsafeGrad f as = d as $ apply f as
+{-# INLINE vgrad #-}
 
--- vgrad' :: Grad i o o' a => i -> o'
--- vgrad' i = unpack' (unsafeGrad' (pack i))
---     where
---         unsafeGrad' f as = d' as $ apply f as
--- {-# INLINE vgrad' #-}
+vgrad' :: Grad i o o' a => i -> o'
+vgrad' i = unpack' (unsafeGrad' (pack i))
+  where
+    unsafeGrad' f as = d' as $ apply f as
+{-# INLINE vgrad' #-}
 
 class Num a => Grads i o a | i -> a o, o -> a i where
     packs :: i -> [Sparse a ()] -> Sparse a ()
@@ -248,9 +248,9 @@ instance Grads i o a => Grads (Sparse a () -> i) (a -> o) a where
     packs _ [] = error "Grad.pack: logic error"
     unpacks f a = unpacks (f . (a:))
 
--- vgrads :: Grads i o a => i -> o
--- vgrads i = unpacks (unsafeGrads (packs i))
---     where
---         unsafeGrads f as = ds as $ apply f as
--- {-# INLINE vgrads #-}
+vgrads :: Grads i o a => i -> o
+vgrads i = unpacks (unsafeGrads (packs i))
+  where
+    unsafeGrads f as = ds as $ apply f as
+{-# INLINE vgrads #-}
 

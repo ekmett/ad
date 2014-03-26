@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Combinators
--- Copyright   :  (c) Edward Kmett 2010
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -11,9 +11,9 @@
 -- Combinators used internally by @Numeric.AD@
 -----------------------------------------------------------------------------
 module Numeric.AD.Internal.Combinators
-    ( zipWithT
-    , zipWithDefaultT
-    ) where
+  ( zipWithT
+  , zipWithDefaultT
+  ) where
 
 import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)

@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Composition
--- Copyright   :  (c) Edward Kmett 2010
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -24,9 +24,9 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Internal.Composition
-    ( ComposeFunctor(..)
-    , ComposeMode(..)
-    ) where
+  ( ComposeFunctor(..)
+  , ComposeMode(..)
+  ) where
 
 #ifndef MIN_VERSION_base
 #define MIN_VERSION_base(x,y,z) 1
@@ -53,13 +53,9 @@ import Numeric.AD.Internal.Classes
 
 -- | The composition of two AD modes is an AD mode in its own right
 newtype ComposeMode f a s = ComposeMode { decomposeMode :: f a s }
---  deriving (Enum, Eq, Ord, Bounded, Num, Fractional, Floating, RealFloat, RealFrac, Real, Erf, InvErf)
-
---deriving instance RealFloat (f a)=> RealFloat (ComposeMode f a s)
---deriving instance RealFrac (f a) => RealFrac (ComposeMode f a s)
---deriving instance Real (f a) => Real (ComposeMode f a s)
---deriving instance Erf (f a s) => Erf (ComposeMode f a s)
---deriving instance InvErf (f a s) => InvErf (ComposeMode f a s)
+#if __GLASGOW_HASKELL__ >= 707
+  deriving Typeable
+#endif
 
 type instance Scalar (ComposeMode f a s) = Scalar a
 
@@ -167,69 +163,15 @@ instance (Lifted (f a s), Lifted a, Mode a, Num a, Scalar (f a s) ~ a, Num (Scal
   -- ComposeMode a ^/ b = ComposeMode $ liftedMode (a ^/ auto b)
   ComposeMode a <**> ComposeMode b = ComposeMode $ liftedMode $ liftedFloating' $ a <**> b
 
-{-
-instance (Primal (f a s), Primal a, a ~ Scalar (f a s)) => Primal (ComposeMode f a s) where
-  primal = primal . primal . decomposeMode
-
-instance (Mode (f a s), Mode a, a ~ Scalar (f a s)) => Mode (ComposeMode f a s) where
-    auto = ComposeMode . auto . auto
-    ComposeMode a <+> ComposeMode b = ComposeMode (a <+> b)
-    a *^ ComposeMode b = ComposeMode (auto a *^ b)
-    ComposeMode a ^* b = ComposeMode (a ^* auto b)
-    ComposeMode a ^/ b = ComposeMode (a ^/ auto b)
-    ComposeMode a <**> ComposeMode b = ComposeMode (a <**> b)
--}
-{-
-instance (Mode (f (g a s)) s', Mode (g a) s, Scalar (f (g a s) s') ~ g a s, Scalar (g a s) ~ a, Floating (g a s)) => Mode (ComposeMode f g a s) s' where
-
-#if __GLASGOW_HASKELL__ >= 707
-deriving instance Typeable ComposeMode
-deriving instance (Typeable f, Typeable g, Typeable s, Data (f (g a s) s'), Data a) => Data (ComposeMode f g a s s')
-#else
-instance (Typeable2 f, Typeable2 g) => Typeable3 (ComposeMode f g) where
-    typeOf3 tfg = mkTyConApp composeModeTyCon [typeOf2 (fa tfg), typeOf2 (ga tfg)]
-        where fa :: t f (g :: * -> * -> *) a s s' -> f a s'
-              fa = undefined
-              ga :: t (f :: * -> * -> *) g a s s'-> g a s
-              ga = undefined
-
-instance (Typeable2 f, Typeable2 g, Typeable a, Typeable s, Typeable s') => Typeable (ComposeMode f g a s s') where
-    typeOf = typeOfDefault
-
-composeModeTyCon :: TyCon
-#if MIN_VERSION_base(4,4,0)
-composeModeTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Composition" "ComposeMode"
-#else
-composeModeTyCon = mkTyCon "Numeric.AD.Internal.Composition.ComposeMode"
-#endif
-{-# NOINLINE composeModeTyCon #-}
-
-composeModeConstr :: Constr
-composeModeConstr = mkConstr composeModeDataType "ComposeMode" [] Prefix
-{-# NOINLINE composeModeConstr #-}
-
-composeModeDataType :: DataType
-composeModeDataType = mkDataType "Numeric.AD.Internal.Composition.ComposeMode" [composeModeConstr]
-{-# NOINLINE composeModeDataType #-}
-
-instance (Typeable2 f, Typeable2 g, Data (f (g a s) s'), Data a, Typeable s', Typeable s, Data s') => Data (ComposeMode f g a s s') where
-    gfoldl f z (ComposeMode a) = z ComposeMode `f` a
-    toConstr _ = composeModeConstr
-    gunfold k z c = case constrIndex c of
-        1 -> k (z ComposeMode)
-        _ -> error "gunfold"
-    dataTypeOf _ = composeModeDataType
-    dataCast1 f = gcast1 f
-#endif
-
--}
-
 ------------------------------------------------------------------------------
 -- ComposeFunctor
 ------------------------------------------------------------------------------
 
 -- | Functor composition, used to nest the use of jacobian and grad
 newtype ComposeFunctor f g a = ComposeFunctor { decomposeFunctor :: f (g a) }
+#if __GLASGOW_HASKELL__ >= 707
+  deriving Typeable
+#endif
 
 instance (Functor f, Functor g) => Functor (ComposeFunctor f g) where
     fmap f (ComposeFunctor a) = ComposeFunctor (fmap (fmap f) a)
@@ -241,7 +183,6 @@ instance (Traversable f, Traversable g) => Traversable (ComposeFunctor f g) wher
     traverse f (ComposeFunctor a) = ComposeFunctor <$> traverse (traverse f) a
 
 #if __GLASGOW_HASKELL__ >= 707
-deriving instance Typeable ComposeFunctor
 deriving instance (Typeable f, Typeable a, Typeable g, Data (f (g a))) => Data (ComposeFunctor f g a)
 #else
 instance (Typeable1 f, Typeable1 g) => Typeable1 (ComposeFunctor f g) where

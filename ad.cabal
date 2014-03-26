@@ -2,7 +2,7 @@ name:         ad
 version:      4.0
 license:      BSD3
 license-File: LICENSE
-copyright:    (c) Edward Kmett 2010-2013,
+copyright:    (c) Edward Kmett 2010-2014,
               (c) Barak Pearlmutter and Jeffrey Mark Siskind 2008-2009
 author:       Edward Kmett
 maintainer:   ekmett@gmail.com
@@ -99,17 +99,17 @@ library
     UndecidableInstances
 
   build-depends:
-    array            >= 0.2 && < 0.5,
-    base             == 4.*,
-    comonad          >= 3,
-    containers       >= 0.2 && < 0.6,
-    data-reify       >= 0.6 && < 0.7,
-    erf              >= 2.0 && < 2.1,
-    free             >= 3,
-    mtl              >= 2,
-    reflection       >= 1.1.6,
-    tagged           >= 0.4.2.1,
-    template-haskell >= 2.5 && < 3
+    array            >= 0.2   && < 0.6,
+    base             >= 4.5   && < 5,
+    comonad          >= 4     && < 5,
+    containers       >= 0.2   && < 0.6,
+    data-reify       >= 0.6   && < 0.7,
+    erf              >= 2.0   && < 2.1,
+    free             >= 4.6.1 && < 5,
+    mtl              >= 2     && < 2.2,
+    reflection       >= 1.4   && < 2,
+    tagged           >= 0.7   && < 1,
+    template-haskell
 
   exposed-modules:
     Numeric.AD

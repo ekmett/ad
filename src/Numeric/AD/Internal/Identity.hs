@@ -25,7 +25,7 @@ import Data.Typeable (Typeable)
 import Numeric.AD.Internal.Classes
 
 newtype Id a s = Id { runId :: a } deriving
-    (Iso a, Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable, Erf, InvErf)
+    (Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable, Erf, InvErf)
 
 type instance Scalar (Id a s) = a
 
@@ -35,16 +35,16 @@ probe = Id
 unprobe :: Id a s -> a
 unprobe = runId
 
-pid :: f a -> f (Id a s)
-pid = iso
+pid :: Functor f => f a -> f (Id a s)
+pid = fmap probe
 
-unpid :: f (Id a s) -> f a
-unpid = osi
+unpid :: Functor f => f (Id a s) -> f a
+unpid = fmap unprobe
 
-probed :: f a -> f (Id a s)
+probed :: Functor f => f a -> f (Id a s)
 probed = pid
 
-unprobed :: f (Id a s) -> f a
+unprobed :: Functor f => f (Id a s) -> f a
 unprobed = unpid
 
 instance Num a => Mode (Id a s) where

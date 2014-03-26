@@ -32,16 +32,16 @@ lowerUU f = unprobe . f . probe
 {-# INLINE lowerUU #-}
 
 -- | Evaluate a scalar-to-nonscalar function in the trivial identity AD mode.
-lowerUF :: (forall s. Id a s -> f (Id a s)) -> a -> f a
+lowerUF :: Functor f => (forall s. Id a s -> f (Id a s)) -> a -> f a
 lowerUF f = unprobed . f . probe
 {-# INLINE lowerUF #-}
 
 -- | Evaluate a nonscalar-to-scalar function in the trivial identity AD mode.
-lowerFU :: (forall s. f (Id a s) -> Id a s) -> f a -> a
+lowerFU :: Functor f => (forall s. f (Id a s) -> Id a s) -> f a -> a
 lowerFU f = unprobe . f . probed
 {-# INLINE lowerFU #-}
 
 -- | Evaluate a nonscalar-to-nonscalar function in the trivial identity AD mode.
-lowerFF :: (forall s. f (Id a s) -> g (Id a s)) -> f a -> g a
+lowerFF :: (Functor f, Functor g) => (forall s. f (Id a s) -> g (Id a s)) -> f a -> g a
 lowerFF f = unprobed . f . probed
 {-# INLINE lowerFF #-}

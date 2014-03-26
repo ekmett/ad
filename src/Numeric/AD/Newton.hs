@@ -126,7 +126,7 @@ gradientAscent f = gradientDescent (negate . f)
 {-# INLINE gradientAscent #-}
 
 -- | Perform a conjugate gradient descent using reverse mode automatic differentiation to compute the gradient, and using forward-on-forward mode for computing extrema.
--- 
+--
 -- >>> let sq x = x * x
 -- >>> let rosenbrock [x,y] = sq (1 - x) + 100 * sq (y - sq x)
 -- >>> rosenbrock [0,0]
@@ -134,7 +134,7 @@ gradientAscent f = gradientDescent (negate . f)
 -- >>> rosenbrock (conjugateGradientDescent rosenbrock [0, 0] !! 5) < 0.1
 -- True
 conjugateGradientDescent :: (Traversable f, Ord a, Fractional a) => (forall t. (Mode t, a ~ Scalar t, Num t) => f t -> t) -> f a -> [f a]
-conjugateGradientDescent f = conjugateGradientAscent (negate . f) 
+conjugateGradientDescent f = conjugateGradientAscent (negate . f)
 {-# INLINE conjugateGradientDescent #-}
 
 
@@ -145,7 +145,7 @@ conjugateGradientAscent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0 delta
     dot x y = sum $ zipWithT (*) x y
     d0 = grad f x0
     delta0 = dot d0 d0
-    go xi ri di deltai = xi : go xi1 ri1 di1 deltai1
+    go xi _ri di deltai = xi : go xi1 ri1 di1 deltai1
       where
         ai = last $ take 20 $ extremum (\a -> f $ zipWithT (\x d -> auto x + a * auto d) xi di) 0
         xi1 = zipWithT (\x d -> x + ai*d) xi di

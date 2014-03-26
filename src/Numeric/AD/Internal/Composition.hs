@@ -26,7 +26,9 @@ import Control.Applicative hiding ((<**>))
 import Data.Number.Erf
 import Data.Data
 import Data.Foldable (Foldable(foldMap))
+#if __GLASGOW_HASKELL__ < 707
 import Data.Proxy
+#endif
 import Data.Traversable (Traversable(traverse))
 import Numeric.AD.Internal.Classes
 

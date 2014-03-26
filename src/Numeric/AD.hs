@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD
--- Copyright   :  (c) Edward Kmett 2010
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -39,82 +39,82 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD
-    (
+  (
     -- * Gradients (Reverse Mode)
-      grad
-    , grad'
-    , gradWith
-    , gradWith'
+    grad
+  , grad'
+  , gradWith
+  , gradWith'
 
-    -- * Higher Order Gradients (Sparse-on-Reverse)
-    , grads
+  -- * Higher Order Gradients (Sparse-on-Reverse)
+  , grads
 
-    -- * Jacobians (Sparse or Reverse)
-    , jacobian
-    , jacobian'
-    , jacobianWith
-    , jacobianWith'
+  -- * Jacobians (Sparse or Reverse)
+  , jacobian
+  , jacobian'
+  , jacobianWith
+  , jacobianWith'
 
-    -- * Higher Order Jacobian (Sparse-on-Reverse)
-    , jacobians
+  -- * Higher Order Jacobian (Sparse-on-Reverse)
+  , jacobians
 
-    -- * Transposed Jacobians (Forward Mode)
-    , jacobianT
-    , jacobianWithT
+  -- * Transposed Jacobians (Forward Mode)
+  , jacobianT
+  , jacobianWithT
 
-    -- * Hessian (Sparse-On-Reverse)
-    , hessian
-    , hessian'
+  -- * Hessian (Sparse-On-Reverse)
+  , hessian
+  , hessian'
 
-    -- * Hessian Tensors (Sparse or Sparse-On-Reverse)
-    , hessianF
-    -- * Hessian Tensors (Sparse)
-    , hessianF'
+  -- * Hessian Tensors (Sparse or Sparse-On-Reverse)
+  , hessianF
+  -- * Hessian Tensors (Sparse)
+  , hessianF'
 
-    -- * Hessian Vector Products (Forward-On-Reverse)
-    , hessianProduct
-    , hessianProduct'
+  -- * Hessian Vector Products (Forward-On-Reverse)
+  , hessianProduct
+  , hessianProduct'
 
-    -- * Derivatives (Forward Mode)
-    , diff
-    , diffF
+  -- * Derivatives (Forward Mode)
+  , diff
+  , diffF
 
-    , diff'
-    , diffF'
+  , diff'
+  , diffF'
 
-    -- * Derivatives (Tower)
-    , diffs
-    , diffsF
+  -- * Derivatives (Tower)
+  , diffs
+  , diffsF
 
-    , diffs0
-    , diffs0F
+  , diffs0
+  , diffs0F
 
-    -- * Directional Derivatives (Forward Mode)
-    , du
-    , du'
-    , duF
-    , duF'
+  -- * Directional Derivatives (Forward Mode)
+  , du
+  , du'
+  , duF
+  , duF'
 
-    -- * Directional Derivatives (Tower)
-    , dus
-    , dus0
-    , dusF
-    , dus0F
+  -- * Directional Derivatives (Tower)
+  , dus
+  , dus0
+  , dusF
+  , dus0F
 
-    -- * Taylor Series (Tower)
-    , taylor
-    , taylor0
+  -- * Taylor Series (Tower)
+  , taylor
+  , taylor0
 
-    -- * Maclaurin Series (Tower)
-    , maclaurin
-    , maclaurin0
+  -- * Maclaurin Series (Tower)
+  , maclaurin
+  , maclaurin0
 
-    -- * Gradient Descent
-    , gradientDescent
-    , gradientAscent
-    , conjugateGradientDescent
-    , conjugateGradientAscent
-    ) where
+  -- * Gradient Descent
+  , gradientDescent
+  , gradientAscent
+  , conjugateGradientDescent
+  , conjugateGradientAscent
+  ) where
 
 import Data.Traversable (Traversable)
 import Data.Reflection (Reifies)
@@ -126,23 +126,23 @@ import Numeric.AD.Internal.Reverse (Reverse, Tape)
 import Numeric.AD.Internal.Sparse (Sparse)
 
 import Numeric.AD.Mode.Forward
-    ( diff, diff', diffF, diffF'
-    , du, du', duF, duF'
-    , jacobianT, jacobianWithT )
+  ( diff, diff', diffF, diffF'
+  , du, du', duF, duF'
+  , jacobianT, jacobianWithT )
 
 import Numeric.AD.Mode.Tower
-    ( diffsF, diffs0F, diffs, diffs0
-    , taylor, taylor0, maclaurin, maclaurin0
-    , dus, dus0, dusF, dus0F )
+  ( diffsF, diffs0F, diffs, diffs0
+  , taylor, taylor0, maclaurin, maclaurin0
+  , dus, dus0, dusF, dus0F )
 
 import qualified Numeric.AD.Mode.Reverse as Reverse
 import Numeric.AD.Mode.Reverse
-    ( grad, grad', gradWith, gradWith')
+  ( grad, grad', gradWith, gradWith')
 
 -- temporary until we make a full sparse mode
 import qualified Numeric.AD.Mode.Sparse as Sparse
 import Numeric.AD.Mode.Sparse
-    ( grads, jacobians, hessian', hessianF')
+  ( grads, jacobians, hessian', hessianF')
 
 import Numeric.AD.Newton
 
@@ -211,4 +211,3 @@ hessian f = Sparse.jacobian (grad (decomposeMode . f . fmap ComposeMode))
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
 hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. Reifies s Tape => f (ComposeMode Reverse (Sparse a s') s) -> g (ComposeMode Reverse (Sparse a s') s)) -> f a -> g (f (f a))
 hessianF f as = decomposeFunctor $ Sparse.jacobian (ComposeFunctor . Reverse.jacobian (fmap decomposeMode . f . fmap ComposeMode)) as
-

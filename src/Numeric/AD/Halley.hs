@@ -32,6 +32,9 @@ import Numeric.AD.Mode.Tower (diffs0)
 import Numeric.AD.Mode.Forward (diff) -- , diff')
 import Numeric.AD.Internal.Composition
 
+-- $setup
+-- >>> import Data.Complex
+
 -- | The 'findZero' function finds a zero of a scalar function using
 -- Halley's method; its output is a stream of increasingly accurate
 -- results.  (Modulo the usual caveats.) If the stream becomes constant
@@ -42,7 +45,6 @@ import Numeric.AD.Internal.Composition
 -- >>> take 10 $ findZero (\x->x^2-4) 1
 -- [1.0,1.8571428571428572,1.9997967892704736,1.9999999999994755,2.0]
 --
--- >>> import Data.Complex
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
 findZero :: (Fractional a, Eq a) => (forall s. Tower a s -> Tower a s) -> a -> [a]

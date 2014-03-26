@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Variadic.Sparse
--- Copyright   :  (c) Edward Kmett 2010-2012
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -17,10 +17,10 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Variadic.Sparse
-    (
-    -- * Unsafe Variadic Gradient
-      Grad, vgrad, vgrad'
-    , Grads, vgrads
-    ) where
+  (
+  -- * Unsafe Variadic Gradient
+    Grad, vgrad, vgrad'
+  , Grads, vgrads
+  ) where
 
 import Numeric.AD.Internal.Sparse

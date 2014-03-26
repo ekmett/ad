@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Variadic.Kahn
--- Copyright   :  (c) Edward Kmett 2010-2012
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -17,10 +17,10 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Variadic.Kahn
-    (
-    -- * Unsafe Variadic Gradient
-      vgrad, vgrad'
-    , Grad
-    ) where
+  (
+  -- * Unsafe Variadic Gradient
+    vgrad, vgrad'
+  , Grad
+  ) where
 
 import Numeric.AD.Internal.Kahn

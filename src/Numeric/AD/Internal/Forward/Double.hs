@@ -166,13 +166,13 @@ instance (Scalar (D (ForwardDouble s)) ~ Scalar (ForwardDouble s)) => RealFrac (
     ceiling  = discrete1 ceiling
     floor    = discrete1 floor
 instance Erf (ForwardDouble s) where
-    erf = lift1 erf $ \x -> (fromInteger 2 / sqrt pi) * exp (negate x * x)
-    erfc = lift1 erfc $ \x -> (fromInteger (-2) / sqrt pi) * exp (negate x * x)
-    normcdf = lift1 normcdf $ \x -> (fromInteger (-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt (fromInteger 2))
+    erf = lift1 erf $ \x -> (2 / sqrt pi) * exp (negate x * x)
+    erfc = lift1 erfc $ \x -> ((-2) / sqrt pi) * exp (negate x * x)
+    normcdf = lift1 normcdf $ \x -> ((-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt 2)
 instance InvErf (ForwardDouble s) where
-    inverf = lift1 inverfc $ \x -> recip $ (fromInteger 2 / sqrt pi) * exp (negate x * x)
-    inverfc = lift1 inverfc $ \x -> recip $ negate (fromInteger 2 / sqrt pi) * exp (negate x * x)
-    invnormcdf = lift1 invnormcdf $ \x -> recip $ (fromInteger (-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt (fromInteger 2))
+    inverf = lift1 inverfc $ \x -> recip $ (2 / sqrt pi) * exp (negate x * x)
+    inverfc = lift1 inverfc $ \x -> recip $ negate (2 / sqrt pi) * exp (negate x * x)
+    invnormcdf = lift1 invnormcdf $ \x -> recip $ ((-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt 2)
 
 bind :: (Traversable f) => (f (ForwardDouble s) -> b) -> f Double -> f b
 bind f as = snd $ mapAccumL outer (0 :: Int) as

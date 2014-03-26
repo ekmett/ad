@@ -1,5 +1,6 @@
-{-# LANGUAGE FlexibleContexts, TypeFamilies, UndecidableInstances #-}
--- {-# OPTIONS_HADDOCK hide, prune #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Var

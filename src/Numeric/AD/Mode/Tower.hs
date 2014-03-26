@@ -1,4 +1,5 @@
-{-# LANGUAGE Rank2Types, BangPatterns #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE BangPatterns #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      : Numeric.AD.Mode.Tower

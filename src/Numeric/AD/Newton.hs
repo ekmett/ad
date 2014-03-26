@@ -1,4 +1,8 @@
-{-# LANGUAGE Rank2Types, BangPatterns, FlexibleContexts, ScopedTypeVariables, TypeFamilies #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Newton

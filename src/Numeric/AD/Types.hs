@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Types
--- Copyright   :  (c) Edward Kmett 2010-12
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -10,17 +10,17 @@
 --
 -----------------------------------------------------------------------------
 module Numeric.AD.Types
-    (
-    -- * AD modes
-      Mode(..)
-    -- * Jets
-    , Jet(..)
-    , headJet
-    , tailJet
-    , jet
-    -- * Apply functions that use 'lift'
-    , lowerUU, lowerUF, lowerFU, lowerFF
-    ) where
+  (
+  -- * AD modes
+    Mode(..)
+  -- * Jets
+  , Jet(..)
+  , headJet
+  , tailJet
+  , jet
+  -- * Apply functions that use 'lift'
+  , lowerUU, lowerUF, lowerFU, lowerFF
+  ) where
 
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Internal.Jet

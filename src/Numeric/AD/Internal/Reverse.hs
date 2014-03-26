@@ -4,7 +4,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Internal.Reverse
--- Copyright   :  (c) Edward Kmett 2012
+-- Copyright   :  (c) Edward Kmett 2012-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -22,17 +22,17 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Internal.Reverse
-    ( Reverse(..)
-    , Tape(..)
-    , Head(..)
-    , Cells(..)
-    , reifyTape
-    , partials
-    , partialArrayOf
-    , partialMapOf
-    , derivativeOf
-    , derivativeOf'
-    ) where
+  ( Reverse(..)
+  , Tape(..)
+  , Head(..)
+  , Cells(..)
+  , reifyTape
+  , partials
+  , partialArrayOf
+  , partialMapOf
+  , derivativeOf
+  , derivativeOf'
+  ) where
 
 import Control.Monad.ST
 import Data.Array.ST
@@ -131,44 +131,43 @@ instance (Num a, Reifies s Tape) => Mode (Reverse a s) where
   x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
 instance (Num a, Reifies s Tape) => Primal (Reverse a s) where
-    primal Zero = 0
-    primal (Lift a) = a
-    primal (Reverse _ a) = a
+  primal Zero = 0
+  primal (Lift a) = a
+  primal (Reverse _ a) = a
 
 instance (Reifies s Tape, Num a) => Jacobian (Reverse a s) where
-    type D (Reverse a s) = Id a s
+  type D (Reverse a s) = Id a s
 
-    unary f _         (Zero)   = Lift (f 0)
-    unary f _         (Lift a) = Lift (f a)
-    unary f (Id dadi) (Reverse i b) = unarily f dadi i b
+  unary f _         (Zero)   = Lift (f 0)
+  unary f _         (Lift a) = Lift (f a)
+  unary f (Id dadi) (Reverse i b) = unarily f dadi i b
 
-    lift1 f df b = unary f (df (Id pb)) b
-        where pb = primal b
+  lift1 f df b = unary f (df (Id pb)) b where
+    pb = primal b
 
-    lift1_ f df b = unary (const a) (df (Id a) (Id pb)) b
-        where pb = primal b
-              a = f pb
+  lift1_ f df b = unary (const a) (df (Id a) (Id pb)) b where
+    pb = primal b
+    a = f pb
 
-    binary f _         _         Zero     Zero     = Lift (f 0 0)
-    binary f _         _         Zero     (Lift c) = Lift (f 0 c)
-    binary f _         _         (Lift b) Zero     = Lift (f b 0)
-    binary f _         _         (Lift b) (Lift c) = Lift (f b c)
+  binary f _         _         Zero     Zero     = Lift (f 0 0)
+  binary f _         _         Zero     (Lift c) = Lift (f 0 c)
+  binary f _         _         (Lift b) Zero     = Lift (f b 0)
+  binary f _         _         (Lift b) (Lift c) = Lift (f b c)
 
-    binary f _         (Id dadc) Zero        (Reverse i c) = unarily (f 0) dadc i c
-    binary f _         (Id dadc) (Lift b)    (Reverse i c) = unarily (f b) dadc i c
-    binary f (Id dadb) _         (Reverse i b) Zero        = unarily (`f` 0) dadb i b
-    binary f (Id dadb) _         (Reverse i b) (Lift c)    = unarily (`f` c) dadb i b
-    binary f (Id dadb) (Id dadc) (Reverse i b) (Reverse j c) = binarily f dadb dadc i b j c
+  binary f _         (Id dadc) Zero        (Reverse i c) = unarily (f 0) dadc i c
+  binary f _         (Id dadc) (Lift b)    (Reverse i c) = unarily (f b) dadc i c
+  binary f (Id dadb) _         (Reverse i b) Zero        = unarily (`f` 0) dadb i b
+  binary f (Id dadb) _         (Reverse i b) (Lift c)    = unarily (`f` c) dadb i b
+  binary f (Id dadb) (Id dadc) (Reverse i b) (Reverse j c) = binarily f dadb dadc i b j c
 
-    lift2 f df b c = binary f dadb dadc b c
-        where (dadb, dadc) = df (Id (primal b)) (Id (primal c))
+  lift2 f df b c = binary f dadb dadc b c where
+    (dadb, dadc) = df (Id (primal b)) (Id (primal c))
 
-    lift2_ f df b c = binary (\_ _ -> a) dadb dadc b c
-        where
-            pb = primal b
-            pc = primal c
-            a = f pb pc
-            (dadb, dadc) = df (Id a) (Id pb) (Id pc)
+  lift2_ f df b c = binary (\_ _ -> a) dadb dadc b c where
+    pb = primal b
+    pc = primal c
+    a = f pb pc
+    (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
 let s = VarT (mkName "s") in
   deriveNumeric (ClassP ''Reifies [s, ConT ''Tape] :) (ConT ''Reverse) s
@@ -205,14 +204,14 @@ partials :: forall s a. (Reifies s Tape, Num a) => Reverse a s -> [a]
 partials Zero        = []
 partials (Lift _)    = []
 partials (Reverse k _) = map (sensitivities !) [0..vs] where
-   Head n t = unsafePerformIO $ readIORef (getTape (reflect (Proxy :: Proxy s)))
-   tk = dropCells (n - k) t
-   (vs,sensitivities) = runST $ do
-     ss <- newArray (0, k) 0
-     writeArray ss k 1
-     v <- backPropagate k tk ss
-     as <- Unsafe.unsafeFreeze ss
-     return (v, as)
+  Head n t = unsafePerformIO $ readIORef (getTape (reflect (Proxy :: Proxy s)))
+  tk = dropCells (n - k) t
+  (vs,sensitivities) = runST $ do
+    ss <- newArray (0, k) 0
+    writeArray ss k 1
+    v <- backPropagate k tk ss
+    as <- Unsafe.unsafeFreeze ss
+    return (v, as)
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.
 partialArrayOf :: (Reifies s Tape, Num a) => Proxy s -> (Int, Int) -> Reverse a s -> Array Int a
@@ -232,6 +231,6 @@ reifyTape vs k = unsafePerformIO $ do
 {-# NOINLINE reifyTape #-}
 
 instance (Num a, Reifies s Tape) => Var (Reverse a s) where
-    var a v = Reverse v a
-    varId (Reverse v _) = v
-    varId _ = error "varId: not a Var"
+  var a v = Reverse v a
+  varId (Reverse v _) = v
+  varId _ = error "varId: not a Var"

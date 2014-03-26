@@ -9,7 +9,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Mode.Reverse
--- Copyright   :  (c) Edward Kmett 2010
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -21,29 +21,29 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Reverse
-    ( Reverse
-    -- * Gradient
-    , grad
-    , grad'
-    , gradWith
-    , gradWith'
+  ( Reverse
+  -- * Gradient
+  , grad
+  , grad'
+  , gradWith
+  , gradWith'
 
-    -- * Jacobian
-    , jacobian
-    , jacobian'
-    , jacobianWith
-    , jacobianWith'
+  -- * Jacobian
+  , jacobian
+  , jacobian'
+  , jacobianWith
+  , jacobianWith'
 
-    -- * Hessian
-    , hessian
-    , hessianF
+  -- * Hessian
+  , hessian
+  , hessianF
 
-    -- * Derivatives
-    , diff
-    , diff'
-    , diffF
-    , diffF'
-    ) where
+  -- * Derivatives
+  , diff
+  , diff'
+  , diffF
+  , diffF'
+  ) where
 
 import Control.Applicative ((<$>))
 import Data.Reflection (Reifies)
@@ -61,8 +61,8 @@ import Numeric.AD.Internal.Var
 -- >>> grad (\[x,y,z] -> x*y+z) [1,2,3]
 -- [2,1,1]
 grad :: (Traversable f, Num a) => (forall s. Reifies s Tape => f (Reverse a s) -> Reverse a s) -> f a -> f a
-grad f as = reifyTape (snd bds) $ \p -> unbind vs $! partialArrayOf p bds $! f $ vary <$> vs
-  where (vs, bds) = bind as
+grad f as = reifyTape (snd bds) $ \p -> unbind vs $! partialArrayOf p bds $! f $ vary <$> vs where
+  (vs, bds) = bind as
 {-# INLINE grad #-}
 
 -- | The 'grad'' function calculates the result and gradient of a non-scalar-to-scalar function with reverse-mode AD in a single pass.
@@ -70,8 +70,8 @@ grad f as = reifyTape (snd bds) $ \p -> unbind vs $! partialArrayOf p bds $! f $
 -- >>> grad' (\[x,y,z] -> x*y+z) [1,2,3]
 -- (5,[2,1,1])
 grad' :: (Traversable f, Num a) => (forall s. Reifies s Tape => f (Reverse a s) -> Reverse a s) -> f a -> (a, f a)
-grad' f as = reifyTape (snd bds) $ \p ->
-  let r = f (fmap vary vs) in (primal r, unbind vs $! partialArrayOf p bds $! r)
+grad' f as = reifyTape (snd bds) $ \p -> case f (fmap vary vs) of
+   r -> (primal r, unbind vs $! partialArrayOf p bds $! r)
   where (vs, bds) = bind as
 {-# INLINE grad' #-}
 
@@ -94,9 +94,9 @@ gradWith g f as = reifyTape (snd bds) $ \p -> unbindWith g vs $! partialArrayOf 
 -- 'grad'' == 'gradWith'' (\_ dx -> dx)
 -- @
 gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse a s) -> Reverse a s) -> f a -> (a, f b)
-gradWith' g f as = reifyTape (snd bds) $ \p ->
-   let r = f (fmap vary vs) in (primal r, unbindWith g vs $! partialArrayOf p bds $! r)
-    where (vs, bds) = bind as
+gradWith' g f as = reifyTape (snd bds) $ \p -> case f (fmap vary vs) of
+   r -> (primal r, unbindWith g vs $! partialArrayOf p bds $! r)
+  where (vs, bds) = bind as
 {-# INLINE gradWith' #-}
 
 -- | The 'jacobian' function calculates the jacobian of a non-scalar-to-non-scalar function with reverse AD lazily in @m@ passes for @m@ outputs.
@@ -104,8 +104,8 @@ gradWith' g f as = reifyTape (snd bds) $ \p ->
 -- >>> jacobian (\[x,y] -> [y,x,x*y]) [2,1]
 -- [[0,1],[1,0],[1,2]]
 jacobian :: (Traversable f, Functor g, Num a) => (forall s. Reifies s Tape => f (Reverse a s) -> g (Reverse a s)) -> f a -> g (f a)
-jacobian f as = reifyTape (snd bds) $ \p -> unbind vs . partialArrayOf p bds <$> f (fmap vary vs)
-  where (vs, bds) = bind as
+jacobian f as = reifyTape (snd bds) $ \p -> unbind vs . partialArrayOf p bds <$> f (fmap vary vs) where
+  (vs, bds) = bind as
 {-# INLINE jacobian #-}
 
 -- | The 'jacobian'' function calculates both the result and the Jacobian of a nonscalar-to-nonscalar function, using @m@ invocations of reverse AD,
@@ -131,7 +131,7 @@ jacobian' f as = reifyTape (snd bds) $ \p ->
 -- @
 jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse a s) -> g (Reverse a s)) -> f a -> g (f b)
 jacobianWith g f as = reifyTape (snd bds) $ \p -> unbindWith g vs . partialArrayOf p bds <$> f (fmap vary vs) where
-    (vs, bds) = bind as
+  (vs, bds) = bind as
 {-# INLINE jacobianWith #-}
 
 -- | 'jacobianWith' g f' calculates both the result and the Jacobian of a nonscalar-to-nonscalar function @f@, using @m@ invocations of reverse AD,
@@ -184,7 +184,6 @@ diffF' :: (Functor f, Num a) => (forall s. Reifies s Tape => Reverse a s -> f (R
 diffF' f a = reifyTape 1 $ \p -> derivativeOf' p <$> f (var a 0)
 {-# INLINE diffF' #-}
 
-
 -- | Compute the hessian via the jacobian of the gradient. gradient is computed in reverse mode and then the jacobian is computed in reverse mode.
 --
 -- However, since the @'grad' f :: f a -> f a@ is square this is not as fast as using the forward-mode Jacobian of a reverse mode gradient provided by 'Numeric.AD.hessian'.
@@ -193,6 +192,7 @@ diffF' f a = reifyTape 1 $ \p -> derivativeOf' p <$> f (var a 0)
 -- [[0,1],[1,0]]
 hessian :: (Traversable f, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (ComposeMode Reverse (Reverse a s') s) -> (ComposeMode Reverse (Reverse a s') s)) -> f a -> f (f a)
 hessian f = jacobian (grad (decomposeMode . f . fmap ComposeMode))
+{-# INLINE hessian #-}
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the reverse-mode Jacobian of the reverse-mode Jacobian of the function.
 --
@@ -202,4 +202,5 @@ hessian f = jacobian (grad (decomposeMode . f . fmap ComposeMode))
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
 hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (ComposeMode Reverse (Reverse a s') s) -> g (ComposeMode Reverse (Reverse a s') s)) -> f a -> g (f (f a))
 hessianF f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap ComposeMode))
+{-# INLINE hessianF #-}
 

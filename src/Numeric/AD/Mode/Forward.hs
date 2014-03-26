@@ -1,8 +1,9 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Mode.Forward
--- Copyright   :  (c) Edward Kmett 2010
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -13,34 +14,34 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Forward
-    ( Forward
-    -- * Gradient
-    , grad
-    , grad'
-    , gradWith
-    , gradWith'
-    -- * Jacobian
-    , jacobian
-    , jacobian'
-    , jacobianWith
-    , jacobianWith'
-    -- * Transposed Jacobian
-    , jacobianT
-    , jacobianWithT
-    -- * Hessian Product
-   , hessianProduct
-   , hessianProduct'
-    -- * Derivatives
-    , diff
-    , diff'
-    , diffF
-    , diffF'
-    -- * Directional Derivatives
-    , du
-    , du'
-    , duF
-    , duF'
-    ) where
+  ( Forward
+  -- * Gradient
+  , grad
+  , grad'
+  , gradWith
+  , gradWith'
+  -- * Jacobian
+  , jacobian
+  , jacobian'
+  , jacobianWith
+  , jacobianWith'
+  -- * Transposed Jacobian
+  , jacobianT
+  , jacobianWithT
+  -- * Hessian Product
+  , hessianProduct
+  , hessianProduct'
+  -- * Derivatives
+  , diff
+  , diff'
+  , diffF
+  , diffF'
+  -- * Directional Derivatives
+  , du
+  , du'
+  , duF
+  , duF'
+  ) where
 
 import Data.Traversable (Traversable)
 import Control.Applicative
@@ -117,10 +118,12 @@ jacobianT f = bind (fmap tangent . f)
 
 -- | A fast, simple, transposed Jacobian computed with 'Forward' mode 'AD' that combines the output with the input.
 jacobianWithT :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. f (Forward a s) -> g (Forward a s)) -> f a -> f (g b)
-jacobianWithT g f = bindWith g' f
-    where g' a ga = g a . tangent <$> ga
+jacobianWithT g f = bindWith g' f where
+  g' a ga = g a . tangent <$> ga
 {-# INLINE jacobianWithT #-}
+#ifdef HLINT
 {-# ANN jacobianWithT "HLint: ignore Eta reduce" #-}
+#endif
 
 -- | Compute the Jacobian using 'Forward' mode 'AD'. This must transpose the result, so 'jacobianT' is faster and allows more result types.
 --
@@ -128,34 +131,30 @@ jacobianWithT g f = bindWith g' f
 -- >>> jacobian (\[x,y] -> [y,x,x+y,x*y,exp x * sin y]) [pi,1]
 -- [[0.0,1.0],[1.0,0.0],[1.0,1.0],[1.0,3.141592653589793],[19.472221418841606,12.502969588876512]]
 jacobian :: (Traversable f, Traversable g, Num a) => (forall s . f (Forward a s) -> g (Forward a s)) -> f a -> g (f a)
-jacobian f as = transposeWith (const id) t p
-    where
-        (p, t) = bind' (fmap tangent . f) as
+jacobian f as = transposeWith (const id) t p where
+  (p, t) = bind' (fmap tangent . f) as
 {-# INLINE jacobian #-}
 
 -- | Compute the Jacobian using 'Forward' mode 'AD' and combine the output with the input. This must transpose the result, so 'jacobianWithT' is faster, and allows more result types.
 jacobianWith :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> (forall s. f (Forward a s) -> g (Forward a s)) -> f a -> g (f b)
-jacobianWith g f as = transposeWith (const id) t p
-    where
-        (p, t) = bindWith' g' f as
-        g' a ga = g a . tangent <$> ga
+jacobianWith g f as = transposeWith (const id) t p where
+  (p, t) = bindWith' g' f as
+  g' a ga = g a . tangent <$> ga
 {-# INLINE jacobianWith #-}
 
 -- | Compute the Jacobian using 'Forward' mode 'AD' along with the actual answer.
 jacobian' :: (Traversable f, Traversable g, Num a) => (forall s. f (Forward a s) -> g (Forward a s)) -> f a -> g (a, f a)
-jacobian' f as = transposeWith row t p
-    where
-        (p, t) = bind' f as
-        row x as' = (primal x, tangent <$> as')
+jacobian' f as = transposeWith row t p where
+  (p, t) = bind' f as
+  row x as' = (primal x, tangent <$> as')
 {-# INLINE jacobian' #-}
 
 -- | Compute the Jacobian using 'Forward' mode 'AD' combined with the input using a user specified function, along with the actual answer.
 jacobianWith' :: (Traversable f, Traversable g, Num a) => (a -> a -> b) -> (forall s. f (Forward a s) -> g (Forward a s)) -> f a -> g (a, f b)
-jacobianWith' g f as = transposeWith row t p
-    where
-        (p, t) = bindWith' g' f as
-        row x as' = (primal x, as')
-        g' a ga = g a . tangent <$> ga
+jacobianWith' g f as = transposeWith row t p where
+  (p, t) = bindWith' g' f as
+  row x as' = (primal x, as')
+  g' a ga = g a . tangent <$> ga
 {-# INLINE jacobianWith' #-}
 
 -- | Compute the gradient of a function using forward mode AD.
@@ -169,9 +168,8 @@ grad f = bind (tangent . f)
 --
 -- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Wengert.grad'' for @n@ inputs, in exchange for better space utilization.
 grad' :: (Traversable f, Num a) => (forall s. f (Forward a s) -> Forward a s) -> f a -> (a, f a)
-grad' f as = (primal b, tangent <$> bs)
-    where
-        (b, bs) = bind' f as
+grad' f as = (primal b, tangent <$> bs) where
+  (b, bs) = bind' f as
 {-# INLINE grad' #-}
 
 -- | Compute the gradient of a function using forward mode AD and combine the result with the input using a user-specified function.
@@ -192,18 +190,13 @@ gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (Forward a 
 gradWith' g f as = (primal $ f (Lift <$> as), bindWith g (tangent . f) as)
 {-# INLINE gradWith' #-}
 
-
 -- | Compute the product of a vector with the Hessian using forward-on-forward-mode AD.
 --
 hessianProduct :: (Traversable f, Num a) => (forall s s'. f (ComposeMode Forward (Forward a s') s) -> ComposeMode Forward (Forward a s') s) -> f (a, a) -> f a
 hessianProduct f = duF $ grad $ decomposeMode . f . fmap ComposeMode
+{-# INLINE hessianProduct #-}
 
 -- | Compute the gradient and hessian product using forward-on-forward-mode AD.
 hessianProduct' :: (Traversable f, Num a) => (forall s s'. f (ComposeMode Forward (Forward a s') s) -> ComposeMode Forward (Forward a s') s) -> f (a, a) -> f (a, a)
 hessianProduct' f = duF' $ grad $ decomposeMode . f . fmap ComposeMode
-
-
--- * Experimental
-
--- data f :> a = a :< f (f :> a)
--- gradients :: (Traversable f, Num a) => (forall s. Mode s => f (AD s a) -> AD s a) -> f a -> (f :> a)
+{-# INLINE hessianProduct' #-}

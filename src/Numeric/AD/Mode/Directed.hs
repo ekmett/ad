@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Mode.Directed
--- Copyright   :  (c) Edward Kmett 2010-12
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -13,19 +13,19 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Directed
-    (
-    -- * Gradients
-      grad
-    , grad'
-    -- * Jacobians
-    , jacobian
-    , jacobian'
-    -- * Derivatives
-    , diff
-    , diff'
-    -- * Exposed Types
-    , Direction(..)
-    ) where
+  (
+  -- * Gradients
+    grad
+  , grad'
+  -- * Jacobians
+  , jacobian
+  , jacobian'
+  -- * Derivatives
+  , diff
+  , diff'
+  -- * Exposed Types
+  , Direction(..)
+  ) where
 
 import Prelude hiding (reverse)
 import Numeric.AD.Types
@@ -38,12 +38,12 @@ import qualified Numeric.AD as M
 import Data.Ix
 
 data Direction
-    = Forward
-    | Kahn
-    | Reverse
-    | Tower
-    | Mixed
-    deriving (Show, Eq, Ord, Read, Bounded, Enum, Ix)
+  = Forward
+  | Kahn
+  | Reverse
+  | Tower
+  | Mixed
+  deriving (Show, Eq, Ord, Read, Bounded, Enum, Ix)
 
 diff :: Num a => Direction -> (forall t. Mode t => t -> t) -> a -> a
 diff Forward f a = F.diff f a

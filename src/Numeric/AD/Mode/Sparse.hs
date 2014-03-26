@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      : Numeric.AD.Mode.Sparse
--- Copyright   : (c) Edward Kmett 2010
+-- Copyright   : (c) Edward Kmett 2010-2014
 -- License     : BSD3
 -- Maintainer  : ekmett@gmail.com
 -- Stability   : experimental
@@ -13,36 +13,36 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Sparse
-    ( Sparse
-    -- * Sparse Gradients
-    , grad
-    , grad'
-    , gradWith
-    , gradWith'
-    , grads
+  ( Sparse
+  -- * Sparse Gradients
+  , grad
+  , grad'
+  , gradWith
+  , gradWith'
+  , grads
 
-    -- * Sparse Jacobians (synonyms)
-    , jacobian
-    , jacobian'
-    , jacobianWith
-    , jacobianWith'
-    , jacobians
+  -- * Sparse Jacobians (synonyms)
+  , jacobian
+  , jacobian'
+  , jacobianWith
+  , jacobianWith'
+  , jacobians
 
-    -- * Sparse Hessians
-    , hessian
-    , hessian'
+  -- * Sparse Hessians
+  , hessian
+  , hessian'
 
-    , hessianF
-    , hessianF'
+  , hessianF
+  , hessianF'
 
-    -- * Unsafe gradients
-    -- , vgrad
-    -- , vgrads
+  -- * Unsafe gradients
+  -- , vgrad
+  -- , vgrads
 
-    -- * Exposed Types
-    , Grad
-    , Grads
-    ) where
+  -- * Exposed Types
+  , Grad
+  , Grads
+  ) where
 
 import Control.Comonad
 import Data.Traversable

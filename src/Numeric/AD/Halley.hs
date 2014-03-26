@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Halley
--- Copyright   :  (c) Edward Kmett 2010
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -16,13 +16,13 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Halley
-    (
-    -- * Halley's Method (Tower AD)
-      findZero
-    , inverse
-    , fixedPoint
-    , extremum
-    ) where
+  (
+  -- * Halley's Method (Tower AD)
+    findZero
+  , inverse
+  , fixedPoint
+  , extremum
+  ) where
 
 import Prelude hiding (all)
 import Numeric.AD.Internal.Forward (Forward)

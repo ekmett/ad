@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.AD.Mode.Kahn
--- Copyright   :  (c) Edward Kmett 2010
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -19,35 +19,34 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Kahn
-    ( Kahn
-    -- * Gradient
-    , grad
-    , grad'
-    , gradWith
-    , gradWith'
+  ( Kahn
+  -- * Gradient
+  , grad
+  , grad'
+  , gradWith
+  , gradWith'
 
-    -- * Jacobian
-    , jacobian
-    , jacobian'
-    , jacobianWith
-    , jacobianWith'
-    -- * Hessian
-    , hessian
-    , hessianF
-    -- * Derivatives
-    , diff
-    , diff'
-    , diffF
-    , diffF'
-    -- * Unsafe Variadic Gradient
-    , vgrad, vgrad'
-    , Grad
-    ) where
+  -- * Jacobian
+  , jacobian
+  , jacobian'
+  , jacobianWith
+  , jacobianWith'
+  -- * Hessian
+  , hessian
+  , hessianF
+  -- * Derivatives
+  , diff
+  , diff'
+  , diffF
+  , diffF'
+  -- * Unsafe Variadic Gradient
+  , vgrad, vgrad'
+  , Grad
+  ) where
 
 import Control.Applicative ((<$>))
 import Data.Traversable (Traversable)
 
--- import Numeric.AD.Types
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Kahn
@@ -57,10 +56,9 @@ import Numeric.AD.Internal.Var
 --
 -- >>> grad (\[x,y,z] -> x*y+z) [1,2,3]
 -- [2,1,1]
-
 grad :: (Traversable f, Num a) => (forall s. f (Kahn a s) -> Kahn a s) -> f a -> f a
-grad f as = unbind vs (partialArray bds $ f vs)
-    where (vs,bds) = bind as
+grad f as = unbind vs (partialArray bds $ f vs) where
+  (vs,bds) = bind as
 {-# INLINE grad #-}
 
 -- | The 'grad'' function calculates the result and gradient of a non-scalar-to-scalar function with kahn-mode AD in a single pass.
@@ -68,9 +66,9 @@ grad f as = unbind vs (partialArray bds $ f vs)
 -- >>> grad' (\[x,y,z] -> 4*x*exp y+cos z) [1,2,3]
 -- (28.566231899122155,[29.5562243957226,29.5562243957226,-0.1411200080598672])
 grad' :: (Traversable f, Num a) => (forall s. f (Kahn a s) -> Kahn a s) -> f a -> (a, f a)
-grad' f as = (primal r, unbind vs $ partialArray bds r)
-    where (vs, bds) = bind as
-          r = f vs
+grad' f as = (primal r, unbind vs $ partialArray bds r) where
+  (vs, bds) = bind as
+  r = f vs
 {-# INLINE grad' #-}
 
 -- | @'grad' g f@ function calculates the gradient of a non-scalar-to-scalar function @f@ with kahn-mode AD in a single pass.
@@ -83,8 +81,8 @@ grad' f as = (primal r, unbind vs $ partialArray bds r)
 --
 --
 gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (Kahn a s) -> Kahn a s) -> f a -> f b
-gradWith g f as = unbindWith g vs (partialArray bds $ f vs)
-    where (vs,bds) = bind as
+gradWith g f as = unbindWith g vs (partialArray bds $ f vs) where
+  (vs,bds) = bind as
 {-# INLINE gradWith #-}
 
 -- | @'grad'' g f@ calculates the result and gradient of a non-scalar-to-scalar function @f@ with kahn-mode AD in a single pass
@@ -92,9 +90,9 @@ gradWith g f as = unbindWith g vs (partialArray bds $ f vs)
 --
 -- @'grad'' == 'gradWith'' (\_ dx -> dx)@
 gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (Kahn a s) -> Kahn a s) -> f a -> (a, f b)
-gradWith' g f as = (primal r, unbindWith g vs $ partialArray bds r)
-    where (vs, bds) = bind as
-          r = f vs
+gradWith' g f as = (primal r, unbindWith g vs $ partialArray bds r) where
+  (vs, bds) = bind as
+  r = f vs
 {-# INLINE gradWith' #-}
 
 -- | The 'jacobian' function calculates the jacobian of a non-scalar-to-non-scalar function with kahn AD lazily in @m@ passes for @m@ outputs.
@@ -106,7 +104,7 @@ gradWith' g f as = (primal r, unbindWith g vs $ partialArray bds r)
 -- [[0.0,7.38905609893065],[-0.8414709848078965,0.0],[1.0,1.0]]
 jacobian :: (Traversable f, Functor g, Num a) => (forall s. f (Kahn a s) -> g (Kahn a s)) -> f a -> g (f a)
 jacobian f as = unbind vs . partialArray bds <$> f vs where
-    (vs, bds) = bind as
+  (vs, bds) = bind as
 {-# INLINE jacobian #-}
 
 -- | The 'jacobian'' function calculates both the result and the Jacobian of a nonscalar-to-nonscalar function, using @m@ invocations of kahn AD,
@@ -117,8 +115,8 @@ jacobian f as = unbind vs . partialArray bds <$> f vs where
 -- [(1,[0,1]),(2,[1,0]),(2,[1,2])]
 jacobian' :: (Traversable f, Functor g, Num a) => (forall s. f (Kahn a s) -> g (Kahn a s)) -> f a -> g (a, f a)
 jacobian' f as = row <$> f vs where
-    (vs, bds) = bind as
-    row a = (primal a, unbind vs (partialArray bds a))
+  (vs, bds) = bind as
+  row a = (primal a, unbind vs (partialArray bds a))
 {-# INLINE jacobian' #-}
 
 -- | 'jacobianWith g f' calculates the Jacobian of a non-scalar-to-non-scalar function @f@ with kahn AD lazily in @m@ passes for @m@ outputs.
@@ -131,7 +129,7 @@ jacobian' f as = row <$> f vs where
 -- @
 jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. f (Kahn a s) -> g (Kahn a s)) -> f a -> g (f b)
 jacobianWith g f as = unbindWith g vs . partialArray bds <$> f vs where
-    (vs, bds) = bind as
+  (vs, bds) = bind as
 {-# INLINE jacobianWith #-}
 
 -- | 'jacobianWith' g f' calculates both the result and the Jacobian of a nonscalar-to-nonscalar function @f@, using @m@ invocations of kahn AD,
@@ -142,8 +140,8 @@ jacobianWith g f as = unbindWith g vs . partialArray bds <$> f vs where
 -- @'jacobian'' == 'jacobianWith'' (\_ dx -> dx)@
 jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. f (Kahn a s) -> g (Kahn a s)) -> f a -> g (a, f b)
 jacobianWith' g f as = row <$> f vs where
-    (vs, bds) = bind as
-    row a = (primal a, unbindWith g vs (partialArray bds a))
+  (vs, bds) = bind as
+  row a = (primal a, unbindWith g vs (partialArray bds a))
 {-# INLINE jacobianWith' #-}
 
 -- | Compute the derivative of a function.
@@ -185,7 +183,7 @@ diffF' f a = derivative' <$> f (var a 0)
 {-# INLINE diffF' #-}
 
 
--- | Compute the 'hessian' via the 'jacobian' of the gradient. gradient is computed in kahn mode and then the 'jacobian' is computed in kahn mode.
+-- | Compute the 'hessian' via the 'jacobian' of the gradient. gradient is computed in 'Kahn' mode and then the 'jacobian' is computed in 'Kahn' mode.
 --
 -- However, since the @'grad' f :: f a -> f a@ is square this is not as fast as using the forward-mode 'jacobian' of a reverse mode gradient provided by 'Numeric.AD.hessian'.
 --
@@ -194,7 +192,7 @@ diffF' f a = derivative' <$> f (var a 0)
 hessian :: (Traversable f, Num a) => (forall s s'. f (ComposeMode Kahn (Kahn a s') s) -> (ComposeMode Kahn (Kahn a s') s)) -> f a -> f (f a)
 hessian f = jacobian (grad (decomposeMode . f . fmap ComposeMode))
 
--- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the kahn-mode Jacobian of the kahn-mode Jacobian of the function.
+-- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the 'Kahn'-mode Jacobian of the 'Kahn'-mode Jacobian of the function.
 --
 -- Less efficient than 'Numeric.AD.Mode.Mixed.hessianF'.
 --
@@ -202,4 +200,3 @@ hessian f = jacobian (grad (decomposeMode . f . fmap ComposeMode))
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
 hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. f (ComposeMode Kahn (Kahn a s') s) -> g (ComposeMode Kahn (Kahn a s') s)) -> f a -> g (f (f a))
 hessianF f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap ComposeMode))
-

@@ -3,7 +3,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Internal.Var
 -- Copyright   :  (c) Edward Kmett 2012
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com

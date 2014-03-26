@@ -2,7 +2,6 @@
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Mode.Forward
 -- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com

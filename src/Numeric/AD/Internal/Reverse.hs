@@ -12,7 +12,6 @@
 {-# OPTIONS_GHC -fno-full-laziness #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Internal.Reverse
 -- Copyright   :  (c) Edward Kmett 2012-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com

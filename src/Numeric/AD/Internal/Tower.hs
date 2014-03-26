@@ -10,7 +10,6 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      : Numeric.AD.Tower.Internal
 -- Copyright   : (c) Edward Kmett 2010
 -- License     : BSD3
 -- Maintainer  : ekmett@gmail.com

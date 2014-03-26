@@ -1,30 +1,30 @@
 {-# LANGUAGE RankNTypes #-}
 module Numeric.AD.Mode.Forward.Double
-    ( ForwardDouble
-    -- * Gradient
-    , grad
-    , grad'
-    , gradWith
-    , gradWith'
-    -- * Jacobian
-    , jacobian
-    , jacobian'
-    , jacobianWith
-    , jacobianWith'
-    -- * Transposed Jacobian
-    , jacobianT
-    , jacobianWithT
-    -- * Derivatives
-    , diff
-    , diff'
-    , diffF
-    , diffF'
-    -- * Directional Derivatives
-    , du
-    , du'
-    , duF
-    , duF'
-    ) where
+  ( ForwardDouble
+  -- * Gradient
+  , grad
+  , grad'
+  , gradWith
+  , gradWith'
+  -- * Jacobian
+  , jacobian
+  , jacobian'
+  , jacobianWith
+  , jacobianWith'
+  -- * Transposed Jacobian
+  , jacobianT
+  , jacobianWithT
+  -- * Derivatives
+  , diff
+  , diff'
+  , diffF
+  , diffF'
+  -- * Directional Derivatives
+  , du
+  , du'
+  , duF
+  , duF'
+  ) where
 
 import Control.Applicative
 import Data.Traversable (Traversable)
@@ -71,7 +71,6 @@ diff f a = tangent $ apply f a
 --
 -- >>> diff' exp 0
 -- (1.0,1.0)
-
 diff' :: (forall s. ForwardDouble s -> ForwardDouble s) -> Double -> (Double, Double)
 diff' f a = unbundle $ apply f a
 {-# INLINE diff' #-}
@@ -99,8 +98,8 @@ jacobianT f = bind (fmap tangent . f)
 
 -- | A fast, simple, transposed Jacobian computed with 'Forward' mode 'AD' that combines the output with the input.
 jacobianWithT :: (Traversable f, Functor g) => (Double -> Double -> b) -> (forall s. f (ForwardDouble s) -> g (ForwardDouble s)) -> f Double -> f (g b)
-jacobianWithT g f = bindWith g' f
-    where g' a ga = g a . tangent <$> ga
+jacobianWithT g f = bindWith g' f where
+  g' a ga = g a . tangent <$> ga
 {-# INLINE jacobianWithT #-}
 {-# ANN jacobianWithT "HLint: ignore Eta reduce" #-}
 
@@ -110,34 +109,30 @@ jacobianWithT g f = bindWith g' f
 -- >>> jacobian (\[x,y] -> [y,x,x+y,x*y,exp x * sin y]) [pi,1]
 -- [[0.0,1.0],[1.0,0.0],[1.0,1.0],[1.0,3.141592653589793],[19.472221418841606,12.502969588876512]]
 jacobian :: (Traversable f, Traversable g) => (forall s . f (ForwardDouble s) -> g (ForwardDouble s)) -> f Double -> g (f Double)
-jacobian f as = transposeWith (const id) t p
-    where
-        (p, t) = bind' (fmap tangent . f) as
+jacobian f as = transposeWith (const id) t p where
+  (p, t) = bind' (fmap tangent . f) as
 {-# INLINE jacobian #-}
 
 -- | Compute the Jacobian using 'Forward' mode 'AD' and combine the output with the input. This must transpose the result, so 'jacobianWithT' is faster, and allows more result types.
 jacobianWith :: (Traversable f, Traversable g) => (Double -> Double -> b) -> (forall s. f (ForwardDouble s) -> g (ForwardDouble s)) -> f Double -> g (f b)
-jacobianWith g f as = transposeWith (const id) t p
-    where
-        (p, t) = bindWith' g' f as
-        g' a ga = g a . tangent <$> ga
+jacobianWith g f as = transposeWith (const id) t p where
+  (p, t) = bindWith' g' f as
+  g' a ga = g a . tangent <$> ga
 {-# INLINE jacobianWith #-}
 
 -- | Compute the Jacobian using 'Forward' mode 'AD' along with the actual answer.
 jacobian' :: (Traversable f, Traversable g) => (forall s. f (ForwardDouble s) -> g (ForwardDouble s)) -> f Double -> g (Double, f Double)
-jacobian' f as = transposeWith row t p
-    where
-        (p, t) = bind' f as
-        row x as' = (primal x, tangent <$> as')
+jacobian' f as = transposeWith row t p where
+  (p, t) = bind' f as
+  row x as' = (primal x, tangent <$> as')
 {-# INLINE jacobian' #-}
 
 -- | Compute the Jacobian using 'Forward' mode 'AD' combined with the input using a user specified function, along with the actual answer.
 jacobianWith' :: (Traversable f, Traversable g) => (Double -> Double -> b) -> (forall s. f (ForwardDouble s) -> g (ForwardDouble s)) -> f Double -> g (Double, f b)
-jacobianWith' g f as = transposeWith row t p
-    where
-        (p, t) = bindWith' g' f as
-        row x as' = (primal x, as')
-        g' a ga = g a . tangent <$> ga
+jacobianWith' g f as = transposeWith row t p where
+  (p, t) = bindWith' g' f as
+  row x as' = (primal x, as')
+  g' a ga = g a . tangent <$> ga
 {-# INLINE jacobianWith' #-}
 
 -- | Compute the gradient of a function using forward mode AD.

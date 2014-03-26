@@ -5,7 +5,6 @@
 {-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Newton
 -- Copyright   :  (c) Edward Kmett 2010
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com

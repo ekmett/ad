@@ -8,7 +8,6 @@
 #endif
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.AD.Internal.Jet
 -- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com

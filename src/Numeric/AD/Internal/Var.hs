@@ -24,6 +24,8 @@ module Numeric.AD.Internal.Var
     ) where
 
 import Prelude hiding (mapM)
+import Control.Applicative
+import Control.Monad hiding (mapM)
 import Data.Array
 import Data.IntMap (IntMap, findWithDefault)
 import Data.Traversable (Traversable, mapM)
@@ -31,14 +33,27 @@ import Numeric.AD.Internal.Classes
 
 -- | Used to mark variables for inspection during the reverse pass
 class Primal v => Var v where
-    var   :: Scalar v -> Int -> v
-    varId :: v -> Int
+  var   :: Scalar v -> Int -> v
+  varId :: v -> Int
 
 -- A simple fresh variable supply monad
 newtype S a = S { runS :: Int -> (a,Int) }
+
+instance Functor S where
+  fmap = liftM
+  {-# INLINE fmap #-}
+
+instance Applicative S where
+  pure = return
+  {-# INLINE pure #-}
+  (<*>) = ap
+  {-# INLINE (<*>) #-}
+
 instance Monad S where
-    return a = S (\s -> (a,s))
-    S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
+  return a = S (\s -> (a,s))
+  {-# INLINE return #-}
+  S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
+  {-# INLINE (>>=) #-}
 
 bind :: (Traversable f, Var v) => f (Scalar v) -> (f v, (Int,Int))
 bind xs = (r,(0,hi)) where

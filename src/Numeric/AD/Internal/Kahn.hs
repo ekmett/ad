@@ -36,7 +36,7 @@ module Numeric.AD.Internal.Kahn
 import Prelude hiding (mapM)
 import Control.Applicative (Applicative(..),(<$>))
 import Control.Monad.ST
-import Control.Monad (forM_)
+import Control.Monad (forM_, liftM, ap)
 import Data.List (foldl')
 import Data.Array.ST
 import Data.Array
@@ -225,10 +225,21 @@ partialMap = fromListWith (+) . partials
 -- A simple fresh variable supply monad
 newtype S a = S { runS :: Int -> (a,Int) }
 
+instance Functor S where
+  fmap = liftM
+  {-# INLINE fmap #-}
+
+instance Applicative S where
+  pure = return
+  {-# INLINE pure #-}
+  (<*>) = ap
+  {-# INLINE (<*>) #-}
 
 instance Monad S where
   return a = S (\s -> (a,s))
+  {-# INLINE return #-}
   S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
+  {-# INLINE (>>=) #-}
 
 instance Num a => Var (Kahn a s) where
   var a v = Kahn (Var a v)

@@ -132,10 +132,10 @@ library
     Numeric.AD.Variadic.Kahn
     Numeric.AD.Variadic.Sparse
 
-    Numeric.AD.Internal.Classes
     Numeric.AD.Internal.Combinators
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Forward.Double
+    Numeric.AD.Internal.Jacobian
     Numeric.AD.Internal.Tower
     Numeric.AD.Internal.Kahn
     Numeric.AD.Internal.Reverse

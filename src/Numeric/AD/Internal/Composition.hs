@@ -36,7 +36,8 @@ import Data.Number.Erf
 import Data.Data
 import Data.Foldable (Foldable(foldMap))
 import Data.Traversable (Traversable(traverse))
-import Numeric.AD.Internal.Classes
+import Numeric.AD.Internal.Jacobian
+import Numeric.AD.Mode
 
 #ifdef HLINT
 {-# ANN module "Hlint: ignore Eta reduce" #-}

@@ -62,8 +62,9 @@ import System.IO.Unsafe (unsafePerformIO)
 import Data.Data (Data)
 import Data.Traversable (Traversable, mapM)
 import Data.Typeable (Typeable)
-import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
+import Numeric.AD.Internal.Jacobian
+import Numeric.AD.Mode
 
 -- | A @Tape@ records the information needed back propagate from the output to each input during reverse 'Mode' AD.
 data Tape a t

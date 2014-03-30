@@ -40,8 +40,9 @@ import Data.Data
 import Data.Foldable (Foldable, toList)
 import Data.Number.Erf
 import Data.Traversable (Traversable, mapAccumL)
-import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
+import Numeric.AD.Internal.Jacobian
+import Numeric.AD.Mode
 
 #ifdef HLINT
 {-# ANN module "HLint: ignore Reduce duplication" #-}

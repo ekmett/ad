@@ -30,15 +30,16 @@ module Numeric.AD.Internal.Sparse
 
 import Prelude hiding (lookup)
 import Control.Applicative hiding ((<**>))
-import Control.Monad (join)
-import Numeric.AD.Internal.Classes
 import Control.Comonad.Cofree
+import Control.Monad (join)
 import Data.Data
-import Data.Number.Erf
-import Data.Typeable ()
-import qualified Data.IntMap as IntMap
 import Data.IntMap (IntMap, mapWithKey, unionWith, findWithDefault, toAscList, singleton, insertWith, lookup)
+import qualified Data.IntMap as IntMap
+import Data.Number.Erf
 import Data.Traversable
+import Data.Typeable ()
+import Numeric.AD.Internal.Jacobian
+import Numeric.AD.Mode
 
 newtype Index = Index (IntMap Int)
 

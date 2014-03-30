@@ -36,8 +36,9 @@ import Data.Foldable (Foldable, toList)
 import Data.Function (on)
 import Data.Number.Erf
 import Data.Traversable (Traversable, mapAccumL)
-import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
+import Numeric.AD.Internal.Jacobian
+import Numeric.AD.Mode
 
 data ForwardDouble a = ForwardDouble { primal, tangent :: {-# UNPACK #-} !Double }
   deriving (Read, Show)
@@ -73,7 +74,6 @@ instance Mode (ForwardDouble s) where
   ForwardDouble a da ^* b = ForwardDouble (a * b) (da * b)
 
   ForwardDouble a da ^/ b = ForwardDouble (a / b) (da / b)
-
 
 instance Jacobian (ForwardDouble s) where
   type D (ForwardDouble s) = Id Double s

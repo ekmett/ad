@@ -34,7 +34,6 @@ import Data.Traversable
 import Numeric.AD.Mode
 import Numeric.AD.Mode.Forward (diff, diff')
 import Numeric.AD.Mode.Reverse (grad, gradWith')
-import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Forward (Forward)

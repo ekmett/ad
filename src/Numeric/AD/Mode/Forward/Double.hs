@@ -28,16 +28,16 @@ module Numeric.AD.Mode.Forward.Double
 
 import Control.Applicative
 import Data.Traversable (Traversable)
-import Numeric.AD.Internal.Classes
+import Numeric.AD.Mode
 import Numeric.AD.Internal.Forward.Double
 
 -- | Compute the directional derivative of a function given a zipped up 'Functor' of the input values and their derivatives
-du :: (Functor f) => (forall s. f (ForwardDouble s) -> ForwardDouble s) -> f (Double, Double) -> Double
+du :: Functor f => (forall s. f (ForwardDouble s) -> ForwardDouble s) -> f (Double, Double) -> Double
 du f = tangent . f . fmap (uncurry bundle)
 {-# INLINE du #-}
 
 -- | Compute the answer and directional derivative of a function given a zipped up 'Functor' of the input values and their derivatives
-du' :: (Functor f) => (forall s. f (ForwardDouble s) -> ForwardDouble s) -> f (Double, Double) -> (Double, Double)
+du' :: Functor f => (forall s. f (ForwardDouble s) -> ForwardDouble s) -> f (Double, Double) -> (Double, Double)
 du' f = unbundle . f . fmap (uncurry bundle)
 {-# INLINE du' #-}
 
@@ -79,7 +79,7 @@ diff' f a = unbundle $ apply f a
 --
 -- >>> diffF (\a -> [sin a, cos a]) 0
 -- [1.0,-0.0]
-diffF :: (Functor f) => (forall s. ForwardDouble s -> f (ForwardDouble s)) -> Double -> f Double
+diffF :: Functor f => (forall s. ForwardDouble s -> f (ForwardDouble s)) -> Double -> f Double
 diffF f a = tangent <$> apply f a
 {-# INLINE diffF #-}
 
@@ -87,7 +87,7 @@ diffF f a = tangent <$> apply f a
 --
 -- >>> diffF' (\a -> [sin a, cos a]) 0
 -- [(0.0,1.0),(1.0,-0.0)]
-diffF' :: (Functor f) => (forall s. ForwardDouble s -> f (ForwardDouble s)) -> Double -> f (Double, Double)
+diffF' :: Functor f => (forall s. ForwardDouble s -> f (ForwardDouble s)) -> Double -> f (Double, Double)
 diffF' f a = unbundle <$> apply f a
 {-# INLINE diffF' #-}
 

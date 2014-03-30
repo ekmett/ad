@@ -26,7 +26,7 @@ import Data.Data (Data)
 import Data.Monoid
 import Data.Number.Erf
 import Data.Typeable (Typeable)
-import Numeric.AD.Internal.Classes
+import Numeric.AD.Mode
 
 newtype Id a s = Id { runId :: a } deriving
   (Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable, Erf, InvErf)

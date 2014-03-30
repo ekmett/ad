@@ -19,77 +19,17 @@
 --
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Internal.Classes
-  (
-  -- * AD modes
-    Mode(..)
-  , one
-  , negOne
-  -- * Automatically Deriving AD
-  , Jacobian(..)
-  -- , deriveNumeric
+module Numeric.AD.Internal.Jacobian
+  ( Jacobian(..)
   , Scalar
   , withPrimal
   , fromBy
   ) where
 
-type family Scalar t
+import Numeric.AD.Mode
 
-infixr 6 <+>
-infixr 7 *^
-infixl 7 ^*
-infixr 7 ^/
-
-class (Num (Scalar t)) => Mode t where
-  -- | allowed to return False for items with a zero derivative, but we'll give more NaNs than strictly necessary
-  isKnownConstant :: t -> Bool
-  isKnownConstant _ = False
-
-  -- | allowed to return False for zero, but we give more NaN's than strictly necessary then
-  isKnownZero :: t -> Bool
-  isKnownZero _ = False
-
-  -- | Embed a constant
-  auto  :: Scalar t -> t
-
-  -- | Vector sum
-  (<+>) :: Num (Scalar t) => t -> t -> t
-
-  -- | Scalar-vector multiplication
-  (*^) :: Scalar t -> t -> t
-
-  -- | Vector-scalar multiplication
-  (^*) :: t -> Scalar t -> t
-
-  -- | Scalar division
-  (^/) :: (Num t, Fractional (Scalar t)) => t -> Scalar t -> t
-
-  -- |
-  -- @'zero' = 'lift' 0@
-  zero :: t
-
-#ifndef HLINT
-  default (*^) :: Num t => Scalar t -> t -> t
-  a *^ b = auto a * b
-  default (^*) :: Num t => t -> Scalar t -> t
-  a ^* b = a * auto b
-#endif
-
-  a ^/ b = a ^* recip b
-
-  zero = auto 0
-
-one :: Mode t => t
-one = auto 1
-{-# INLINE one #-}
-
-negOne :: Mode t => t
-negOne = auto (-1)
-{-# INLINE negOne #-}
-
--- | 'Jacobian' is used by 'deriveMode' but is not exposed
--- via 'Mode' to prevent its abuse by end users
--- via the 'AD' data type.
+-- | 'Jacobian' is useful for defining new AD primitives in a
+-- fairly generic way.
 class (Mode t, Mode (D t), Num (D t)) => Jacobian t where
   type D t :: *
 

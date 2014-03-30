@@ -55,10 +55,10 @@ newtype ComposeMode f a s = ComposeMode { decomposeMode :: f a s }
 
 type instance Scalar (ComposeMode f a s) = Scalar a
 
-instance (Eq (f a s)) => Eq (ComposeMode f a s) where
+instance Eq (f a s) => Eq (ComposeMode f a s) where
   ComposeMode a == ComposeMode b = a == b
 
-instance (Enum (f a s)) => Enum (ComposeMode f a s) where
+instance Enum (f a s) => Enum (ComposeMode f a s) where
   succ (ComposeMode a) = ComposeMode (succ a)
   pred (ComposeMode a) = ComposeMode (pred a)
   fromEnum (ComposeMode a) = fromEnum a
@@ -68,14 +68,14 @@ instance (Enum (f a s)) => Enum (ComposeMode f a s) where
   enumFromThen (ComposeMode a) (ComposeMode b) = ComposeMode <$> enumFromThen a b
   enumFromThenTo (ComposeMode a) (ComposeMode b) (ComposeMode c) = ComposeMode <$> enumFromThenTo a b c
 
-instance (Ord (f a s)) => Ord (ComposeMode f a s) where
+instance Ord (f a s) => Ord (ComposeMode f a s) where
   compare (ComposeMode a) (ComposeMode b) = compare a b
 
-instance (Bounded (f a s)) => Bounded (ComposeMode f a s) where
+instance Bounded (f a s) => Bounded (ComposeMode f a s) where
   minBound = ComposeMode minBound
   maxBound = ComposeMode minBound
 
-instance (Num (f a s)) => Num (ComposeMode f a s) where
+instance Num (f a s) => Num (ComposeMode f a s) where
   ComposeMode a + ComposeMode b = ComposeMode (a + b)
   ComposeMode a - ComposeMode b = ComposeMode (a - b)
   ComposeMode a * ComposeMode b = ComposeMode (a * b)
@@ -83,15 +83,15 @@ instance (Num (f a s)) => Num (ComposeMode f a s) where
   signum (ComposeMode a) = ComposeMode (signum a)
   fromInteger i = ComposeMode (fromInteger i)
 
-instance (Real (f a s)) => Real (ComposeMode f a s) where
+instance Real (f a s) => Real (ComposeMode f a s) where
   toRational (ComposeMode a) = toRational a
 
-instance (Fractional (f a s)) => Fractional (ComposeMode f a s) where
+instance Fractional (f a s) => Fractional (ComposeMode f a s) where
   ComposeMode a / ComposeMode b = ComposeMode (a / b)
   recip (ComposeMode a) = ComposeMode (recip a)
   fromRational r = ComposeMode (fromRational r)
 
-instance (RealFrac (f a s)) => RealFrac (ComposeMode f a s) where
+instance RealFrac (f a s) => RealFrac (ComposeMode f a s) where
   properFraction (ComposeMode a) = case properFraction a of
     (i, b) -> (i, ComposeMode b)
   truncate (ComposeMode a) = truncate a
@@ -99,7 +99,7 @@ instance (RealFrac (f a s)) => RealFrac (ComposeMode f a s) where
   ceiling  (ComposeMode a) = ceiling a
   floor    (ComposeMode a) = floor a
 
-instance (Floating (f a s)) => Floating (ComposeMode f a s) where
+instance Floating (f a s) => Floating (ComposeMode f a s) where
   pi = ComposeMode pi
   exp (ComposeMode a) = ComposeMode (exp a)
   sqrt (ComposeMode a) = ComposeMode (sqrt a)
@@ -119,16 +119,16 @@ instance (Floating (f a s)) => Floating (ComposeMode f a s) where
   atanh (ComposeMode a) = ComposeMode (atanh a)
   acosh (ComposeMode a) = ComposeMode (acosh a)
 
-instance (Erf (f a s)) => Erf (ComposeMode f a s) where
+instance Erf (f a s) => Erf (ComposeMode f a s) where
   erf (ComposeMode a) = ComposeMode (erf a)
   erfc (ComposeMode a) = ComposeMode (erfc a)
 
-instance (InvErf (f a s)) => InvErf (ComposeMode f a s) where
+instance InvErf (f a s) => InvErf (ComposeMode f a s) where
   inverf (ComposeMode a) = ComposeMode (inverf a)
   inverfc (ComposeMode a) = ComposeMode (inverfc a)
   invnormcdf (ComposeMode a) = ComposeMode (invnormcdf a)
 
-instance (RealFloat (f a s)) => RealFloat (ComposeMode f a s) where
+instance RealFloat (f a s) => RealFloat (ComposeMode f a s) where
   floatRadix (ComposeMode a) = floatRadix a
   floatDigits (ComposeMode a) = floatDigits a
   floatRange (ComposeMode a) = floatRange a

@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 -----------------------------------------------------------------------------
@@ -115,7 +116,7 @@ primal :: Num a => Tower a s -> a
 primal (Tower (x:_)) = x
 primal _ = 0
 
-instance (Num a) => Mode (Tower a s) where
+instance Num a => Mode (Tower a s) where
   auto a = Tower [a]
   zero = Tower []
 
@@ -123,7 +124,7 @@ instance (Num a) => Mode (Tower a s) where
   as <+> Tower [] = as
   Tower (a:as) <+> Tower (b:bs) = Tower (c:cs) where
     c = a + b
-    Tower cs = Tower as <+> Tower bs
+    Tower cs = Tower as <+> (Tower bs :: Tower a s)
 
   a *^ Tower bs = Tower (map (a*) bs)
   Tower as ^* b = Tower (map (*b) as)

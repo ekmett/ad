@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
@@ -35,7 +34,7 @@ infixr 7 *^
 infixl 7 ^*
 infixr 7 ^/
 
-class Num (Scalar t) => Mode t where
+class (Num t, Num (Scalar t)) => Mode t where
   -- | allowed to return False for items with a zero derivative, but we'll give more NaNs than strictly necessary
   isKnownConstant :: t -> Bool
   isKnownConstant _ = False
@@ -48,30 +47,23 @@ class Num (Scalar t) => Mode t where
   auto  :: Scalar t -> t
 
   -- | Vector sum
-  (<+>) :: Num (Scalar t) => t -> t -> t
+  (<+>) :: t -> t -> t
 
   -- | Scalar-vector multiplication
   (*^) :: Scalar t -> t -> t
+  a *^ b = auto a * b
 
   -- | Vector-scalar multiplication
   (^*) :: t -> Scalar t -> t
+  a ^* b = a * auto b
 
   -- | Scalar division
   (^/) :: Fractional (Scalar t) => t -> Scalar t -> t
+  a ^/ b = a ^* recip b
 
   -- |
   -- @'zero' = 'lift' 0@
   zero :: t
-
-#ifndef HLINT
-  default (*^) :: Num t => Scalar t -> t -> t
-  a *^ b = auto a * b
-  default (^*) :: Num t => t -> Scalar t -> t
-  a ^* b = a * auto b
-#endif
-
-  a ^/ b = a ^* recip b
-
   zero = auto 0
 
 one :: Mode t => t

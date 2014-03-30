@@ -46,5 +46,5 @@ withPrimal t a = unary (const a) one t
 {-# INLINE withPrimal #-}
 
 -- | Used internally to define various 'Enum' combinators.
-fromBy :: (Jacobian t, Scalar t ~ Scalar (D t)) => t -> t -> Int -> Scalar t -> t
+fromBy :: Jacobian t => t -> t -> Int -> Scalar t -> t
 fromBy a delta n x = binary (\_ _ -> x) one (fromIntegral n) a delta

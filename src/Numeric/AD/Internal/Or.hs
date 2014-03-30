@@ -3,7 +3,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DataKinds #-}
 #if __GLASGOW_HASKELL__ >= 707
 {-# LANGUAGE DeriveDataTypeable #-}
 #endif
@@ -21,6 +20,7 @@
 
 module Numeric.AD.Internal.Or
   ( Or(..)
+  , F, T
   , runL, runR
   , Chosen(..)
   , chosen
@@ -38,10 +38,10 @@ import Numeric.AD.Mode
 #ifdef HLINT
 #endif
 
-runL :: Or a b False -> a
+runL :: Or a b F -> a
 runL (L a) = a
 
-runR :: Or a b True -> b
+runR :: Or a b T -> b
 runR (R b) = b
 
 ------------------------------------------------------------------------------
@@ -61,21 +61,26 @@ binary f _ (L a) (L b) = L (f a b)
 binary _ g (R a) (R b) = R (g a b)
 binary _ _ _ _ = impossible
 
+data F
+data T
+
 class Chosen s where
   choose :: a -> b -> Or a b s
 
-instance Chosen False where
+instance Chosen F where
   choose x _ = L x
 
-instance Chosen True where
+instance Chosen T where
   choose _ x = R x
 
+#ifndef HLINT
 -- | The choice between two AD modes is an AD mode in its own right
-data Or a b (s :: Bool) where
-  L :: a -> Or a b False
-  R :: b -> Or a b True
+data Or a b s where
+  L :: a -> Or a b F
+  R :: b -> Or a b T
 #if __GLASGOW_HASKELL__ >= 707
   deriving Typeable
+#endif
 #endif
 
 impossible :: a

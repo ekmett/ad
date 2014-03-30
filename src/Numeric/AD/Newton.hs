@@ -3,7 +3,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DataKinds #-}
 -----------------------------------------------------------------------------
 -- |
 -- Copyright   :  (c) Edward Kmett 2010
@@ -146,10 +145,10 @@ conjugateGradientDescent
 conjugateGradientDescent f = conjugateGradientAscent (negate . f)
 {-# INLINE conjugateGradientDescent #-}
 
-lfu :: Functor f => (f (Or a b False) -> Or a b False) -> f a -> a
+lfu :: Functor f => (f (Or a b F) -> Or a b F) -> f a -> a
 lfu f = runL . f . fmap L
 
-rfu :: Functor f => (f (Or a b True) -> Or a b True) -> f b -> b
+rfu :: Functor f => (f (Or a b T) -> Or a b T) -> f b -> b
 rfu f = runR . f . fmap R
 
 -- | Perform a conjugate gradient ascent using reverse mode automatic differentiation to compute the gradient.

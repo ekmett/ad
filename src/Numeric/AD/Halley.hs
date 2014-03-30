@@ -27,7 +27,7 @@ module Numeric.AD.Halley
 import Prelude hiding (all)
 import Numeric.AD.Internal.Forward (Forward)
 import Numeric.AD.Internal.Tower (Tower)
-import Numeric.AD.Types
+import Numeric.AD.Mode
 import Numeric.AD.Mode.Tower (diffs0)
 import Numeric.AD.Mode.Forward (diff) -- , diff')
 import Numeric.AD.Internal.Composition

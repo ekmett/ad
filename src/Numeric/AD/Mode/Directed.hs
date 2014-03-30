@@ -27,7 +27,7 @@ module Numeric.AD.Mode.Directed
   ) where
 
 import Prelude hiding (reverse)
-import Numeric.AD.Types
+import Numeric.AD.Mode
 import Data.Traversable (Traversable)
 import qualified Numeric.AD.Mode.Kahn as K
 import qualified Numeric.AD.Mode.Forward as F

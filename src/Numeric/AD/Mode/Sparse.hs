@@ -46,7 +46,7 @@ module Numeric.AD.Mode.Sparse
 import Control.Comonad
 import Data.Traversable
 import Control.Comonad.Cofree
-import Numeric.AD.Types
+import Numeric.AD.Jet
 import Numeric.AD.Internal.Sparse
 import Numeric.AD.Internal.Combinators
 

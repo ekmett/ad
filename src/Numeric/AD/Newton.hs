@@ -31,7 +31,7 @@ import Prelude hiding (all, mapM, sum)
 import Data.Foldable (all, sum)
 import Data.Reflection (Reifies)
 import Data.Traversable
-import Numeric.AD.Types
+import Numeric.AD.Mode
 import Numeric.AD.Mode.Forward (diff, diff')
 import Numeric.AD.Mode.Reverse (grad, gradWith')
 import Numeric.AD.Internal.Classes

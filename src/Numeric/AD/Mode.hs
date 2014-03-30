@@ -8,16 +8,10 @@
 -- Portability :  GHC only
 --
 -----------------------------------------------------------------------------
-module Numeric.AD.Types
+module Numeric.AD.Mode
   (
   -- * AD modes
     Mode(..)
-  -- * Jets
-  , Jet(..)
-  , headJet
-  , tailJet
-  , jet
   ) where
 
-import Numeric.AD.Internal.Jet
 import Numeric.AD.Internal.Classes

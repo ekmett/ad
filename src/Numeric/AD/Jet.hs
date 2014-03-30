@@ -15,7 +15,7 @@
 -- Portability :  GHC only
 --
 -----------------------------------------------------------------------------
-module Numeric.AD.Internal.Jet
+module Numeric.AD.Jet
   ( Jet(..)
   , headJet
   , tailJet

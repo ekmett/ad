@@ -114,11 +114,12 @@ library
 
   exposed-modules:
     Numeric.AD
-    Numeric.AD.Types
 
-    Numeric.AD.Newton
     Numeric.AD.Halley
+    Numeric.AD.Jet
+    Numeric.AD.Newton
 
+    Numeric.AD.Mode
     Numeric.AD.Mode.Directed
     Numeric.AD.Mode.Forward
     Numeric.AD.Mode.Forward.Double
@@ -141,9 +142,6 @@ library
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Composition
-
-  other-modules:
-    Numeric.AD.Internal.Jet
     Numeric.AD.Internal.Identity
 
   if flag(lib-Werror)

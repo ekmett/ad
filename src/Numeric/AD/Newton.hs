@@ -151,7 +151,6 @@ rfu :: Functor f => (f (Or a b T) -> Or a b T) -> f b -> b
 rfu f = runR . f . fmap R
 
 -- | Perform a conjugate gradient ascent using reverse mode automatic differentiation to compute the gradient.
--- conjugateGradientAscent :: (Traversable f, Ord a, Fractional a) => (forall t. (Mode t, a ~ Scalar t, Num t) => f t -> t) -> f a -> [f a]
 conjugateGradientAscent
   :: (Traversable f, Ord a, Fractional a)
   => (forall s1 s2 s3 s4. Chosen s4 => f (Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4) -> Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4)

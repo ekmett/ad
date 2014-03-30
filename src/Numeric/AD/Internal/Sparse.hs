@@ -1,10 +1,10 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -30,14 +30,15 @@ module Numeric.AD.Internal.Sparse
 
 import Prelude hiding (lookup)
 import Control.Applicative hiding ((<**>))
+import Control.Monad (join)
 import Numeric.AD.Internal.Classes
 import Control.Comonad.Cofree
 import Data.Data
+import Data.Number.Erf
 import Data.Typeable ()
 import qualified Data.IntMap as IntMap
 import Data.IntMap (IntMap, mapWithKey, unionWith, findWithDefault, toAscList, singleton, insertWith, lookup)
 import Data.Traversable
-import Language.Haskell.TH
 
 newtype Index = Index (IntMap Int)
 
@@ -155,14 +156,16 @@ instance Num a => Primal (Sparse a s) where
   primal (Sparse a _) = a
   primal Zero = 0
 
+(<**>) :: Floating a => Sparse a s -> Sparse a s -> Sparse a s
+Zero <**> y    = auto (0 ** primal y)
+_    <**> Zero = auto 1
+x    <**> y@(Sparse b bs)
+  | IntMap.null bs = lift1 (**b) (\z -> b *^ z <**> Sparse (b-1) IntMap.empty) x
+  | otherwise      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
+
 instance Num a => Mode (Sparse a s) where
   auto a = Sparse a IntMap.empty
   zero = Zero
-  Zero <**> y    = auto (0 ** primal y)
-  _    <**> Zero = auto 1
-  x    <**> y@(Sparse b bs)
-    | IntMap.null bs = lift1 (**b) (\z -> b *^ z <**> Sparse (b-1) IntMap.empty) x
-    | otherwise      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
   Zero <+> a = a
   a <+> Zero = a
   Sparse a as <+> Sparse b bs = Sparse (a + b) $ unionWith (<+>) as bs
@@ -212,7 +215,8 @@ instance Num a => Jacobian (Sparse a s) where
       (mapWithKey (times dadb) db)
       (mapWithKey (times dadc) dc)
 
-let s = VarT (mkName "s") in deriveNumeric id (ConT ''Sparse) s
+#define HEAD Sparse a s
+#include "instances.h"
 
 class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
   pack :: i -> [Sparse a ()] -> Sparse a ()

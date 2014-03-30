@@ -75,13 +75,12 @@ instance Mode (ForwardDouble s) where
 
   ForwardDouble a da <+> ForwardDouble b db = ForwardDouble (a + b) (da + db)
 
-  x <**> y = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
-
   a *^ ForwardDouble b db = ForwardDouble (a * b) (a * db)
 
   ForwardDouble a da ^* b = ForwardDouble (a * b) (da * b)
 
   ForwardDouble a da ^/ b = ForwardDouble (a / b) (da / b)
+
 
 instance Jacobian (ForwardDouble s) where
   type D (ForwardDouble s) = Id Double s
@@ -131,7 +130,10 @@ instance Floating (ForwardDouble s) where
   log      = lift1 log recip
   logBase x y = log y / log x
   sqrt     = lift1_ sqrt (\z _ -> recip (auto 2 * z))
-  (**)     = (<**>)
+  ForwardDouble 0 0 ** ForwardDouble a _ = ForwardDouble (0 ** a) 0
+  _ ** ForwardDouble 0 0                 = ForwardDouble 1 0
+  x ** ForwardDouble y 0 = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
+  x ** y                 = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
   sin      = lift1 sin cos
   cos      = lift1 cos $ negate . sin
   tan      = lift1 tan $ recip . join (*) . cos

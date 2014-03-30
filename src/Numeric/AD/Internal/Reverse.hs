@@ -42,16 +42,18 @@ module Numeric.AD.Internal.Reverse
   , derivativeOf'
   ) where
 
+import Data.Functor
+import Control.Monad (join)
 import Control.Monad.ST
 import Data.Array.ST
 import Data.Array
 import Data.Array.Unsafe as Unsafe
 import Data.IORef
 import Data.IntMap (IntMap, fromDistinctAscList)
+import Data.Number.Erf
 import Data.Proxy
 import Data.Reflection
 import Data.Typeable
-import Language.Haskell.TH hiding (reify)
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Internal.Var
@@ -133,10 +135,11 @@ instance (Num a, Reifies s Tape) => Mode (Reverse a s) where
   a ^* b = lift1 (* b) (\_ -> auto b) a
   a ^/ b = lift1 (/ b) (\_ -> auto (recip b)) a
 
-  Zero <**> y      = auto (0 ** primal y)
-  _    <**> Zero   = auto 1
-  x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
-  x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
+(<**>) :: (Reifies s Tape, Floating a) => Reverse a s -> Reverse a s -> Reverse a s
+Zero <**> y      = auto (0 ** primal y)
+_    <**> Zero   = auto 1
+x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
+x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
 instance (Num a, Reifies s Tape) => Primal (Reverse a s) where
   primal Zero = 0
@@ -177,8 +180,11 @@ instance (Reifies s Tape, Num a) => Jacobian (Reverse a s) where
     a = f pb pc
     (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
-let s = VarT (mkName "s") in
-  deriveNumeric (ClassP ''Reifies [s, ConT ''Tape] :) (ConT ''Reverse) s
+#define BODY0 Reifies s Tape =>
+#define BODY1(x) (Reifies s Tape,x)
+#define BODY2(x,y) (Reifies s Tape,x,y)
+#define HEAD Reverse a s
+#include "instances.h"
 
 -- | Helper that extracts the derivative of a chain when the chain was constructed with one variable.
 derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> Reverse a s -> a

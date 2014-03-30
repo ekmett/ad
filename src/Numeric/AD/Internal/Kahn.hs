@@ -4,7 +4,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-full-laziness #-}
@@ -41,16 +40,16 @@ module Numeric.AD.Internal.Kahn
 import Prelude hiding (mapM)
 import Control.Applicative (Applicative(..),(<$>))
 import Control.Monad.ST
-import Control.Monad (forM_, liftM, ap)
+import Control.Monad (forM_, liftM, ap, join)
 import Data.List (foldl')
 import Data.Array.ST
 import Data.Array
 import Data.IntMap (IntMap, fromListWith)
 import Data.Graph (Vertex, transposeG, Graph)
+import Data.Number.Erf
 import Data.Reify (reifyGraph, MuRef(..))
 import qualified Data.Reify.Graph as Reified
 import System.IO.Unsafe (unsafePerformIO)
-import Language.Haskell.TH
 import Data.Data (Data)
 import Data.Typeable (Typeable)
 import Numeric.AD.Internal.Classes
@@ -97,10 +96,12 @@ instance Num a => Mode (Kahn a s) where
   a ^* b = lift1 (* b) (\_ -> auto b) a
   a ^/ b = lift1 (/ b) (\_ -> auto (recip b)) a
 
-  Kahn Zero <**> y                = auto (0 ** primal y)
-  _            <**> Kahn Zero     = auto 1
-  x            <**> Kahn (Lift y) = lift1 (**y) (\z -> y *^ z ** Id (y-1)) x
-  x            <**> y                = lift2_ (**) (\z xi yi -> (yi * z / xi, z * xi)) x y
+
+(<**>) :: Floating a => Kahn a s -> Kahn a s -> Kahn a s
+Kahn Zero <**> y             = auto (0 ** primal y)
+_         <**> Kahn Zero     = auto 1
+x         <**> Kahn (Lift y) = lift1 (**y) (\z -> y *^ z ** Id (y-1)) x
+x         <**> y             = lift2_ (**) (\z xi yi -> (yi * z / xi, z * xi)) x y
 
 instance Num a => Primal (Kahn a s) where
   primal (Kahn Zero) = 0
@@ -142,7 +143,8 @@ instance Num a => Jacobian (Kahn a s) where
     a = f pb pc
     (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
-let s = VarT (mkName "s") in deriveNumeric id (ConT ''Kahn) s
+#define HEAD Kahn a s
+#include <instances.h>
 
 derivative :: Num a => Kahn a s -> a
 derivative = sum . map snd . partials

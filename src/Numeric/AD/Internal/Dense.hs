@@ -4,7 +4,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 -----------------------------------------------------------------------------
@@ -38,10 +37,12 @@ module Numeric.AD.Internal.Dense
   , apply
   ) where
 
-import Language.Haskell.TH
+import Control.Monad (join)
+import Data.Functor
 import Data.Typeable ()
 import Data.Traversable (Traversable, mapAccumL)
 import Data.Data ()
+import Data.Number.Erf
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
@@ -96,11 +97,6 @@ instance (Num a, Traversable f) => Mode (Dense f a s) where
   Dense a da <+> Lift b     = Dense (a + b) da
   Dense a da <+> Dense b db = Dense (a + b) $ zipWithT (+) da db
 
-  Zero <**> y      = auto (0 ** primal y)
-  _    <**> Zero   = auto 1
-  x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
-  x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
-
   _ *^ Zero       = Zero
   a *^ Lift b     = Lift (a * b)
   a *^ Dense b db = Dense (a * b) $ fmap (a*) db
@@ -111,7 +107,13 @@ instance (Num a, Traversable f) => Mode (Dense f a s) where
   Lift a     ^/ b = Lift (a / b)
   Dense a da ^/ b = Dense (a / b) $ fmap (/b) da
 
-instance (Num a, Traversable f) => Jacobian (Dense f a s) where
+(<**>) :: (Traversable f, Floating a) => Dense f a s -> Dense f a s -> Dense f a s
+Zero <**> y      = auto (0 ** primal y)
+_    <**> Zero   = auto 1
+x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
+x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
+
+instance (Traversable f, Num a) => Jacobian (Dense f a s) where
   type D (Dense f a s) = Id a s
   unary f _         Zero        = Lift (f 0)
   unary f _         (Lift b)    = Lift (f b)
@@ -173,9 +175,8 @@ instance (Num a, Traversable f) => Jacobian (Dense f a s) where
     (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
     productRule dbi dci = dadb * dbi + dci * dadc
 
-let s = VarT (mkName "s")
-    f = VarT (mkName "f") in
-    deriveNumeric
-        (ClassP ''Traversable [f]:)
-        (ConT ''Dense `AppT` f)
-        s
+#define BODY0 Traversable f =>
+#define BODY1(x)    (Traversable f, x)
+#define BODY2(x,y) (Traversable f, x, y)
+#define HEAD Dense f a s
+#include "instances.h"

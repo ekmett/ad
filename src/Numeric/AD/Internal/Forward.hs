@@ -33,12 +33,12 @@ module Numeric.AD.Internal.Forward
   , transposeWith
   ) where
 
-import Language.Haskell.TH
-import Data.Typeable
-import Data.Traversable (Traversable, mapAccumL)
-import Data.Foldable (Foldable, toList)
+import Control.Monad (join)
+import Control.Applicative hiding ((<**>))
 import Data.Data
-import Control.Applicative
+import Data.Foldable (Foldable, toList)
+import Data.Number.Erf
+import Data.Traversable (Traversable, mapAccumL)
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 
@@ -97,11 +97,6 @@ instance Num a => Mode (Forward a s) where
   Lift a <+> Forward b db = Forward (a + b) db
   Lift a <+> Lift b = Lift (a + b)
 
-  Zero <**> y      = auto (0 ** primal y)
-  _    <**> Zero   = auto 1
-  x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
-  x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
-
   a *^ Forward b db = Forward (a * b) (a * db)
   a *^ Lift b = Lift (a * b)
   _ *^ Zero = Zero
@@ -113,6 +108,12 @@ instance Num a => Mode (Forward a s) where
   Forward a da ^/ b = Forward (a / b) (da / b)
   Lift a ^/ b = Lift (a / b)
   Zero ^/ _ = Zero
+
+(<**>) :: Floating a => Forward a s -> Forward a s -> Forward a s
+Zero <**> y      = auto (0 ** primal y)
+_    <**> Zero   = auto 1
+x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
+x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
 instance Num a => Jacobian (Forward a s) where
   type D (Forward a s) = Id a s
@@ -168,8 +169,8 @@ instance Num a => Jacobian (Forward a s) where
     (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
     da = dadb * db + dc * dadc
 
-let s = VarT (mkName "s") in
-  deriveNumeric id (ConT ''Forward) s
+#define HEAD Forward a s
+#include "instances.h"
 
 bind :: (Traversable f, Num a) => (f (Forward a s) -> b) -> f a -> f b
 bind f as = snd $ mapAccumL outer (0 :: Int) as where

@@ -81,6 +81,7 @@ source-repository head
 library
   extensions: CPP
   hs-source-dirs: src
+  include-dirs: include
 
   other-extensions:
     BangPatterns

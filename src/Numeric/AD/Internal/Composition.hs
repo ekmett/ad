@@ -160,7 +160,6 @@ instance (Lifted (f a s), Lifted a, Mode a, Num a, Scalar (f a s) ~ a, Num (Scal
   a *^ ComposeMode b = ComposeMode $ liftedMode (auto a *^ b)
   ComposeMode a ^* b = ComposeMode $ liftedMode (a ^* auto b)
   -- ComposeMode a ^/ b = ComposeMode $ liftedMode (a ^/ auto b)
-  ComposeMode a <**> ComposeMode b = ComposeMode $ liftedMode $ liftedFloating' $ a <**> b
 
 ------------------------------------------------------------------------------
 -- ComposeFunctor

@@ -5,12 +5,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 -----------------------------------------------------------------------------
 -- |
--- Copyright   : (c) Edward Kmett 2010
+-- Copyright   : (c) Edward Kmett 2010-2014
 -- License     : BSD3
 -- Maintainer  : ekmett@gmail.com
 -- Stability   : experimental
@@ -35,10 +34,11 @@ module Numeric.AD.Internal.Tower
 
 import Prelude hiding (all)
 import Control.Applicative hiding ((<**>))
+import Control.Monad (join)
 import Data.Foldable
 import Data.Data (Data)
+import Data.Number.Erf
 import Data.Typeable (Typeable)
-import Language.Haskell.TH
 import Numeric.AD.Internal.Classes
 
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'
@@ -117,10 +117,6 @@ instance Num a => Primal (Tower a s) where
 instance (Num a) => Mode (Tower a s) where
   auto a = Tower [a]
   zero = Tower []
-  Tower [] <**> y         = auto (0 ** primal y)
-  _        <**> Tower []  = auto 1
-  x        <**> Tower [y] = lift1 (**y) (\z -> y *^ z <**> Tower [y-1]) x
-  x        <**> y         = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
   Tower [] <+> bs = bs
   as <+> Tower [] = as
@@ -155,5 +151,11 @@ instance Num a => Jacobian (Tower a s) where
     a = bundle a0 da
     (dadb, dadc) = df a b c
 
-let s = VarT (mkName "s") in
-  deriveNumeric id (ConT ''Tower) s
+(<**>) :: Floating a => Tower a s -> Tower a s -> Tower a s
+Tower [] <**> y         = auto (0 ** primal y)
+_        <**> Tower []  = auto 1
+x        <**> Tower [y] = lift1 (**y) (\z -> y *^ z <**> Tower [y-1]) x
+x        <**> y         = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
+
+#define HEAD Tower a s
+#include <instances.h>

@@ -35,8 +35,8 @@ import Numeric.AD.Mode
 import Numeric.AD.Mode.Forward (diff, diff')
 import Numeric.AD.Mode.Reverse (grad, gradWith')
 import Numeric.AD.Internal.Combinators
-import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Forward (Forward)
+import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Reverse (Reverse, Tape)
 
 -- $setup
@@ -94,8 +94,8 @@ fixedPoint f = findZero (\x -> f x - x)
 --
 -- >>> last $ take 10 $ extremum cos 1
 -- 0.0
-extremum :: (Fractional a, Eq a) => (forall s s'. ComposeMode (Forward (Forward a s') s) -> ComposeMode (Forward (Forward a s') s)) -> a -> [a]
-extremum f = findZero (diff (decomposeMode . f . ComposeMode))
+extremum :: (Fractional a, Eq a) => (forall s s'. On (Forward (Forward a s') s) -> On (Forward (Forward a s') s)) -> a -> [a]
+extremum f = findZero (diff (off . f . On))
 {-# INLINE extremum #-}
 
 -- | The 'gradientDescent' function performs a multivariate

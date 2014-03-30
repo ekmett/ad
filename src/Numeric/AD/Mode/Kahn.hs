@@ -52,7 +52,7 @@ module Numeric.AD.Mode.Kahn
 import Control.Applicative ((<$>))
 import Data.Functor.Compose
 import Data.Traversable (Traversable)
-import Numeric.AD.Internal.Composition
+import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Kahn
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with kahn-mode AD in a single pass.
@@ -192,8 +192,8 @@ diffF' f a = derivative' <$> f (var a 0)
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
 -- [[0,1],[1,0]]
-hessian :: (Traversable f, Num a) => (forall s s'. f (ComposeMode (Kahn (Kahn a s') s)) -> (ComposeMode (Kahn (Kahn a s') s))) -> f a -> f (f a)
-hessian f = jacobian (grad (decomposeMode . f . fmap ComposeMode))
+hessian :: (Traversable f, Num a) => (forall s s'. f (On (Kahn (Kahn a s') s)) -> (On (Kahn (Kahn a s') s))) -> f a -> f (f a)
+hessian f = jacobian (grad (off . f . fmap On))
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the 'Kahn'-mode Jacobian of the 'Kahn'-mode Jacobian of the function.
 --
@@ -201,5 +201,5 @@ hessian f = jacobian (grad (decomposeMode . f . fmap ComposeMode))
 --
 -- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
-hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. f (ComposeMode (Kahn (Kahn a s') s)) -> g (ComposeMode (Kahn (Kahn a s') s))) -> f a -> g (f (f a))
-hessianF f = getCompose . jacobian (Compose . jacobian (fmap decomposeMode . f . fmap ComposeMode))
+hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. f (On (Kahn (Kahn a s') s)) -> g (On (Kahn (Kahn a s') s))) -> f a -> g (f (f a))
+hessianF f = getCompose . jacobian (Compose . jacobian (fmap off . f . fmap On))

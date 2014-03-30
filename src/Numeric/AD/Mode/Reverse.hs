@@ -48,7 +48,7 @@ import Control.Applicative ((<$>))
 import Data.Functor.Compose
 import Data.Reflection (Reifies)
 import Data.Traversable (Traversable)
-import Numeric.AD.Internal.Composition
+import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Reverse
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with reverse-mode AD in a single pass.
@@ -186,8 +186,8 @@ diffF' f a = reifyTape 1 $ \p -> derivativeOf' p <$> f (var a 0)
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
 -- [[0,1],[1,0]]
-hessian :: (Traversable f, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (ComposeMode (Reverse (Reverse a s') s)) -> (ComposeMode (Reverse (Reverse a s') s))) -> f a -> f (f a)
-hessian f = jacobian (grad (decomposeMode . f . fmap ComposeMode))
+hessian :: (Traversable f, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (On (Reverse (Reverse a s') s)) -> (On (Reverse (Reverse a s') s))) -> f a -> f (f a)
+hessian f = jacobian (grad (off . f . fmap On))
 {-# INLINE hessian #-}
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the reverse-mode Jacobian of the reverse-mode Jacobian of the function.
@@ -196,6 +196,6 @@ hessian f = jacobian (grad (decomposeMode . f . fmap ComposeMode))
 --
 -- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
-hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (ComposeMode (Reverse (Reverse a s') s)) -> g (ComposeMode (Reverse (Reverse a s') s))) -> f a -> g (f (f a))
-hessianF f = getCompose . jacobian (Compose . jacobian (fmap decomposeMode . f . fmap ComposeMode))
+hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (On (Reverse (Reverse a s') s)) -> g (On (Reverse (Reverse a s') s))) -> f a -> g (f (f a))
+hessianF f = getCompose . jacobian (Compose . jacobian (fmap off . f . fmap On))
 {-# INLINE hessianF #-}

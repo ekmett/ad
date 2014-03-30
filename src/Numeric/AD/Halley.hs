@@ -26,11 +26,11 @@ module Numeric.AD.Halley
 
 import Prelude hiding (all)
 import Numeric.AD.Internal.Forward (Forward)
+import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Tower (Tower)
 import Numeric.AD.Mode
 import Numeric.AD.Mode.Tower (diffs0)
 import Numeric.AD.Mode.Forward (diff) -- , diff')
-import Numeric.AD.Internal.Composition
 
 -- $setup
 -- >>> import Data.Complex
@@ -86,6 +86,6 @@ fixedPoint f = findZero (\x -> f x - x)
 --
 -- >>> take 10 $ extremum cos 1
 -- [1.0,0.29616942658570555,4.59979519460002e-3,1.6220740159042513e-8,0.0]
-extremum :: (Fractional a, Eq a) => (forall s s'. ComposeMode (Forward (Tower a s') s) -> ComposeMode (Forward (Tower a s') s)) -> a -> [a]
-extremum f = findZero (diff (decomposeMode . f . ComposeMode))
+extremum :: (Fractional a, Eq a) => (forall s s'. On (Forward (Tower a s') s) -> On (Forward (Tower a s') s)) -> a -> [a]
+extremum f = findZero (diff (off . f . On))
 {-# INLINE extremum #-}

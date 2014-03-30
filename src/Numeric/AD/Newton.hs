@@ -137,7 +137,6 @@ gradientAscent f = gradientDescent (negate . f)
 -- 1
 -- >>> rosenbrock (conjugateGradientDescent rosenbrock [0, 0] !! 5) < 0.1
 -- True
--- conjugateGradientDescent :: (Traversable f, Ord a, Fractional a) => (forall t. (Mode t, a ~ Scalar t, Num t) => f t -> t) -> f a -> [f a]
 conjugateGradientDescent
   :: (Traversable f, Ord a, Fractional a)
   => (forall s1 s2 s3 s4. Chosen s4 => f (Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4) -> Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4)

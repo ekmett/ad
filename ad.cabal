@@ -130,10 +130,6 @@ library
     Numeric.AD.Mode.Tower
     Numeric.AD.Mode.Sparse
 
-    Numeric.AD.Variadic
-    Numeric.AD.Variadic.Kahn
-    Numeric.AD.Variadic.Sparse
-
     Numeric.AD.Internal.Combinators
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Forward

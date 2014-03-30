@@ -30,7 +30,6 @@ module Numeric.AD.Mode.Kahn
   , grad'
   , gradWith
   , gradWith'
-
   -- * Jacobian
   , jacobian
   , jacobian'
@@ -45,6 +44,7 @@ module Numeric.AD.Mode.Kahn
   , diffF
   , diffF'
   -- * Unsafe Variadic Gradient
+  -- $vgrad
   , vgrad, vgrad'
   , Grad
   ) where
@@ -203,3 +203,13 @@ hessian f = jacobian (grad (off . f . fmap On))
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
 hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. f (On (Kahn (Kahn a s') s)) -> g (On (Kahn (Kahn a s') s))) -> f a -> g (f (f a))
 hessianF f = getCompose . jacobian (Compose . jacobian (fmap off . f . fmap On))
+
+
+-- $vgrad
+--
+-- Variadic combinators for variadic mixed-mode automatic differentiation.
+--
+-- Unfortunately, variadicity comes at the expense of being able to use
+-- quantification to avoid sensitivity confusion, so be careful when
+-- counting the number of 'auto' calls you use when taking the gradient
+-- of a function that takes gradients!

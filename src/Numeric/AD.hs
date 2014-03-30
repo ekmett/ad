@@ -42,14 +42,24 @@
 
 module Numeric.AD
   (
-    -- * Gradients (Reverse Mode)
-    grad
+
+  -- * AD modes
+    Mode(auto)
+  , Scalar
+
+  -- * Gradients (Reverse Mode)
+  , grad
   , grad'
   , gradWith
   , gradWith'
 
   -- * Higher Order Gradients (Sparse-on-Reverse)
   , grads
+
+  -- * Variadic Gradients (Sparse or Kahn)
+  -- $vgrad
+  , Grad , vgrad, vgrad'
+  , Grads, vgrads
 
   -- * Jacobians (Sparse or Reverse)
   , jacobian
@@ -70,6 +80,7 @@ module Numeric.AD
 
   -- * Hessian Tensors (Sparse or Sparse-On-Reverse)
   , hessianF
+
   -- * Hessian Tensors (Sparse)
   , hessianF'
 
@@ -117,9 +128,6 @@ module Numeric.AD
   , conjugateGradientDescent
   , conjugateGradientAscent
 
-  -- * AD modes
-  , Mode(auto)
-  , Scalar
   ) where
 
 import Control.Applicative
@@ -127,9 +135,10 @@ import Data.Functor.Compose
 import Data.Traversable (Traversable)
 import Data.Reflection (Reifies)
 import Numeric.AD.Internal.Forward (Forward)
+import Numeric.AD.Internal.Kahn (Grad, vgrad, vgrad')
 import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Reverse (Reverse, Tape)
-import Numeric.AD.Internal.Sparse (Sparse)
+import Numeric.AD.Internal.Sparse (Sparse, Grads, vgrads)
 
 import Numeric.AD.Mode
 
@@ -219,3 +228,12 @@ hessian f = Sparse.jacobian (grad (off . f . fmap On))
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
 hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. Reifies s Tape => f (On (Reverse (Sparse a s') s)) -> g (On (Reverse (Sparse a s') s))) -> f a -> g (f (f a))
 hessianF f as = getCompose $ Sparse.jacobian (Compose . Reverse.jacobian (fmap off . f . fmap On)) as
+
+-- $vgrad
+--
+-- Variadic combinators for variadic mixed-mode automatic differentiation.
+--
+-- Unfortunately, variadicity comes at the expense of being able to use
+-- quantification to avoid sensitivity confusion, so be careful when
+-- counting the number of 'auto' calls you use when taking the gradient
+-- of a function that takes gradients!

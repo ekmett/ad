@@ -18,7 +18,15 @@ module Numeric.AD.Mode.Sparse
   , grad'
   , gradWith
   , gradWith'
+  -- * Variadic Gradients
+  -- $vgrad
+  , Grad
+  , vgrad
+  -- * Higher-Order Gradients
   , grads
+  -- * Variadic Higher-Order Gradients
+  , Grads
+  , vgrads
 
   -- * Sparse Jacobians (synonyms)
   , jacobian
@@ -34,13 +42,6 @@ module Numeric.AD.Mode.Sparse
   , hessianF
   , hessianF'
 
-  -- * Unsafe gradients
-  -- , vgrad
-  -- , vgrads
-
-  -- * Exposed Types
-  , Grad
-  , Grads
   ) where
 
 import Control.Comonad
@@ -117,3 +118,12 @@ hessianF f as = d2 <$> jacobians f as
 hessianF' :: (Traversable f, Functor g, Num a) => (forall s. f (Sparse a s) -> g (Sparse a s)) -> f a -> g (a, f (a, f a))
 hessianF' f as = d2' <$> jacobians f as
 {-# INLINE hessianF' #-}
+
+-- $vgrad
+--
+-- Variadic combinators for variadic mixed-mode automatic differentiation.
+--
+-- Unfortunately, variadicity comes at the expense of being able to use
+-- quantification to avoid sensitivity confusion, so be careful when
+-- counting the number of 'auto' calls you use when taking the gradient
+-- of a function that takes gradients!

@@ -23,4 +23,4 @@ notifications:
       - "\x0313ad\x03/\x0306%{branch}\x03 \x0314%{commit}\x03 %{build_url} %{message}"
 
 env:
-  - mode="--enable-tests" script="cabal test"
+  - mode="--enable-tests" script="cabal test --show-details=always"

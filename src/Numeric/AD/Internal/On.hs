@@ -6,6 +6,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# OPTIONS_HADDOCK not-home #-}
+
 -----------------------------------------------------------------------------
 -- |
 -- Copyright   :  (c) Edward Kmett 2010-2014

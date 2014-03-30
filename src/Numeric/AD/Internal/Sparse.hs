@@ -9,6 +9,8 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+{-# OPTIONS_HADDOCK not-home #-}
+
 module Numeric.AD.Internal.Sparse
   ( Index(..)
   , emptyIndex

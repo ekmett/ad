@@ -6,6 +6,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_HADDOCK not-home #-}
+
 -----------------------------------------------------------------------------
 ---- |
 ---- Copyright   :  (c) Edward Kmett 2010-2014
@@ -18,6 +20,7 @@
 ----
 ---- Handle with care.
 -------------------------------------------------------------------------------
+
 module Numeric.AD.Internal.Forward.Double
   ( ForwardDouble(..)
   , bundle

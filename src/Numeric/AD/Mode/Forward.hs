@@ -44,8 +44,6 @@ module Numeric.AD.Mode.Forward
 
 import Data.Traversable (Traversable)
 import Control.Applicative
--- import Numeric.AD.Types
-import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Forward
 

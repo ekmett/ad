@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DataKinds #-}
 -----------------------------------------------------------------------------
 -- |
 -- Copyright   :  (c) Edward Kmett 2010
@@ -33,9 +34,11 @@ import Data.Reflection (Reifies)
 import Data.Traversable
 import Numeric.AD.Mode
 import Numeric.AD.Mode.Forward (diff, diff')
-import Numeric.AD.Mode.Reverse (grad, gradWith')
+import Numeric.AD.Mode.Reverse as Reverse (gradWith')
+import Numeric.AD.Mode.Kahn as Kahn (Kahn, grad)
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Forward (Forward)
+import Numeric.AD.Internal.Or
 import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Reverse (Reverse, Tape)
 
@@ -108,7 +111,7 @@ extremum f = findZero (diff (off . f . On))
 gradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse a s) -> Reverse a s) -> f a -> [f a]
 gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
   where
-    (fx0, xgx0) = gradWith' (,) f x0
+    (fx0, xgx0) = Reverse.gradWith' (,) f x0
     go x fx xgx !eta !i
       | eta == 0     = [] -- step size is 0
       | fx1 > fx     = go x fx xgx (eta/2) 0 -- we stepped too far
@@ -119,7 +122,7 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
       where
         zeroGrad = all (\(_,g) -> g == 0)
         x1 = fmap (\(xi,gxi) -> xi - eta * gxi) xgx
-        (fx1, xgx1) = gradWith' (,) f x1
+        (fx1, xgx1) = Reverse.gradWith' (,) f x1
 {-# INLINE gradientDescent #-}
 
 -- | Perform a gradient descent using reverse mode automatic differentiation to compute the gradient.
@@ -135,22 +138,36 @@ gradientAscent f = gradientDescent (negate . f)
 -- 1
 -- >>> rosenbrock (conjugateGradientDescent rosenbrock [0, 0] !! 5) < 0.1
 -- True
-conjugateGradientDescent :: (Traversable f, Ord a, Fractional a) => (forall t. (Mode t, a ~ Scalar t, Num t) => f t -> t) -> f a -> [f a]
+-- conjugateGradientDescent :: (Traversable f, Ord a, Fractional a) => (forall t. (Mode t, a ~ Scalar t, Num t) => f t -> t) -> f a -> [f a]
+conjugateGradientDescent
+  :: (Traversable f, Ord a, Fractional a)
+  => (forall s1 s2 s3 s4. Chosen s4 => f (Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4) -> Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4)
+  -> f a -> [f a]
 conjugateGradientDescent f = conjugateGradientAscent (negate . f)
 {-# INLINE conjugateGradientDescent #-}
 
+lfu :: Functor f => (f (Or a b False) -> Or a b False) -> f a -> a
+lfu f = runL . f . fmap L
+
+rfu :: Functor f => (f (Or a b True) -> Or a b True) -> f b -> b
+rfu f = runR . f . fmap R
+
 -- | Perform a conjugate gradient ascent using reverse mode automatic differentiation to compute the gradient.
-conjugateGradientAscent :: (Traversable f, Ord a, Fractional a) => (forall t. (Mode t, a ~ Scalar t, Num t) => f t -> t) -> f a -> [f a]
+-- conjugateGradientAscent :: (Traversable f, Ord a, Fractional a) => (forall t. (Mode t, a ~ Scalar t, Num t) => f t -> t) -> f a -> [f a]
+conjugateGradientAscent
+  :: (Traversable f, Ord a, Fractional a)
+  => (forall s1 s2 s3 s4. Chosen s4 => f (Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4) -> Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4)
+  -> f a -> [f a]
 conjugateGradientAscent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0 delta0)
   where
     dot x y = sum $ zipWithT (*) x y
-    d0 = grad f x0
+    d0 = Kahn.grad (rfu f) x0
     delta0 = dot d0 d0
     go xi _ri di deltai = xi : go xi1 ri1 di1 deltai1
       where
-        ai = last $ take 20 $ extremum (\a -> f $ zipWithT (\x d -> auto x + a * auto d) xi di) 0
+        ai = last $ take 20 $ extremum (\a -> lfu f $ zipWithT (\x d -> auto x + a * auto d) xi di) 0
         xi1 = zipWithT (\x d -> x + ai*d) xi di
-        ri1 = grad f xi1
+        ri1 = Kahn.grad (rfu f) xi1
         deltai1 = dot ri1 ri1
         bi1 = deltai1 / deltai
         di1 = zipWithT (\r d -> r + bi1 * d) ri1 di

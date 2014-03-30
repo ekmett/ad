@@ -127,7 +127,6 @@ module Numeric.AD
   , gradientAscent
   , conjugateGradientDescent
   , conjugateGradientAscent
-
   ) where
 
 import Control.Applicative

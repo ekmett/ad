@@ -35,9 +35,6 @@ import Data.Typeable
 #endif
 import Numeric.AD.Mode
 
-#ifdef HLINT
-#endif
-
 runL :: Or a b F -> a
 runL (L a) = a
 

@@ -116,6 +116,10 @@ module Numeric.AD
   , gradientAscent
   , conjugateGradientDescent
   , conjugateGradientAscent
+
+  -- * AD modes
+  , Mode(auto)
+  , Scalar
   ) where
 
 import Control.Applicative
@@ -126,6 +130,8 @@ import Numeric.AD.Internal.Forward (Forward)
 import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Reverse (Reverse, Tape)
 import Numeric.AD.Internal.Sparse (Sparse)
+
+import Numeric.AD.Mode
 
 import Numeric.AD.Mode.Forward
   ( diff, diff', diffF, diffF'

@@ -21,10 +21,15 @@
 
 module Numeric.AD.Internal.Or
   ( Or(..)
+  , runL, runR
   , Chosen(..)
   , chosen
   , unary
   , binary
+  , luu, ruu
+  , luf, ruf
+  , lfu, rfu
+  , lff, rff
   ) where
 
 import Control.Applicative
@@ -36,6 +41,36 @@ import Numeric.AD.Mode
 
 #ifdef HLINT
 #endif
+
+runL :: Or a b False -> a
+runL (L a) = a
+
+runR :: Or a b True -> b
+runR (R b) = b
+
+luu :: (a -> a) -> Or a b False -> Or a b False
+luu f = L . f . runL
+
+ruu :: (b -> b) -> Or a b True -> Or a b True
+ruu f = R . f . runR
+
+luf :: Functor f => (a -> f a) -> Or a b False -> f (Or a b False)
+luf f = fmap L . f . runL
+
+ruf :: Functor f => (b -> f b) -> Or a b True -> f (Or a b True)
+ruf f = fmap R . f . runR
+
+lfu :: Functor f => (f a -> a) -> f (Or a b False) -> Or a b False
+lfu f = L . f . fmap runL
+
+rfu :: Functor f => (f b -> b) -> f (Or a b True) -> Or a b True
+rfu f = R . f . fmap runR
+
+lff :: (Functor f, Functor g) => (f a -> g a) -> f (Or a b False) -> g (Or a b False)
+lff f = fmap L . f . fmap runL
+
+rff :: (Functor f, Functor g) => (f b -> g b) -> f (Or a b True) -> g (Or a b True)
+rff f = fmap R . f . fmap runR
 
 ------------------------------------------------------------------------------
 -- On

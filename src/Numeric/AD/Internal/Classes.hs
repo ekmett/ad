@@ -27,7 +27,6 @@ module Numeric.AD.Internal.Classes
   , one
   , negOne
   -- * Automatically Deriving AD
-  , Lifted(..)
   , Jacobian(..)
   , Primal(..)
   , deriveNumeric
@@ -43,55 +42,9 @@ module Numeric.AD.Internal.Classes
 import Control.Applicative ((<$>), pure)
 import Control.Monad
 import Data.Number.Erf
-import Data.Proxy
 import Language.Haskell.TH.Syntax
 
 type family Scalar t
-
-class Lifted g where
-  liftBounded    :: (a ~ Scalar g, Bounded a, Num a)  => p g -> (Bounded g    => r) -> r
-  liftEnum       :: (a ~ Scalar g, Enum    a, Num a)  => p g -> (Enum g       => r) -> r
-  liftEq         :: (a ~ Scalar g, Eq      a, Num a)  => p g -> (Eq g         => r) -> r
-  liftOrd        :: (a ~ Scalar g, Ord     a, Num a)  => p g -> (Ord g        => r) -> r
-  liftNum        :: (a ~ Scalar g, Num a)             => p g -> (Num g        => r) -> r
-  liftFractional :: (a ~ Scalar g, Fractional a)      => p g -> (Fractional g => r) -> r
-  liftFloating   :: (a ~ Scalar g, Floating a)        => p g -> (Floating g   => r) -> r
-  liftRealFloat  :: (a ~ Scalar g, RealFloat a)       => p g -> (RealFloat g  => r) -> r
-  liftRealFrac   :: (a ~ Scalar g, RealFrac a)        => p g -> (RealFrac g   => r) -> r
-  liftReal       :: (a ~ Scalar g, Real a)            => p g -> (Real g       => r) -> r
-  liftErf        :: (a ~ Scalar g, Erf a)             => p g -> (Erf g        => r) -> r
-  liftInvErf     :: (a ~ Scalar g, InvErf a)          => p g -> (InvErf g     => r) -> r
-  liftMode       :: (a ~ Scalar g, Mode a, Num a)     => p g -> (Mode g       => r) -> r
-  liftPrimal     :: (a ~ Scalar g, Primal a, Num a)   => p g -> (Primal g     => r) -> r
-  liftJacobian   :: (a ~ Scalar g, Jacobian a, Num a) => p g -> (Jacobian g   => r) -> r
-  -- liftScalar     ::                 p (f a) -> (Scalar (f a) ~ a => r) -> r
-
-  liftedBounded :: forall a. (a ~ Scalar g, Bounded a, Num a) => (Bounded g => g) -> g
-  liftedBounded = liftBounded (Proxy :: Proxy g)
-
-  liftedNum :: forall a. (Num a, a ~ Scalar g) => (Num g => g) -> g
-  liftedNum = liftNum (Proxy :: Proxy g)
-
-  liftedEnum :: forall a. (a ~ Scalar g, Enum a, Num a) => (Enum g => g) -> g
-  liftedEnum = liftEnum (Proxy :: Proxy g)
-
-  liftedFractional :: forall a. (a ~ Scalar g, Fractional a) => (Fractional g => g) -> g
-  liftedFractional = liftFractional (Proxy :: Proxy g)
-
-  liftedFloating :: forall a. (a ~ Scalar g, Floating a) => (Floating g => g) -> g
-  liftedFloating = liftFloating (Proxy :: Proxy g)
-
-  liftedRealFloat :: forall a. (a ~ Scalar g, RealFloat a) => (RealFloat g => g) -> g
-  liftedRealFloat = liftRealFloat (Proxy :: Proxy g)
-
-  liftedErf :: forall a. (a ~ Scalar g, Erf a) => (Erf g => g) -> g
-  liftedErf = liftErf (Proxy :: Proxy g)
-
-  liftedInvErf :: forall a. (a ~ Scalar g, InvErf a) => (InvErf g => g) -> g
-  liftedInvErf = liftInvErf (Proxy :: Proxy g)
-
-  liftedMode :: forall a. (a ~ Scalar g, Mode a, Num a) => (Mode g => g) -> g
-  liftedMode = liftMode (Proxy :: Proxy g)
 
 infixr 6 <+>
 infixr 7 *^
@@ -217,22 +170,6 @@ deriveNumeric f tCon s' = map fudgeCxt <$> lifted
     fudgeCxt (InstanceD cxt typ dec) = InstanceD (f cxt) typ dec
     fudgeCxt _ = error "Numeric.AD.Internal.Classes.deriveNumeric_fudgeCxt: Not InstanceD"
     lifted = [d|
-      instance Lifted ($t a $s) where
-        liftBounded    _ a = a
-        liftEnum       _ a = a
-        liftEq         _ a = a
-        liftOrd        _ a = a
-        liftNum        _ a = a
-        liftFractional _ a = a
-        liftFloating   _ a = a
-        liftRealFloat  _ a = a
-        liftRealFrac   _ a = a
-        liftReal       _ a = a
-        liftErf        _ a = a
-        liftInvErf     _ a = a
-        liftMode       _ a = a
-        liftPrimal     _ a = a
-        liftJacobian   _ a = a
       instance (Eq a, Num a) => Eq ($t a $s) where
         (==)          = discrete2 (==)
       instance (Ord a, Num a) => Ord ($t a $s) where

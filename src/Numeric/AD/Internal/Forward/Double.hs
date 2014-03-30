@@ -102,8 +102,10 @@ instance Jacobian (ForwardDouble s) where
 
 instance Eq (ForwardDouble s) where
   (==)          = on (==) primal
+
 instance Ord (ForwardDouble s) where
   compare       = on compare primal
+
 instance Num (ForwardDouble s) where
   fromInteger 0  = zero
   fromInteger n = auto (fromInteger n)
@@ -113,11 +115,13 @@ instance Num (ForwardDouble s) where
   negate       = lift1 negate (const (auto (-1)))
   abs          = lift1 abs signum
   signum a     = lift1 signum (const zero) a
+
 instance Fractional (ForwardDouble s) where
   fromRational 0 = zero
   fromRational r = auto (fromRational r)
   x / y        = x * recip y
   recip        = lift1_ recip (const . negate . join (*))
+
 instance Floating (ForwardDouble s) where
   pi       = auto pi
   exp      = lift1_ exp const
@@ -140,6 +144,7 @@ instance Floating (ForwardDouble s) where
   asinh    = lift1 asinh $ \x -> recip (sqrt (1 + join (*) x))
   acosh    = lift1 acosh $ \x -> recip (sqrt (join (*) x - 1))
   atanh    = lift1 atanh $ \x -> recip (1 - join (*) x)
+
 instance Enum (ForwardDouble s) where
   succ                 = lift1 succ (const 1)
   pred                 = lift1 pred (const 1)
@@ -149,8 +154,10 @@ instance Enum (ForwardDouble s) where
   enumFromTo a b       = withPrimal a <$> enumFromTo (primal a) (primal b)
   enumFromThen a b     = zipWith (fromBy a delta) [0..] $ enumFromThen (primal a) (primal b) where delta = b - a
   enumFromThenTo a b c = zipWith (fromBy a delta) [0..] $ enumFromThenTo (primal a) (primal b) (primal c) where delta = b - a
+
 instance Real (ForwardDouble s) where
   toRational      = toRational . primal
+
 instance RealFloat (ForwardDouble s) where
   floatRadix      = floatRadix . primal
   floatDigits     = floatDigits . primal
@@ -166,6 +173,7 @@ instance RealFloat (ForwardDouble s) where
   scaleFloat n = unary (scaleFloat n) (scaleFloat n 1)
   significand x =  unary significand (scaleFloat (- floatDigits x) 1) x
   atan2 = lift2 atan2 $ \vx vy -> let r = recip (join (*) vx + join (*) vy) in (vy * r, negate vx * r)
+
 instance RealFrac (ForwardDouble s) where
   properFraction a = (w, a `withPrimal` pb) where
     pa = primal a
@@ -174,10 +182,12 @@ instance RealFrac (ForwardDouble s) where
   round    = round . primal
   ceiling  = ceiling . primal
   floor    = floor . primal
+
 instance Erf (ForwardDouble s) where
   erf = lift1 erf $ \x -> (2 / sqrt pi) * exp (negate x * x)
   erfc = lift1 erfc $ \x -> ((-2) / sqrt pi) * exp (negate x * x)
   normcdf = lift1 normcdf $ \x -> ((-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt 2)
+
 instance InvErf (ForwardDouble s) where
   inverf = lift1 inverfc $ \x -> recip $ (2 / sqrt pi) * exp (negate x * x)
   inverfc = lift1 inverfc $ \x -> recip $ negate (2 / sqrt pi) * exp (negate x * x)

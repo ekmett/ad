@@ -50,6 +50,7 @@ import Prelude hiding (mapM)
 import Control.Applicative (Applicative(..),(<$>))
 import Control.Monad.ST
 import Control.Monad hiding (mapM)
+import Control.Monad.Trans.State
 import Data.List (foldl')
 import Data.Array.ST
 import Data.Array
@@ -237,25 +238,6 @@ partialMap :: Num a => Kahn a s -> IntMap a
 partialMap = fromListWith (+) . partials
 {-# INLINE partialMap #-}
 
--- A simple fresh variable supply monad
-newtype S a = S { runS :: Int -> (a,Int) }
-
-instance Functor S where
-  fmap = liftM
-  {-# INLINE fmap #-}
-
-instance Applicative S where
-  pure = return
-  {-# INLINE pure #-}
-  (<*>) = ap
-  {-# INLINE (<*>) #-}
-
-instance Monad S where
-  return a = S (\s -> (a,s))
-  {-# INLINE return #-}
-  S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
-  {-# INLINE (>>=) #-}
-
 class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
   pack :: i -> [Kahn a ()] -> Kahn a ()
   unpack :: ([a] -> [a]) -> o
@@ -292,8 +274,8 @@ varId _ = error "varId: not a Var"
 
 bind :: Traversable f => f a -> (f (Kahn a s), (Int,Int))
 bind xs = (r,(0,hi)) where
-  (r,hi) = runS (mapM freshVar xs) 0
-  freshVar a = S (\s -> let s' = s + 1 in s' `seq` (var a s, s'))
+  (r,hi) = runState (mapM freshVar xs) 0
+  freshVar a = state $ \s -> let s' = s + 1 in s' `seq` (var a s, s')
 
 unbind :: Functor f => f (Kahn a s) -> Array Int a -> f a
 unbind xs ys = fmap (\v -> ys ! varId v) xs

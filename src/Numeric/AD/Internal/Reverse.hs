@@ -51,9 +51,9 @@ module Numeric.AD.Internal.Reverse
   ) where
 
 import Data.Functor
-import Control.Applicative hiding ((<**>))
 import Control.Monad hiding (mapM)
 import Control.Monad.ST
+import Control.Monad.Trans.State
 import Data.Array.ST
 import Data.Array
 import Data.Array.Unsafe as Unsafe
@@ -260,29 +260,10 @@ varId :: Reverse a s -> Int
 varId (Reverse v _) = v
 varId _ = error "varId: not a Var"
 
--- A simple fresh variable supply monad
-newtype S a = S { runS :: Int -> (a,Int) }
-
-instance Functor S where
-  fmap = liftM
-  {-# INLINE fmap #-}
-
-instance Applicative S where
-  pure = return
-  {-# INLINE pure #-}
-  (<*>) = ap
-  {-# INLINE (<*>) #-}
-
-instance Monad S where
-  return a = S (\s -> (a,s))
-  {-# INLINE return #-}
-  S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
-  {-# INLINE (>>=) #-}
-
 bind :: Traversable f => f a -> (f (Reverse a s), (Int,Int))
 bind xs = (r,(0,hi)) where
-  (r,hi) = runS (mapM freshVar xs) 0
-  freshVar a = S (\s -> let s' = s + 1 in s' `seq` (var a s, s'))
+  (r,hi) = runState (mapM freshVar xs) 0
+  freshVar a = state $ \s -> let s' = s + 1 in s' `seq` (var a s, s')
 
 unbind :: Functor f => f (Reverse a s) -> Array Int a -> f a
 unbind xs ys = fmap (\v -> ys ! varId v) xs

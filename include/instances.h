@@ -1,8 +1,3 @@
-
-#ifndef BODY0
-#define BODY0
-#endif
-
 #ifndef BODY1
 #define BODY1(x) x
 #endif
@@ -10,23 +5,6 @@
 #ifndef BODY2
 #define BODY2(x,y) (x,y)
 #endif
-
-instance BODY0 Lifted (HEAD) where
-  liftBounded    _ a = a
-  liftEnum       _ a = a
-  liftEq         _ a = a
-  liftOrd        _ a = a
-  liftNum        _ a = a
-  liftFractional _ a = a
-  liftFloating   _ a = a
-  liftRealFloat  _ a = a
-  liftRealFrac   _ a = a
-  liftReal       _ a = a
-  liftErf        _ a = a
-  liftInvErf     _ a = a
-  liftMode       _ a = a
-  liftPrimal     _ a = a
-  liftJacobian   _ a = a
 
 instance BODY2(Eq a, Num a) => Eq (HEAD) where
   (==)          = discrete2 (==)

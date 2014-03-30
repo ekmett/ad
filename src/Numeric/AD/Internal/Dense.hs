@@ -175,7 +175,6 @@ instance (Traversable f, Num a) => Jacobian (Dense f a s) where
     (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
     productRule dbi dci = dadb * dbi + dci * dadc
 
-#define BODY0 Traversable f =>
 #define BODY1(x)    (Traversable f, x)
 #define BODY2(x,y) (Traversable f, x, y)
 #define HEAD Dense f a s

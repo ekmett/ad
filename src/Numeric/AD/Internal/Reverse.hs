@@ -180,7 +180,6 @@ instance (Reifies s Tape, Num a) => Jacobian (Reverse a s) where
     a = f pb pc
     (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
-#define BODY0 Reifies s Tape =>
 #define BODY1(x) (Reifies s Tape,x)
 #define BODY2(x,y) (Reifies s Tape,x,y)
 #define HEAD Reverse a s

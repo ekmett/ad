@@ -1,3 +1,11 @@
+4.1
+---
+* Fixed a bug in the type of `conjugateGradientAscent` and `conjugateGradientDescent` that prevent users from being able to ever call it.
+
+4.0.0.1
+-------
+* Added the missing `instances.h` header file to `extra-source-files`.
+
 4.0
 ---
 * An overhaul permitting monomorphic modes was completed by @alang9.

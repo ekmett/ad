@@ -64,6 +64,7 @@ import Data.Proxy
 import Data.Reflection
 import Data.Traversable (Traversable, mapM)
 import Data.Typeable
+import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Jacobian
 import Numeric.AD.Mode

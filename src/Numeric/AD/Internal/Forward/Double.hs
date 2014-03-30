@@ -36,6 +36,7 @@ import Data.Foldable (Foldable, toList)
 import Data.Function (on)
 import Data.Number.Erf
 import Data.Traversable (Traversable, mapAccumL)
+import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Jacobian
 import Numeric.AD.Mode

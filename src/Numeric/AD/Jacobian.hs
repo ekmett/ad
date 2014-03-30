@@ -21,8 +21,6 @@
 
 module Numeric.AD.Jacobian
   ( Jacobian(..)
-  , withPrimal
-  , fromBy
   ) where
 
 import Numeric.AD.Mode
@@ -39,12 +37,3 @@ class (Mode t, Mode (D t), Num (D t)) => Jacobian t where
   binary :: (Scalar t -> Scalar t -> Scalar t) -> D t -> D t -> t -> t -> t
   lift2  :: (Scalar t -> Scalar t -> Scalar t) -> (D t -> D t -> (D t, D t)) -> t -> t -> t
   lift2_ :: (Scalar t -> Scalar t -> Scalar t) -> (D t -> D t -> D t -> (D t, D t)) -> t -> t -> t
-
--- | Used internally to define various 'Enum' combinators.
-withPrimal :: Jacobian t => t -> Scalar t -> t
-withPrimal t a = unary (const a) 1 t
-{-# INLINE withPrimal #-}
-
--- | Used internally to define various 'Enum' combinators.
-fromBy :: Jacobian t => t -> t -> Int -> Scalar t -> t
-fromBy a delta n x = binary (\_ _ -> x) 1 (fromIntegral n) a delta

@@ -63,6 +63,7 @@ import System.IO.Unsafe (unsafePerformIO)
 import Data.Data (Data)
 import Data.Traversable (Traversable, mapM)
 import Data.Typeable (Typeable)
+import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Jacobian
 import Numeric.AD.Mode

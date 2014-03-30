@@ -92,13 +92,6 @@ instance Num a => Mode (Forward a s) where
   isKnownConstant Forward{} = False
   isKnownConstant _ = True
 
-  Zero <+> a = a
-  a <+> Zero = a
-  Forward a da <+> Forward b db = Forward (a + b) (da + db)
-  Forward a da <+> Lift b = Forward (a + b) da
-  Lift a <+> Forward b db = Forward (a + b) db
-  Lift a <+> Lift b = Lift (a + b)
-
   a *^ Forward b db = Forward (a * b) (a * db)
   a *^ Lift b = Lift (a * b)
   _ *^ Zero = Zero
@@ -110,6 +103,14 @@ instance Num a => Mode (Forward a s) where
   Forward a da ^/ b = Forward (a / b) (da / b)
   Lift a ^/ b = Lift (a / b)
   Zero ^/ _ = Zero
+
+(<+>) :: Num a => Forward a s -> Forward a s -> Forward a s
+Zero         <+> a            = a
+a            <+> Zero         = a
+Forward a da <+> Forward b db = Forward (a + b) (da + db)
+Forward a da <+> Lift b       = Forward (a + b) da
+Lift a       <+> Forward b db = Forward (a + b) db
+Lift a       <+> Lift b       = Lift (a + b)
 
 (<**>) :: Floating a => Forward a s -> Forward a s -> Forward a s
 Zero <**> y      = auto (0 ** primal y)

@@ -55,4 +55,3 @@ instance Num a => Mode (Id a s) where
   auto = Id
   Id a ^* b = Id (a * b)
   a *^ Id b = Id (a * b)
-  Id a <+> Id b = Id (a + b)

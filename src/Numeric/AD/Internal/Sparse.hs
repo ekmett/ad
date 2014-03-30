@@ -76,7 +76,7 @@ times :: Num a => Sparse a s -> Int -> Sparse a s -> Sparse a s
 times Zero _ _ = Zero
 times _ _ Zero = Zero
 times (Sparse a as) n (Sparse b bs) = Sparse (a * b) $
-  unionWith (<+>)
+  unionWith (+)
     (fmap (^* b) (dropMap n as))
     (fmap (a *^) (dropMap n bs))
 {-# INLINE times #-}
@@ -167,15 +167,20 @@ x    <**> y@(Sparse b bs)
 instance Num a => Mode (Sparse a s) where
   auto a = Sparse a IntMap.empty
   zero = Zero
-  Zero <+> a = a
-  a <+> Zero = a
-  Sparse a as <+> Sparse b bs = Sparse (a + b) $ unionWith (<+>) as bs
+
   Zero        ^* _ = Zero
   Sparse a as ^* b = Sparse (a * b) $ fmap (^* b) as
   _ *^ Zero        = Zero
   a *^ Sparse b bs = Sparse (a * b) $ fmap (a *^) bs
   Zero        ^/ _ = Zero
   Sparse a as ^/ b = Sparse (a / b) $ fmap (^/ b) as
+
+infixr 6 <+>
+
+(<+>) :: Num a => Sparse a s -> Sparse a s -> Sparse a s
+Zero <+> a = a
+a <+> Zero = a
+Sparse a as <+> Sparse b bs = Sparse (a + b) $ unionWith (<+>) as bs
 
 instance Num a => Jacobian (Sparse a s) where
   type D (Sparse a s) = Sparse a s

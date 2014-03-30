@@ -120,15 +120,18 @@ instance Num a => Mode (Tower a s) where
   auto a = Tower [a]
   zero = Tower []
 
-  Tower [] <+> bs = bs
-  as <+> Tower [] = as
-  Tower (a:as) <+> Tower (b:bs) = Tower (c:cs) where
-    c = a + b
-    Tower cs = Tower as <+> (Tower bs :: Tower a s)
-
   a *^ Tower bs = Tower (map (a*) bs)
   Tower as ^* b = Tower (map (*b) as)
   Tower as ^/ b = Tower (map (/b) as)
+
+infixr 6 <+>
+
+(<+>) :: forall a s. Num a => Tower a s -> Tower a s -> Tower a s
+Tower [] <+> bs = bs
+as <+> Tower [] = as
+Tower (a:as) <+> Tower (b:bs) = Tower (c:cs) where
+  c = a + b
+  Tower cs = Tower as <+> (Tower bs :: Tower a s)
 
 instance Num a => Jacobian (Tower a s) where
   type D (Tower a s) = Tower a s

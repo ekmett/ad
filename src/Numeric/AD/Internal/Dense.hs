@@ -92,12 +92,6 @@ instance (Num a, Traversable f) => Mode (Dense f a s) where
   auto = Lift
   zero = Zero
 
-  Zero <+> a = a
-  a <+> Zero = a
-  Lift a     <+> Lift b     = Lift (a + b)
-  Lift a     <+> Dense b db = Dense (a + b) db
-  Dense a da <+> Lift b     = Dense (a + b) da
-  Dense a da <+> Dense b db = Dense (a + b) $ zipWithT (+) da db
 
   _ *^ Zero       = Zero
   a *^ Lift b     = Lift (a * b)
@@ -108,6 +102,14 @@ instance (Num a, Traversable f) => Mode (Dense f a s) where
   Zero       ^/ _ = Zero
   Lift a     ^/ b = Lift (a / b)
   Dense a da ^/ b = Dense (a / b) $ fmap (/b) da
+
+(<+>) :: (Traversable f, Num a) => Dense f a s -> Dense f a s -> Dense f a s
+Zero       <+> a          = a
+a          <+> Zero       = a
+Lift a     <+> Lift b     = Lift (a + b)
+Lift a     <+> Dense b db = Dense (a + b) db
+Dense a da <+> Lift b     = Dense (a + b) da
+Dense a da <+> Dense b db = Dense (a + b) $ zipWithT (+) da db
 
 (<**>) :: (Traversable f, Floating a) => Dense f a s -> Dense f a s -> Dense f a s
 Zero <**> y      = auto (0 ** primal y)

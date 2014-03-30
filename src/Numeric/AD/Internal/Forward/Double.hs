@@ -67,13 +67,14 @@ instance Mode (ForwardDouble s) where
   isKnownConstant (ForwardDouble _ 0) = True
   isKnownConstant _ = False
 
-  ForwardDouble a da <+> ForwardDouble b db = ForwardDouble (a + b) (da + db)
-
   a *^ ForwardDouble b db = ForwardDouble (a * b) (a * db)
 
   ForwardDouble a da ^* b = ForwardDouble (a * b) (da * b)
 
   ForwardDouble a da ^/ b = ForwardDouble (a / b) (da / b)
+
+(<+>) :: ForwardDouble s -> ForwardDouble s -> ForwardDouble s
+ForwardDouble a da <+> ForwardDouble b db = ForwardDouble (a + b) (da + db)
 
 instance Jacobian (ForwardDouble s) where
   type D (ForwardDouble s) = Id Double s
@@ -106,7 +107,7 @@ instance Ord (ForwardDouble s) where
 instance Num (ForwardDouble s) where
   fromInteger 0  = zero
   fromInteger n = auto (fromInteger n)
-  (+)          = (<+>) -- binary (+) one one
+  (+)          = (<+>) -- binary (+) 1 1
   (-)          = binary (-) (auto 1) (auto (-1)) -- TODO: <-> ? as it is, this might be pretty bad for Tower
   (*)          = lift2 (*) (\x y -> (y, x))
   negate       = lift1 negate (const (auto (-1)))
@@ -131,17 +132,17 @@ instance Floating (ForwardDouble s) where
   cos      = lift1 cos $ negate . sin
   tan      = lift1 tan $ recip . join (*) . cos
   asin     = lift1 asin $ \x -> recip (sqrt (auto 1 - join (*) x))
-  acos     = lift1 acos $ \x -> negate (recip (sqrt (one - join (*) x)))
-  atan     = lift1 atan $ \x -> recip (one + join (*) x)
+  acos     = lift1 acos $ \x -> negate (recip (sqrt (1 - join (*) x)))
+  atan     = lift1 atan $ \x -> recip (1 + join (*) x)
   sinh     = lift1 sinh cosh
   cosh     = lift1 cosh sinh
   tanh     = lift1 tanh $ recip . join (*) . cosh
-  asinh    = lift1 asinh $ \x -> recip (sqrt (one + join (*) x))
-  acosh    = lift1 acosh $ \x -> recip (sqrt (join (*) x - one))
-  atanh    = lift1 atanh $ \x -> recip (one - join (*) x)
+  asinh    = lift1 asinh $ \x -> recip (sqrt (1 + join (*) x))
+  acosh    = lift1 acosh $ \x -> recip (sqrt (join (*) x - 1))
+  atanh    = lift1 atanh $ \x -> recip (1 - join (*) x)
 instance Enum (ForwardDouble s) where
-  succ                 = lift1 succ (const one)
-  pred                 = lift1 pred (const one)
+  succ                 = lift1 succ (const 1)
+  pred                 = lift1 pred (const 1)
   toEnum               = auto . toEnum
   fromEnum             = fromEnum . primal
   enumFrom a           = withPrimal a <$> enumFrom (primal a)
@@ -162,8 +163,8 @@ instance RealFloat (ForwardDouble s) where
   isNegativeZero  = isNegativeZero . primal
   isIEEE          = isIEEE . primal
   exponent = exponent
-  scaleFloat n = unary (scaleFloat n) (scaleFloat n one)
-  significand x =  unary significand (scaleFloat (- floatDigits x) one) x
+  scaleFloat n = unary (scaleFloat n) (scaleFloat n 1)
+  significand x =  unary significand (scaleFloat (- floatDigits x) 1) x
   atan2 = lift2 atan2 $ \vx vy -> let r = recip (join (*) vx + join (*) vy) in (vy * r, negate vx * r)
 instance RealFrac (ForwardDouble s) where
   properFraction a = (w, a `withPrimal` pb) where

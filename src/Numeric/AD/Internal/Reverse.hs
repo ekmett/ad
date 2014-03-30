@@ -140,10 +140,12 @@ instance (Num a, Reifies s Tape) => Mode (Reverse a s) where
 
   auto = Lift
   zero = Zero
-  (<+>)  = binary (+) one one
   a *^ b = lift1 (a *) (\_ -> auto a) b
   a ^* b = lift1 (* b) (\_ -> auto b) a
   a ^/ b = lift1 (/ b) (\_ -> auto (recip b)) a
+
+(<+>) :: (Reifies s Tape, Num a) => Reverse a s -> Reverse a s -> Reverse a s
+(<+>)  = binary (+) 1 1
 
 (<**>) :: (Reifies s Tape, Floating a) => Reverse a s -> Reverse a s -> Reverse a s
 Zero <**> y      = auto (0 ** primal y)
@@ -195,12 +197,12 @@ instance (Reifies s Tape, Num a) => Jacobian (Reverse a s) where
 #define HEAD Reverse a s
 #include "instances.h"
 
--- | Helper that extracts the derivative of a chain when the chain was constructed with one variable.
+-- | Helper that extracts the derivative of a chain when the chain was constructed with 1 variable.
 derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> Reverse a s -> a
 derivativeOf _ = sum . partials
 {-# INLINE derivativeOf #-}
 
--- | Helper that extracts both the primal and derivative of a chain when the chain was constructed with one variable.
+-- | Helper that extracts both the primal and derivative of a chain when the chain was constructed with 1 variable.
 derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> Reverse a s -> (a, a)
 derivativeOf' p r = (primal r, derivativeOf p r)
 {-# INLINE derivativeOf' #-}

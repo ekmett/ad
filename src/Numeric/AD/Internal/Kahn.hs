@@ -102,11 +102,12 @@ instance Num a => Mode (Kahn a s) where
 
   auto a = Kahn (Lift a)
   zero   = Kahn Zero
-  (<+>)  = binary (+) one one
   a *^ b = lift1 (a *) (\_ -> auto a) b
   a ^* b = lift1 (* b) (\_ -> auto b) a
   a ^/ b = lift1 (/ b) (\_ -> auto (recip b)) a
 
+(<+>) :: Num a => Kahn a s -> Kahn a s -> Kahn a s
+(<+>)  = binary (+) 1 1
 
 (<**>) :: Floating a => Kahn a s -> Kahn a s -> Kahn a s
 Kahn Zero <**> y             = auto (0 ** primal y)

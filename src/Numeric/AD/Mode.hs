@@ -22,14 +22,11 @@ module Numeric.AD.Mode
   (
   -- * AD modes
     Mode(..)
-  , one
-  , negOne
   , Scalar
   ) where
 
 type family Scalar (t :: *) :: *
 
-infixr 6 <+>
 infixr 7 *^
 infixl 7 ^*
 infixr 7 ^/
@@ -45,9 +42,6 @@ class (Num t, Num (Scalar t)) => Mode t where
 
   -- | Embed a constant
   auto  :: Scalar t -> t
-
-  -- | Vector sum
-  (<+>) :: t -> t -> t
 
   -- | Scalar-vector multiplication
   (*^) :: Scalar t -> t -> t
@@ -65,11 +59,3 @@ class (Num t, Num (Scalar t)) => Mode t where
   -- @'zero' = 'lift' 0@
   zero :: t
   zero = auto 0
-
-one :: Mode t => t
-one = auto 1
-{-# INLINE one #-}
-
-negOne :: Mode t => t
-negOne = auto (-1)
-{-# INLINE negOne #-}

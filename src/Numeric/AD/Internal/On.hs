@@ -48,6 +48,5 @@ type instance Scalar (On t) = Scalar (Scalar t)
 
 instance (Mode t, Mode (Scalar t)) => Mode (On t) where
   auto = On . auto . auto
-  On a <+> On b = On (a <+> b)
   a *^ On b = On (auto a *^ b)
   On a ^* b = On (a ^* auto b)

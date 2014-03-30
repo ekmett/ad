@@ -39,7 +39,7 @@ import Data.Foldable
 import Data.Data (Data)
 import Data.Number.Erf
 import Data.Typeable (Typeable)
-import Numeric.AD.Internal.Jacobian
+import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'

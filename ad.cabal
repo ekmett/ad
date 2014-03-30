@@ -116,6 +116,7 @@ library
     Numeric.AD
 
     Numeric.AD.Halley
+    Numeric.AD.Jacobian
     Numeric.AD.Jet
     Numeric.AD.Newton
 
@@ -135,7 +136,6 @@ library
     Numeric.AD.Internal.Combinators
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Forward.Double
-    Numeric.AD.Internal.Jacobian
     Numeric.AD.Internal.Tower
     Numeric.AD.Internal.Kahn
     Numeric.AD.Internal.Reverse

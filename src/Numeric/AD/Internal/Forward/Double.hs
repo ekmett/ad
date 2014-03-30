@@ -37,7 +37,7 @@ import Data.Function (on)
 import Data.Number.Erf
 import Data.Traversable (Traversable, mapAccumL)
 import Numeric.AD.Internal.Identity
-import Numeric.AD.Internal.Jacobian
+import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 
 data ForwardDouble a = ForwardDouble { primal, tangent :: {-# UNPACK #-} !Double }

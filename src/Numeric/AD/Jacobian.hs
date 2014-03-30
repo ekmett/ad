@@ -19,7 +19,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Internal.Jacobian
+module Numeric.AD.Jacobian
   ( Jacobian(..)
   , withPrimal
   , fromBy

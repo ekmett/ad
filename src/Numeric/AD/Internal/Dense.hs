@@ -46,7 +46,7 @@ import Data.Data ()
 import Data.Number.Erf
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity
-import Numeric.AD.Internal.Jacobian
+import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 
 data Dense f a s

@@ -65,7 +65,7 @@ import Data.Reflection
 import Data.Traversable (Traversable, mapM)
 import Data.Typeable
 import Numeric.AD.Internal.Identity
-import Numeric.AD.Internal.Jacobian
+import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 import Prelude hiding (mapM)
 import System.IO.Unsafe (unsafePerformIO)

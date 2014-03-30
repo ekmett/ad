@@ -38,7 +38,7 @@ import qualified Data.IntMap as IntMap
 import Data.Number.Erf
 import Data.Traversable
 import Data.Typeable ()
-import Numeric.AD.Internal.Jacobian
+import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 
 newtype Index = Index (IntMap Int)

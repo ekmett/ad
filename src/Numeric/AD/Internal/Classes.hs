@@ -64,10 +64,8 @@ class (Num (Scalar t)) => Mode t where
   -- | Scalar division
   (^/) :: (Num t, Fractional (Scalar t)) => t -> Scalar t -> t
 
-  -- default (<**>) :: (Jacobian t, Floating (D t), Floating (Scalar t)) => t -> t -> t
-  -- x <**> y = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
-
-  -- | > 'zero' = 'lift' 0
+  -- |
+  -- @'zero' = 'lift' 0@
   zero :: t
 
 #ifndef HLINT

@@ -165,7 +165,7 @@ instance RealFloat (ForwardDouble s) where
   scaleFloat n = unary (scaleFloat n) (scaleFloat n one)
   significand x =  unary significand (scaleFloat (- floatDigits x) one) x
   atan2 = lift2 atan2 $ \vx vy -> let r = recip (join (*) vx + join (*) vy) in (vy * r, negate vx * r)
-instance (Scalar (D (ForwardDouble s)) ~ Scalar (ForwardDouble s)) => RealFrac (ForwardDouble s) where
+instance RealFrac (ForwardDouble s) where
   properFraction a = (w, a `withPrimal` pb) where
     pa = primal a
     (w, pb) = properFraction pa

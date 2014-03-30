@@ -36,7 +36,6 @@ import Data.Number.Erf
 import Data.Data
 import Data.Foldable (Foldable(foldMap))
 import Data.Traversable (Traversable(traverse))
-import Numeric.AD.Internal.Jacobian
 import Numeric.AD.Mode
 
 #ifdef HLINT

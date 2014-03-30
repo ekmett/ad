@@ -130,7 +130,6 @@ library
     Numeric.AD.Mode.Tower
     Numeric.AD.Mode.Sparse
 
-    Numeric.AD.Internal.Combinators
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Forward.Double
@@ -140,6 +139,9 @@ library
     Numeric.AD.Internal.Reverse
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Tower
+
+  other-modules:
+    Numeric.AD.Internal.Combinators
 
   if flag(lib-Werror)
     ghc-options: -Werror

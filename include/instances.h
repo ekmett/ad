@@ -95,11 +95,11 @@ instance BODY1(RealFrac a) => RealFrac (HEAD) where
   floor    = floor . primal
 
 instance BODY1(Erf a) => Erf (HEAD) where
-  erf = lift1 erf $ \x -> (fromInteger 2 / sqrt pi) * exp (negate x * x)
-  erfc = lift1 erfc $ \x -> (fromInteger (-2) / sqrt pi) * exp (negate x * x)
-  normcdf = lift1 normcdf $ \x -> (fromInteger (-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt (fromInteger 2))
+  erf = lift1 erf $ \x -> (2 / sqrt pi) * exp (negate x * x)
+  erfc = lift1 erfc $ \x -> ((-2) / sqrt pi) * exp (negate x * x)
+  normcdf = lift1 normcdf $ \x -> ((-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt (2))
 
 instance BODY1(InvErf a) => InvErf (HEAD) where
-  inverf = lift1 inverfc $ \x -> recip $ (fromInteger 2 / sqrt pi) * exp (negate x * x)
-  inverfc = lift1 inverfc $ \x -> recip $ negate (fromInteger 2 / sqrt pi) * exp (negate x * x)
-  invnormcdf = lift1 invnormcdf $ \x -> recip $ (fromInteger (-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt (fromInteger 2))
+  inverf = lift1 inverfc $ \x -> recip $ (2 / sqrt pi) * exp (negate x * x)
+  inverfc = lift1 inverfc $ \x -> recip $ negate (2 / sqrt pi) * exp (negate x * x)
+  invnormcdf = lift1 invnormcdf $ \x -> recip $ ((-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt 2)

@@ -27,12 +27,8 @@ module Numeric.AD.Internal.Classes
   , negOne
   -- * Automatically Deriving AD
   , Jacobian(..)
-  , Primal(..)
   -- , deriveNumeric
   , Scalar
-  , discrete1
-  , discrete2
-  , discrete3
   , withPrimal
   , fromBy
   ) where
@@ -93,18 +89,6 @@ negOne :: Mode t => t
 negOne = auto (-1)
 {-# INLINE negOne #-}
 
--- | 'Primal' is used by 'deriveMode' but is not exposed
--- via the 'Mode' class to prevent its abuse by end users
--- via the AD data type.
---
--- It provides direct access to the result, stripped of its derivative information,
--- but this is unsafe in general as (auto . primal) would discard derivative
--- information. The end user is protected from accidentally using this function
--- by the universal quantification on the various combinators we expose.
-
-class Primal t where
-  primal :: t -> Scalar t
-
 -- | 'Jacobian' is used by 'deriveMode' but is not exposed
 -- via 'Mode' to prevent its abuse by end users
 -- via the 'AD' data type.
@@ -125,15 +109,3 @@ withPrimal t a = unary (const a) one t
 
 fromBy :: (Jacobian t, Scalar t ~ Scalar (D t)) => t -> t -> Int -> Scalar t -> t
 fromBy a delta n x = binary (\_ _ -> x) one (fromIntegral n) a delta
-
-discrete1 :: Primal t => (Scalar t -> c) -> t -> c
-discrete1 f x = f (primal x)
-{-# INLINE discrete1 #-}
-
-discrete2 :: Primal t => (Scalar t -> Scalar t -> c) -> t -> t -> c
-discrete2 f x y = f (primal x) (primal y)
-{-# INLINE discrete2 #-}
-
-discrete3 :: Primal t => (Scalar t -> Scalar t -> Scalar t -> d) -> t -> t -> t -> d
-discrete3 f x y z = f (primal x) (primal y) (primal z)
-{-# INLINE discrete3 #-}

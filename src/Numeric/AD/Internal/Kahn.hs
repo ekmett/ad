@@ -35,26 +35,34 @@ module Numeric.AD.Internal.Kahn
   , derivative'
   , vgrad, vgrad'
   , Grad(..)
+  , bind
+  , unbind
+  , unbindMap
+  , unbindWith
+  , unbindMapWithDefault
+  , primal
+  , var
+  , varId
   ) where
 
 import Prelude hiding (mapM)
 import Control.Applicative (Applicative(..),(<$>))
 import Control.Monad.ST
-import Control.Monad (forM_, liftM, ap, join)
+import Control.Monad hiding (mapM)
 import Data.List (foldl')
 import Data.Array.ST
 import Data.Array
-import Data.IntMap (IntMap, fromListWith)
+import Data.IntMap (IntMap, fromListWith, findWithDefault)
 import Data.Graph (Vertex, transposeG, Graph)
 import Data.Number.Erf
 import Data.Reify (reifyGraph, MuRef(..))
 import qualified Data.Reify.Graph as Reified
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Data (Data)
+import Data.Traversable (Traversable, mapM)
 import Data.Typeable (Typeable)
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
-import Numeric.AD.Internal.Var
 
 -- | A @Tape@ records the information needed back propagate from the output to each input during reverse 'Mode' AD.
 data Tape a t
@@ -103,12 +111,12 @@ _         <**> Kahn Zero     = auto 1
 x         <**> Kahn (Lift y) = lift1 (**y) (\z -> y *^ z ** Id (y-1)) x
 x         <**> y             = lift2_ (**) (\z xi yi -> (yi * z / xi, z * xi)) x y
 
-instance Num a => Primal (Kahn a s) where
-  primal (Kahn Zero) = 0
-  primal (Kahn (Lift a)) = a
-  primal (Kahn (Var a _)) = a
-  primal (Kahn (Binary a _ _ _ _)) = a
-  primal (Kahn (Unary a _ _)) = a
+primal :: Num a => Kahn a s -> a
+primal (Kahn Zero) = 0
+primal (Kahn (Lift a)) = a
+primal (Kahn (Var a _)) = a
+primal (Kahn (Binary a _ _ _ _)) = a
+primal (Kahn (Unary a _ _)) = a
 
 instance Num a => Jacobian (Kahn a s) where
   type D (Kahn a s) = Id a s
@@ -246,11 +254,6 @@ instance Monad S where
   S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
   {-# INLINE (>>=) #-}
 
-instance Num a => Var (Kahn a s) where
-  var a v = Kahn (Var a v)
-  varId (Kahn (Var _ v)) = v
-  varId _ = error "varId: not a Var"
-
 class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
   pack :: i -> [Kahn a ()] -> Kahn a ()
   unpack :: ([a] -> [a]) -> o
@@ -277,3 +280,27 @@ vgrad' i = unpack' (unsafeGrad' (pack i)) where
   unsafeGrad' f as = (primal r, unbind vs (partialArray bds r)) where
     r = f vs
     (vs,bds) = bind as
+
+var :: a -> Int -> Kahn a s
+var a v = Kahn (Var a v)
+
+varId :: Kahn a s -> Int
+varId (Kahn (Var _ v)) = v
+varId _ = error "varId: not a Var"
+
+bind :: Traversable f => f a -> (f (Kahn a s), (Int,Int))
+bind xs = (r,(0,hi)) where
+  (r,hi) = runS (mapM freshVar xs) 0
+  freshVar a = S (\s -> let s' = s + 1 in s' `seq` (var a s, s'))
+
+unbind :: Functor f => f (Kahn a s) -> Array Int a -> f a
+unbind xs ys = fmap (\v -> ys ! varId v) xs
+
+unbindWith :: (Functor f, Num a) => (a -> b -> c) -> f (Kahn a s) -> Array Int b -> f c
+unbindWith f xs ys = fmap (\v -> f (primal v) (ys ! varId v)) xs
+
+unbindMap :: (Functor f, Num a) => f (Kahn a s) -> IntMap a -> f a
+unbindMap xs ys = fmap (\v -> findWithDefault 0 (varId v) ys) xs
+
+unbindMapWithDefault :: (Functor f, Num a) => b -> (a -> b -> c) -> f (Kahn a s) -> IntMap b -> f c
+unbindMapWithDefault z f xs ys = fmap (\v -> f (primal v) $ findWithDefault z (varId v) ys) xs

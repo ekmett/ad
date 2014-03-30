@@ -20,7 +20,6 @@
 -------------------------------------------------------------------------------
 module Numeric.AD.Internal.Forward.Double
   ( ForwardDouble(..)
-  , tangent
   , bundle
   , unbundle
   , apply
@@ -33,35 +32,29 @@ module Numeric.AD.Internal.Forward.Double
 
 import Control.Applicative hiding ((<**>))
 import Control.Monad (join)
+import Data.Foldable (Foldable, toList)
+import Data.Function (on)
 import Data.Number.Erf
 import Data.Traversable (Traversable, mapAccumL)
-import Data.Foldable (Foldable, toList)
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
 
-data ForwardDouble a = ForwardDouble {-# UNPACK #-} !Double {-# UNPACK #-} !Double
+data ForwardDouble a = ForwardDouble { primal, tangent :: {-# UNPACK #-} !Double }
+  deriving (Read, Show)
 
 type instance Scalar (ForwardDouble s) = Double
-
--- | Calculate the 'tangent' using forward mode AD.
-tangent :: ForwardDouble s -> Double
-tangent (ForwardDouble _ da) = da
-{-# INLINE tangent #-}
 
 unbundle :: ForwardDouble s -> (Double, Double)
 unbundle (ForwardDouble a da) = (a, da)
 {-# INLINE unbundle #-}
 
 bundle :: Double -> Double -> ForwardDouble s
-bundle a da = ForwardDouble a da
+bundle = ForwardDouble
 {-# INLINE bundle #-}
 
 apply :: (ForwardDouble s -> b) -> Double -> b
 apply f a = f (bundle a 1)
 {-# INLINE apply #-}
-
-instance Primal (ForwardDouble s) where
-  primal (ForwardDouble a _) = a
 
 instance Mode (ForwardDouble s) where
   auto = flip ForwardDouble 0
@@ -107,9 +100,9 @@ instance Jacobian (ForwardDouble s) where
     da = dadb * db + dc * dadc
 
 instance Eq (ForwardDouble s) where
-  (==)          = discrete2 (==)
+  (==)          = on (==) primal
 instance Ord (ForwardDouble s) where
-  compare       = discrete2 compare
+  compare       = on compare primal
 instance Num (ForwardDouble s) where
   fromInteger 0  = zero
   fromInteger n = auto (fromInteger n)
@@ -150,24 +143,24 @@ instance Enum (ForwardDouble s) where
   succ                 = lift1 succ (const one)
   pred                 = lift1 pred (const one)
   toEnum               = auto . toEnum
-  fromEnum             = discrete1 fromEnum
+  fromEnum             = fromEnum . primal
   enumFrom a           = withPrimal a <$> enumFrom (primal a)
-  enumFromTo a b       = withPrimal a <$> discrete2 enumFromTo a b
-  enumFromThen a b     = zipWith (fromBy a delta) [0..] $ discrete2 enumFromThen a b where delta = b - a
-  enumFromThenTo a b c = zipWith (fromBy a delta) [0..] $ discrete3 enumFromThenTo a b c where delta = b - a
+  enumFromTo a b       = withPrimal a <$> enumFromTo (primal a) (primal b)
+  enumFromThen a b     = zipWith (fromBy a delta) [0..] $ enumFromThen (primal a) (primal b) where delta = b - a
+  enumFromThenTo a b c = zipWith (fromBy a delta) [0..] $ enumFromThenTo (primal a) (primal b) (primal c) where delta = b - a
 instance Real (ForwardDouble s) where
-  toRational      = discrete1 toRational
+  toRational      = toRational . primal
 instance RealFloat (ForwardDouble s) where
-  floatRadix      = discrete1 floatRadix
-  floatDigits     = discrete1 floatDigits
-  floatRange      = discrete1 floatRange
-  decodeFloat     = discrete1 decodeFloat
+  floatRadix      = floatRadix . primal
+  floatDigits     = floatDigits . primal
+  floatRange      = floatRange . primal
+  decodeFloat     = decodeFloat . primal
   encodeFloat m e = auto (encodeFloat m e)
-  isNaN           = discrete1 isNaN
-  isInfinite      = discrete1 isInfinite
-  isDenormalized  = discrete1 isDenormalized
-  isNegativeZero  = discrete1 isNegativeZero
-  isIEEE          = discrete1 isIEEE
+  isNaN           = isNaN . primal
+  isInfinite      = isInfinite . primal
+  isDenormalized  = isDenormalized . primal
+  isNegativeZero  = isNegativeZero . primal
+  isIEEE          = isIEEE . primal
   exponent = exponent
   scaleFloat n = unary (scaleFloat n) (scaleFloat n one)
   significand x =  unary significand (scaleFloat (- floatDigits x) one) x
@@ -176,10 +169,10 @@ instance (Scalar (D (ForwardDouble s)) ~ Scalar (ForwardDouble s)) => RealFrac (
   properFraction a = (w, a `withPrimal` pb) where
     pa = primal a
     (w, pb) = properFraction pa
-  truncate = discrete1 truncate
-  round    = discrete1 round
-  ceiling  = discrete1 ceiling
-  floor    = discrete1 floor
+  truncate = truncate . primal
+  round    = round . primal
+  ceiling  = ceiling . primal
+  floor    = floor . primal
 instance Erf (ForwardDouble s) where
   erf = lift1 erf $ \x -> (2 / sqrt pi) * exp (negate x * x)
   erfc = lift1 erfc $ \x -> ((-2) / sqrt pi) * exp (negate x * x)

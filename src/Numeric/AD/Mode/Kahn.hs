@@ -51,11 +51,8 @@ module Numeric.AD.Mode.Kahn
 
 import Control.Applicative ((<$>))
 import Data.Traversable (Traversable)
-
-import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Kahn
-import Numeric.AD.Internal.Var
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with kahn-mode AD in a single pass.
 --

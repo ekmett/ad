@@ -128,9 +128,6 @@ instance (InvErf (f a s)) => InvErf (ComposeMode f a s) where
   inverfc (ComposeMode a) = ComposeMode (inverfc a)
   invnormcdf (ComposeMode a) = ComposeMode (invnormcdf a)
 
-instance (Primal (f a s), Primal a, Scalar (f a s) ~ a) => Primal (ComposeMode f a s) where
-  primal (ComposeMode a) = primal (primal a)
-
 instance (RealFloat (f a s)) => RealFloat (ComposeMode f a s) where
   floatRadix (ComposeMode a) = floatRadix a
   floatDigits (ComposeMode a) = floatDigits a

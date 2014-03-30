@@ -6,15 +6,15 @@
 #define BODY2(x,y) (x,y)
 #endif
 
-instance BODY2(Eq a, Num a) => Eq (HEAD) where
-  (==)          = discrete2 (==)
+instance BODY2(Num a, Eq a) => Eq (HEAD) where
+  a == b = primal a == primal b
 
-instance BODY2(Ord a, Num a) => Ord (HEAD) where
-  compare       = discrete2 compare
+instance BODY2(Num a, Ord a) => Ord (HEAD) where
+  compare a b = compare (primal a) (primal b)
 
-instance BODY2(Bounded a, Num a) => Bounded (HEAD) where
-  maxBound      = auto maxBound
-  minBound      = auto minBound
+instance BODY2(Num a, Bounded a) => Bounded (HEAD) where
+  maxBound = auto maxBound
+  minBound = auto minBound
 
 instance BODY1(Num a) => Num (HEAD) where
   fromInteger 0  = zero
@@ -57,30 +57,30 @@ instance BODY1(Floating a) => Floating (HEAD) where
   atanh    = lift1 atanh $ \x -> recip (one - join (*) x)
 
 instance BODY2(Num a, Enum a) => Enum (HEAD) where
-  succ                 = lift1 succ (const one)
-  pred                 = lift1 pred (const one)
-  toEnum               = auto . toEnum
-  fromEnum             = discrete1 fromEnum
-  enumFrom a           = withPrimal a <$> enumFrom (primal a)
-  enumFromTo a b       = withPrimal a <$> discrete2 enumFromTo a b
-  enumFromThen a b     = zipWith (fromBy a delta) [0..] $ discrete2 enumFromThen a b where delta = b - a
-  enumFromThenTo a b c = zipWith (fromBy a delta) [0..] $ discrete3 enumFromThenTo a b c where delta = b - a
+  succ             = lift1 succ (const one)
+  pred             = lift1 pred (const one)
+  toEnum           = auto . toEnum
+  fromEnum a       = fromEnum (primal a)
+  enumFrom a       = withPrimal a <$> enumFrom (primal a)
+  enumFromTo a b   = withPrimal a <$> enumFromTo (primal a) (primal b)
+  enumFromThen a b = zipWith (fromBy a delta) [0..] $ enumFromThen (primal a) (primal b) where delta = b - a
+  enumFromThenTo a b c = zipWith (fromBy a delta) [0..] $ enumFromThenTo (primal a) (primal b) (primal c) where delta = b - a
 
 instance BODY1(Real a) => Real (HEAD) where
-  toRational      = discrete1 toRational
+  toRational = toRational . primal
 
 instance BODY1(RealFloat a) => RealFloat (HEAD) where
-  floatRadix      = discrete1 floatRadix
-  floatDigits     = discrete1 floatDigits
-  floatRange      = discrete1 floatRange
-  decodeFloat     = discrete1 decodeFloat
+  floatRadix     = floatRadix . primal
+  floatDigits    = floatDigits . primal
+  floatRange    = floatRange . primal
+  decodeFloat    = decodeFloat . primal
   encodeFloat m e = auto (encodeFloat m e)
-  isNaN           = discrete1 isNaN
-  isInfinite      = discrete1 isInfinite
-  isDenormalized  = discrete1 isDenormalized
-  isNegativeZero  = discrete1 isNegativeZero
-  isIEEE          = discrete1 isIEEE
-  exponent = exponent
+  isNaN          = isNaN . primal
+  isInfinite     = isInfinite . primal
+  isDenormalized = isDenormalized . primal
+  isNegativeZero = isNegativeZero . primal
+  isIEEE         = isIEEE . primal
+  exponent = exponent . primal
   scaleFloat n = unary (scaleFloat n) (scaleFloat n one)
   significand x =  unary significand (scaleFloat (- floatDigits x) one) x
   atan2 = lift2 atan2 $ \vx vy -> let r = recip (join (*) vx + join (*) vy) in (vy * r, negate vx * r)
@@ -89,10 +89,10 @@ instance BODY1(RealFrac a) => RealFrac (HEAD) where
   properFraction a = (w, a `withPrimal` pb) where
       pa = primal a
       (w, pb) = properFraction pa
-  truncate = discrete1 truncate
-  round    = discrete1 round
-  ceiling  = discrete1 ceiling
-  floor    = discrete1 floor
+  truncate = truncate . primal
+  round    = round . primal
+  ceiling  = ceiling . primal
+  floor    = floor . primal
 
 instance BODY1(Erf a) => Erf (HEAD) where
   erf = lift1 erf $ \x -> (fromInteger 2 / sqrt pi) * exp (negate x * x)

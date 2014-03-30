@@ -56,6 +56,3 @@ instance Num a => Mode (Id a s) where
   Id a ^* b = Id (a * b)
   a *^ Id b = Id (a * b)
   Id a <+> Id b = Id (a + b)
-
-instance Num a => Primal (Id a s) where
-  primal (Id a) = a

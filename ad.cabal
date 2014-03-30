@@ -138,7 +138,6 @@ library
     Numeric.AD.Internal.Tower
     Numeric.AD.Internal.Kahn
     Numeric.AD.Internal.Reverse
-    Numeric.AD.Internal.Var
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Composition

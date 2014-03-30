@@ -40,23 +40,32 @@ module Numeric.AD.Internal.Reverse
   , partialMapOf
   , derivativeOf
   , derivativeOf'
+  , bind
+  , unbind
+  , unbindMap
+  , unbindWith
+  , unbindMapWithDefault
+  , var
+  , varId
+  , primal
   ) where
 
 import Data.Functor
-import Control.Monad (join)
+import Control.Applicative hiding ((<**>))
+import Control.Monad hiding (mapM)
 import Control.Monad.ST
 import Data.Array.ST
 import Data.Array
 import Data.Array.Unsafe as Unsafe
 import Data.IORef
-import Data.IntMap (IntMap, fromDistinctAscList)
+import Data.IntMap (IntMap, fromDistinctAscList, findWithDefault)
 import Data.Number.Erf
 import Data.Proxy
 import Data.Reflection
+import Data.Traversable (Traversable, mapM)
 import Data.Typeable
 import Numeric.AD.Internal.Classes
 import Numeric.AD.Internal.Identity
-import Numeric.AD.Internal.Var
 import Prelude hiding (mapM)
 import System.IO.Unsafe (unsafePerformIO)
 import Unsafe.Coerce
@@ -141,10 +150,10 @@ _    <**> Zero   = auto 1
 x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
 x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
-instance (Num a, Reifies s Tape) => Primal (Reverse a s) where
-  primal Zero = 0
-  primal (Lift a) = a
-  primal (Reverse _ a) = a
+primal :: Num a => Reverse a s -> a
+primal Zero = 0
+primal (Lift a) = a
+primal (Reverse _ a) = a
 
 instance (Reifies s Tape, Num a) => Jacobian (Reverse a s) where
   type D (Reverse a s) = Id a s
@@ -243,7 +252,45 @@ reifyTape vs k = unsafePerformIO $ do
   return (reify (Tape h) k)
 {-# NOINLINE reifyTape #-}
 
-instance (Num a, Reifies s Tape) => Var (Reverse a s) where
-  var a v = Reverse v a
-  varId (Reverse v _) = v
-  varId _ = error "varId: not a Var"
+var :: a -> Int -> Reverse a s
+var a v = Reverse v a
+
+varId :: Reverse a s -> Int
+varId (Reverse v _) = v
+varId _ = error "varId: not a Var"
+
+-- A simple fresh variable supply monad
+newtype S a = S { runS :: Int -> (a,Int) }
+
+instance Functor S where
+  fmap = liftM
+  {-# INLINE fmap #-}
+
+instance Applicative S where
+  pure = return
+  {-# INLINE pure #-}
+  (<*>) = ap
+  {-# INLINE (<*>) #-}
+
+instance Monad S where
+  return a = S (\s -> (a,s))
+  {-# INLINE return #-}
+  S g >>= f = S (\s -> let (a,s') = g s in runS (f a) s')
+  {-# INLINE (>>=) #-}
+
+bind :: Traversable f => f a -> (f (Reverse a s), (Int,Int))
+bind xs = (r,(0,hi)) where
+  (r,hi) = runS (mapM freshVar xs) 0
+  freshVar a = S (\s -> let s' = s + 1 in s' `seq` (var a s, s'))
+
+unbind :: Functor f => f (Reverse a s) -> Array Int a -> f a
+unbind xs ys = fmap (\v -> ys ! varId v) xs
+
+unbindWith :: (Functor f, Num a) => (a -> b -> c) -> f (Reverse a s) -> Array Int b -> f c
+unbindWith f xs ys = fmap (\v -> f (primal v) (ys ! varId v)) xs
+
+unbindMap :: (Functor f, Num a) => f (Reverse a s) -> IntMap a -> f a
+unbindMap xs ys = fmap (\v -> findWithDefault 0 (varId v) ys) xs
+
+unbindMapWithDefault :: (Functor f, Num a) => b -> (a -> b -> c) -> f (Reverse a s) -> IntMap b -> f c
+unbindMapWithDefault z f xs ys = fmap (\v -> f (primal v) $ findWithDefault z (varId v) ys) xs

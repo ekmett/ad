@@ -152,9 +152,9 @@ spartial (n:ns) (Sparse _ da) = do
 spartial _  Zero         = Nothing
 {-# INLINE spartial #-}
 
-instance Num a => Primal (Sparse a s) where
-  primal (Sparse a _) = a
-  primal Zero = 0
+primal :: Num a => Sparse a s -> a
+primal (Sparse a _) = a
+primal Zero = 0
 
 (<**>) :: Floating a => Sparse a s -> Sparse a s -> Sparse a s
 Zero <**> y    = auto (0 ** primal y)

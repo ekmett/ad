@@ -22,6 +22,7 @@
 
 module Numeric.AD.Internal.Forward
   ( Forward(..)
+  , primal
   , tangent
   , bundle
   , unbundle
@@ -75,10 +76,10 @@ apply :: Num a => (Forward a s -> b) -> a -> b
 apply f a = f (bundle a 1)
 {-# INLINE apply #-}
 
-instance Num a => Primal (Forward a s) where
-  primal (Forward a _) = a
-  primal (Lift a) = a
-  primal Zero = 0
+primal :: Num a => Forward a s -> a
+primal (Forward a _) = a
+primal (Lift a) = a
+primal Zero = 0
 
 instance Num a => Mode (Forward a s) where
   auto = Lift

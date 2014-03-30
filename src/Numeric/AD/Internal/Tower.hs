@@ -110,9 +110,9 @@ getADTower = getTower
 tower :: [a] -> Tower a s
 tower = Tower
 
-instance Num a => Primal (Tower a s) where
-  primal (Tower (x:_)) = x
-  primal _ = 0
+primal :: Num a => Tower a s -> a
+primal (Tower (x:_)) = x
+primal _ = 0
 
 instance (Num a) => Mode (Tower a s) where
   auto a = Tower [a]

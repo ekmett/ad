@@ -81,10 +81,10 @@ apply :: (Traversable f, Num a) => (f (Dense f a s) -> b) -> f a -> b
 apply f as = f (vars as)
 {-# INLINE apply #-}
 
-instance (Num a, Traversable f) => Primal (Dense f a s) where
-  primal Zero = 0
-  primal (Lift a) = a
-  primal (Dense a _) = a
+primal :: Num a => Dense f a s -> a
+primal Zero = 0
+primal (Lift a) = a
+primal (Dense a _) = a
 
 instance (Num a, Traversable f) => Mode (Dense f a s) where
   auto = Lift

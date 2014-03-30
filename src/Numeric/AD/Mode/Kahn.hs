@@ -50,6 +50,7 @@ module Numeric.AD.Mode.Kahn
   ) where
 
 import Control.Applicative ((<$>))
+import Data.Functor.Compose
 import Data.Traversable (Traversable)
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Kahn
@@ -201,4 +202,4 @@ hessian f = jacobian (grad (decomposeMode . f . fmap ComposeMode))
 -- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
 hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. f (ComposeMode (Kahn (Kahn a s') s)) -> g (ComposeMode (Kahn (Kahn a s') s))) -> f a -> g (f (f a))
-hessianF f = decomposeFunctor . jacobian (ComposeFunctor . jacobian (fmap decomposeMode . f . fmap ComposeMode))
+hessianF f = getCompose . jacobian (Compose . jacobian (fmap decomposeMode . f . fmap ComposeMode))

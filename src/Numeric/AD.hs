@@ -118,10 +118,10 @@ module Numeric.AD
   , conjugateGradientAscent
   ) where
 
+import Control.Applicative
+import Data.Functor.Compose
 import Data.Traversable (Traversable)
 import Data.Reflection (Reifies)
-import Control.Applicative
-
 import Numeric.AD.Internal.Composition
 import Numeric.AD.Internal.Forward (Forward)
 import Numeric.AD.Internal.Reverse (Reverse, Tape)
@@ -212,4 +212,4 @@ hessian f = Sparse.jacobian (grad (decomposeMode . f . fmap ComposeMode))
 -- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
 hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. Reifies s Tape => f (ComposeMode (Reverse (Sparse a s') s)) -> g (ComposeMode (Reverse (Sparse a s') s))) -> f a -> g (f (f a))
-hessianF f as = decomposeFunctor $ Sparse.jacobian (ComposeFunctor . Reverse.jacobian (fmap decomposeMode . f . fmap ComposeMode)) as
+hessianF f as = getCompose $ Sparse.jacobian (Compose . Reverse.jacobian (fmap decomposeMode . f . fmap ComposeMode)) as

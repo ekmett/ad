@@ -94,7 +94,7 @@ fixedPoint f = findZero (\x -> f x - x)
 --
 -- >>> last $ take 10 $ extremum cos 1
 -- 0.0
-extremum :: (Fractional a, Eq a) => (forall s s'. ComposeMode Forward (Forward a s') s -> ComposeMode Forward (Forward a s') s) -> a -> [a]
+extremum :: (Fractional a, Eq a) => (forall s s'. ComposeMode (Forward (Forward a s') s) -> ComposeMode (Forward (Forward a s') s)) -> a -> [a]
 extremum f = findZero (diff (decomposeMode . f . ComposeMode))
 {-# INLINE extremum #-}
 

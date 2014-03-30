@@ -1,5 +1,5 @@
 name:         ad
-version:      4.0
+version:      4.0.0.1
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2014,
@@ -22,6 +22,7 @@ extra-source-files:
   README.markdown
   travis/cabal-apt-install
   travis/config
+  include/instances.h
 synopsis:     Automatic Differentiation
 description:
     Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.

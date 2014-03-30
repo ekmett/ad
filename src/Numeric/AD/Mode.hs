@@ -57,7 +57,7 @@ class Num (Scalar t) => Mode t where
   (^*) :: t -> Scalar t -> t
 
   -- | Scalar division
-  (^/) :: (Num t, Fractional (Scalar t)) => t -> Scalar t -> t
+  (^/) :: Fractional (Scalar t) => t -> Scalar t -> t
 
   -- |
   -- @'zero' = 'lift' 0@

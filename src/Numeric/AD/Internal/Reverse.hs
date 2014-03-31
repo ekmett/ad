@@ -114,26 +114,26 @@ modifyTape p = atomicModifyIORef (getTape (reflect p))
 
 -- | This is used to create a new entry on the chain given a unary function, its derivative with respect to its input,
 -- the variable ID of its input, and the value of its input. Used by 'unary' and 'binary' internally.
-unarily :: forall s a. Reifies s Tape => (a -> a) -> a -> Int -> a -> Reverse a s
+unarily :: forall s a. Reifies s Tape => (a -> a) -> a -> Int -> a -> Reverse s a
 unarily f di i b = Reverse (unsafePerformIO (modifyTape (Proxy :: Proxy s) (un i di))) $! f b
 {-# INLINE unarily #-}
 
 -- | This is used to create a new entry on the chain given a binary function, its derivatives with respect to its inputs,
 -- their variable IDs and values. Used by 'binary' internally.
-binarily :: forall s a. Reifies s Tape => (a -> a -> a) -> a -> a -> Int -> a -> Int -> a -> Reverse a s
+binarily :: forall s a. Reifies s Tape => (a -> a -> a) -> a -> a -> Int -> a -> Int -> a -> Reverse s a
 binarily f di dj i b j c = Reverse (unsafePerformIO (modifyTape (Proxy :: Proxy s) (bin i j di dj))) $! f b c
 {-# INLINE binarily #-}
 
 #ifndef HLINT
-data Reverse a s where
-  Zero :: Reverse a s
-  Lift :: a -> Reverse a s
-  Reverse :: {-# UNPACK #-} !Int -> a -> Reverse a s
+data Reverse s a where
+  Zero :: Reverse s a
+  Lift :: a -> Reverse s a
+  Reverse :: {-# UNPACK #-} !Int -> a -> Reverse s a
   deriving (Show, Typeable)
 #endif
 
-instance (Num a, Reifies s Tape) => Mode (Reverse a s) where
-  type Scalar (Reverse a s) = a
+instance (Reifies s Tape, Num a) => Mode (Reverse s a) where
+  type Scalar (Reverse s a) = a
 
   isKnownZero Zero = True
   isKnownZero _    = False
@@ -147,22 +147,22 @@ instance (Num a, Reifies s Tape) => Mode (Reverse a s) where
   a ^* b = lift1 (* b) (\_ -> auto b) a
   a ^/ b = lift1 (/ b) (\_ -> auto (recip b)) a
 
-(<+>) :: (Reifies s Tape, Num a) => Reverse a s -> Reverse a s -> Reverse a s
+(<+>) :: (Reifies s Tape, Num a) => Reverse s a -> Reverse s a -> Reverse s a
 (<+>)  = binary (+) 1 1
 
-(<**>) :: (Reifies s Tape, Floating a) => Reverse a s -> Reverse a s -> Reverse a s
+(<**>) :: (Reifies s Tape, Floating a) => Reverse s a -> Reverse s a -> Reverse s a
 Zero <**> y      = auto (0 ** primal y)
 _    <**> Zero   = auto 1
 x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
 x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
-primal :: Num a => Reverse a s -> a
+primal :: Num a => Reverse s a -> a
 primal Zero = 0
 primal (Lift a) = a
 primal (Reverse _ a) = a
 
-instance (Reifies s Tape, Num a) => Jacobian (Reverse a s) where
-  type D (Reverse a s) = Id a
+instance (Reifies s Tape, Num a) => Jacobian (Reverse s a) where
+  type D (Reverse s a) = Id a
 
   unary f _         (Zero)   = Lift (f 0)
   unary f _         (Lift a) = Lift (f a)
@@ -197,16 +197,16 @@ instance (Reifies s Tape, Num a) => Jacobian (Reverse a s) where
 
 #define BODY1(x) (Reifies s Tape,x)
 #define BODY2(x,y) (Reifies s Tape,x,y)
-#define HEAD Reverse a s
+#define HEAD Reverse s a
 #include "instances.h"
 
 -- | Helper that extracts the derivative of a chain when the chain was constructed with 1 variable.
-derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> Reverse a s -> a
+derivativeOf :: (Reifies s Tape, Num a) => Proxy s -> Reverse s a -> a
 derivativeOf _ = sum . partials
 {-# INLINE derivativeOf #-}
 
 -- | Helper that extracts both the primal and derivative of a chain when the chain was constructed with 1 variable.
-derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> Reverse a s -> (a, a)
+derivativeOf' :: (Reifies s Tape, Num a) => Proxy s -> Reverse s a -> (a, a)
 derivativeOf' p r = (primal r, derivativeOf p r)
 {-# INLINE derivativeOf' #-}
 
@@ -227,8 +227,8 @@ backPropagate k (Binary i j g h xs) ss = do
   (backPropagate $! k - 1) xs ss
 
 -- | Extract the partials from the current chain for a given AD variable.
-{-# SPECIALIZE partials :: Reifies s Tape => Reverse Double s -> [Double] #-}
-partials :: forall s a. (Reifies s Tape, Num a) => Reverse a s -> [a]
+{-# SPECIALIZE partials :: Reifies s Tape => Reverse s Double -> [Double] #-}
+partials :: forall s a. (Reifies s Tape, Num a) => Reverse s a -> [a]
 partials Zero        = []
 partials (Lift _)    = []
 partials (Reverse k _) = map (sensitivities !) [0..vs] where
@@ -242,12 +242,12 @@ partials (Reverse k _) = map (sensitivities !) [0..vs] where
     return (v, as)
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.
-partialArrayOf :: (Reifies s Tape, Num a) => Proxy s -> (Int, Int) -> Reverse a s -> Array Int a
+partialArrayOf :: (Reifies s Tape, Num a) => Proxy s -> (Int, Int) -> Reverse s a -> Array Int a
 partialArrayOf _ vbounds = accumArray (+) 0 vbounds . zip [0..] . partials
 {-# INLINE partialArrayOf #-}
 
 -- | Return an 'IntMap' of sparse partials
-partialMapOf :: (Reifies s Tape, Num a) => Proxy s -> Reverse a s -> IntMap a
+partialMapOf :: (Reifies s Tape, Num a) => Proxy s -> Reverse s a -> IntMap a
 partialMapOf _ = fromDistinctAscList . zip [0..] . partials
 {-# INLINE partialMapOf #-}
 
@@ -258,26 +258,26 @@ reifyTape vs k = unsafePerformIO $ do
   return (reify (Tape h) k)
 {-# NOINLINE reifyTape #-}
 
-var :: a -> Int -> Reverse a s
+var :: a -> Int -> Reverse s a
 var a v = Reverse v a
 
-varId :: Reverse a s -> Int
+varId :: Reverse s a -> Int
 varId (Reverse v _) = v
 varId _ = error "varId: not a Var"
 
-bind :: Traversable f => f a -> (f (Reverse a s), (Int,Int))
+bind :: Traversable f => f a -> (f (Reverse s a), (Int,Int))
 bind xs = (r,(0,hi)) where
   (r,hi) = runState (mapM freshVar xs) 0
   freshVar a = state $ \s -> let s' = s + 1 in s' `seq` (var a s, s')
 
-unbind :: Functor f => f (Reverse a s) -> Array Int a -> f a
+unbind :: Functor f => f (Reverse s a) -> Array Int a -> f a
 unbind xs ys = fmap (\v -> ys ! varId v) xs
 
-unbindWith :: (Functor f, Num a) => (a -> b -> c) -> f (Reverse a s) -> Array Int b -> f c
+unbindWith :: (Functor f, Num a) => (a -> b -> c) -> f (Reverse s a) -> Array Int b -> f c
 unbindWith f xs ys = fmap (\v -> f (primal v) (ys ! varId v)) xs
 
-unbindMap :: (Functor f, Num a) => f (Reverse a s) -> IntMap a -> f a
+unbindMap :: (Functor f, Num a) => f (Reverse s a) -> IntMap a -> f a
 unbindMap xs ys = fmap (\v -> findWithDefault 0 (varId v) ys) xs
 
-unbindMapWithDefault :: (Functor f, Num a) => b -> (a -> b -> c) -> f (Reverse a s) -> IntMap b -> f c
+unbindMapWithDefault :: (Functor f, Num a) => b -> (a -> b -> c) -> f (Reverse s a) -> IntMap b -> f c
 unbindMapWithDefault z f xs ys = fmap (\v -> f (primal v) $ findWithDefault z (varId v) ys) xs

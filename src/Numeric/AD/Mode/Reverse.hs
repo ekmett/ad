@@ -56,7 +56,7 @@ import Numeric.AD.Internal.Reverse
 --
 -- >>> grad (\[x,y,z] -> x*y+z) [1,2,3]
 -- [2,1,1]
-grad :: (Traversable f, Num a) => (forall s. Reifies s Tape => f (Reverse a s) -> Reverse a s) -> f a -> f a
+grad :: (Traversable f, Num a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> f a
 grad f as = reifyTape (snd bds) $ \p -> unbind vs $! partialArrayOf p bds $! f vs where
   (vs, bds) = bind as
 {-# INLINE grad #-}
@@ -65,7 +65,7 @@ grad f as = reifyTape (snd bds) $ \p -> unbind vs $! partialArrayOf p bds $! f v
 --
 -- >>> grad' (\[x,y,z] -> x*y+z) [1,2,3]
 -- (5,[2,1,1])
-grad' :: (Traversable f, Num a) => (forall s. Reifies s Tape => f (Reverse a s) -> Reverse a s) -> f a -> (a, f a)
+grad' :: (Traversable f, Num a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> (a, f a)
 grad' f as = reifyTape (snd bds) $ \p -> case f vs of
    r -> (primal r, unbind vs $! partialArrayOf p bds $! r)
   where (vs, bds) = bind as
@@ -78,7 +78,7 @@ grad' f as = reifyTape (snd bds) $ \p -> case f vs of
 -- 'grad' == 'gradWith' (\_ dx -> dx)
 -- 'id' == 'gradWith' 'const'
 -- @
-gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse a s) -> Reverse a s) -> f a -> f b
+gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> f b
 gradWith g f as = reifyTape (snd bds) $ \p -> unbindWith g vs $! partialArrayOf p bds $! f vs
   where (vs,bds) = bind as
 {-# INLINE gradWith #-}
@@ -89,7 +89,7 @@ gradWith g f as = reifyTape (snd bds) $ \p -> unbindWith g vs $! partialArrayOf 
 -- @
 -- 'grad'' == 'gradWith'' (\_ dx -> dx)
 -- @
-gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse a s) -> Reverse a s) -> f a -> (a, f b)
+gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> (a, f b)
 gradWith' g f as = reifyTape (snd bds) $ \p -> case f vs of
    r -> (primal r, unbindWith g vs $! partialArrayOf p bds $! r)
   where (vs, bds) = bind as
@@ -99,7 +99,7 @@ gradWith' g f as = reifyTape (snd bds) $ \p -> case f vs of
 --
 -- >>> jacobian (\[x,y] -> [y,x,x*y]) [2,1]
 -- [[0,1],[1,0],[1,2]]
-jacobian :: (Traversable f, Functor g, Num a) => (forall s. Reifies s Tape => f (Reverse a s) -> g (Reverse a s)) -> f a -> g (f a)
+jacobian :: (Traversable f, Functor g, Num a) => (forall s. Reifies s Tape => f (Reverse s a) -> g (Reverse s a)) -> f a -> g (f a)
 jacobian f as = reifyTape (snd bds) $ \p -> unbind vs . partialArrayOf p bds <$> f vs where
   (vs, bds) = bind as
 {-# INLINE jacobian #-}
@@ -110,7 +110,7 @@ jacobian f as = reifyTape (snd bds) $ \p -> unbind vs . partialArrayOf p bds <$>
 --
 -- >>> jacobian' (\[x,y] -> [y,x,x*y]) [2,1]
 -- [(1,[0,1]),(2,[1,0]),(2,[1,2])]
-jacobian' :: (Traversable f, Functor g, Num a) => (forall s. Reifies s Tape => f (Reverse a s) -> g (Reverse a s)) -> f a -> g (a, f a)
+jacobian' :: (Traversable f, Functor g, Num a) => (forall s. Reifies s Tape => f (Reverse s a) -> g (Reverse s a)) -> f a -> g (a, f a)
 jacobian' f as = reifyTape (snd bds) $ \p ->
   let row a = (primal a, unbind vs $! partialArrayOf p bds $! a)
   in row <$> f vs
@@ -125,7 +125,7 @@ jacobian' f as = reifyTape (snd bds) $ \p ->
 -- 'jacobian' == 'jacobianWith' (\_ dx -> dx)
 -- 'jacobianWith' 'const' == (\f x -> 'const' x '<$>' f x)
 -- @
-jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse a s) -> g (Reverse a s)) -> f a -> g (f b)
+jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse s a) -> g (Reverse s a)) -> f a -> g (f b)
 jacobianWith g f as = reifyTape (snd bds) $ \p -> unbindWith g vs . partialArrayOf p bds <$> f vs where
   (vs, bds) = bind as
 {-# INLINE jacobianWith #-}
@@ -137,7 +137,7 @@ jacobianWith g f as = reifyTape (snd bds) $ \p -> unbindWith g vs . partialArray
 --
 -- @'jacobian'' == 'jacobianWith'' (\_ dx -> dx)@
 --
-jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse a s) -> g (Reverse a s)) -> f a -> g (a, f b)
+jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. Reifies s Tape => f (Reverse s a) -> g (Reverse s a)) -> f a -> g (a, f b)
 jacobianWith' g f as = reifyTape (snd bds) $ \p ->
   let row a = (primal a, unbindWith g vs $! partialArrayOf p bds $! a)
   in row <$> f vs
@@ -148,7 +148,7 @@ jacobianWith' g f as = reifyTape (snd bds) $ \p ->
 --
 -- >>> diff sin 0
 -- 1.0
-diff :: Num a => (forall s. Reifies s Tape => Reverse a s -> Reverse a s) -> a -> a
+diff :: Num a => (forall s. Reifies s Tape => Reverse s a -> Reverse s a) -> a -> a
 diff f a = reifyTape 1 $ \p -> derivativeOf p $! f (var a 0)
 {-# INLINE diff #-}
 
@@ -159,7 +159,7 @@ diff f a = reifyTape 1 $ \p -> derivativeOf p $! f (var a 0)
 --
 -- >>> diff' exp 0
 -- (1.0,1.0)
-diff' :: Num a => (forall s. Reifies s Tape => Reverse a s -> Reverse a s) -> a -> (a, a)
+diff' :: Num a => (forall s. Reifies s Tape => Reverse s a -> Reverse s a) -> a -> (a, a)
 diff' f a = reifyTape 1 $ \p -> derivativeOf' p $! f (var a 0)
 {-# INLINE diff' #-}
 
@@ -168,7 +168,7 @@ diff' f a = reifyTape 1 $ \p -> derivativeOf' p $! f (var a 0)
 -- >>> diffF (\a -> [sin a, cos a]) 0
 -- [1.0,0.0]
 --
-diffF :: (Functor f, Num a) => (forall s. Reifies s Tape => Reverse a s -> f (Reverse a s)) -> a -> f a
+diffF :: (Functor f, Num a) => (forall s. Reifies s Tape => Reverse s a -> f (Reverse s a)) -> a -> f a
 diffF f a = reifyTape 1 $ \p -> derivativeOf p <$> f (var a 0)
 {-# INLINE diffF #-}
 
@@ -176,7 +176,7 @@ diffF f a = reifyTape 1 $ \p -> derivativeOf p <$> f (var a 0)
 --
 -- >>> diffF' (\a -> [sin a, cos a]) 0
 -- [(0.0,1.0),(1.0,0.0)]
-diffF' :: (Functor f, Num a) => (forall s. Reifies s Tape => Reverse a s -> f (Reverse a s)) -> a -> f (a, a)
+diffF' :: (Functor f, Num a) => (forall s. Reifies s Tape => Reverse s a -> f (Reverse s a)) -> a -> f (a, a)
 diffF' f a = reifyTape 1 $ \p -> derivativeOf' p <$> f (var a 0)
 {-# INLINE diffF' #-}
 
@@ -186,7 +186,7 @@ diffF' f a = reifyTape 1 $ \p -> derivativeOf' p <$> f (var a 0)
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
 -- [[0,1],[1,0]]
-hessian :: (Traversable f, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (On (Reverse (Reverse a s') s)) -> (On (Reverse (Reverse a s') s))) -> f a -> f (f a)
+hessian :: (Traversable f, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (On (Reverse s (Reverse s' a))) -> (On (Reverse s (Reverse s' a)))) -> f a -> f (f a)
 hessian f = jacobian (grad (off . f . fmap On))
 {-# INLINE hessian #-}
 
@@ -196,6 +196,6 @@ hessian f = jacobian (grad (off . f . fmap On))
 --
 -- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
-hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (On (Reverse (Reverse a s') s)) -> g (On (Reverse (Reverse a s') s))) -> f a -> g (f (f a))
+hessianF :: (Traversable f, Functor g, Num a) => (forall s s'. (Reifies s Tape, Reifies s' Tape) => f (On (Reverse s (Reverse s' a))) -> g (On (Reverse s (Reverse s' a)))) -> f a -> g (f (f a))
 hessianF f = getCompose . jacobian (Compose . jacobian (fmap off . f . fmap On))
 {-# INLINE hessianF #-}

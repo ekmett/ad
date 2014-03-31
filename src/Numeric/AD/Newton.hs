@@ -105,7 +105,7 @@ extremum f = Rank1.extremum (runAD.f.AD)
 -- increasingly accurate results.  (Modulo the usual caveats.)
 --
 -- It uses reverse mode automatic differentiation to compute the gradient.
-gradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse a s) -> Reverse a s) -> f a -> [f a]
+gradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> [f a]
 gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
   where
     (fx0, xgx0) = Reverse.gradWith' (,) f x0
@@ -123,7 +123,7 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
 {-# INLINE gradientDescent #-}
 
 -- | Perform a gradient descent using reverse mode automatic differentiation to compute the gradient.
-gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse a s) -> Reverse a s) -> f a -> [f a]
+gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> [f a]
 gradientAscent f = gradientDescent (negate . f)
 {-# INLINE gradientAscent #-}
 

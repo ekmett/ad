@@ -63,8 +63,8 @@ indices (Index as) = uncurry (flip replicate) `concatMap` toAscList as
 -- which it was found. This should be key for efficiently computing sparse hessians.
 -- there are only (n + k - 1) choose k distinct nth partial derivatives of a
 -- function with k inputs.
-data Sparse a s
-  = Sparse !a (IntMap (Sparse a s))
+data Sparse a
+  = Sparse !a (IntMap (Sparse a))
   | Zero
   deriving (Show, Data, Typeable)
 
@@ -72,7 +72,7 @@ dropMap :: Int -> IntMap a -> IntMap a
 dropMap n = snd . IntMap.split (n - 1)
 {-# INLINE dropMap #-}
 
-times :: Num a => Sparse a s -> Int -> Sparse a s -> Sparse a s
+times :: Num a => Sparse a -> Int -> Sparse a -> Sparse a
 times Zero _ _ = Zero
 times _ _ Zero = Zero
 times (Sparse a as) n (Sparse b bs) = Sparse (a * b) $
@@ -81,12 +81,12 @@ times (Sparse a as) n (Sparse b bs) = Sparse (a * b) $
     (fmap (a *^) (dropMap n bs))
 {-# INLINE times #-}
 
-vars :: (Traversable f, Num a) => f a -> f (Sparse a s)
+vars :: (Traversable f, Num a) => f a -> f (Sparse a)
 vars = snd . mapAccumL var 0 where
   var !n a = (n + 1, Sparse a $ singleton n $ auto 1)
 {-# INLINE vars #-}
 
-apply :: (Traversable f, Num a) => (f (Sparse a s) -> b) -> f a -> b
+apply :: (Traversable f, Num a) => (f (Sparse a) -> b) -> f a -> b
 apply f = f . vars
 {-# INLINE apply #-}
 
@@ -94,17 +94,17 @@ skeleton :: Traversable f => f a -> f Int
 skeleton = snd . mapAccumL (\ !n _ -> (n + 1, n)) 0
 {-# INLINE skeleton #-}
 
-d :: (Traversable f, Num a) => f b -> Sparse a s -> f a
+d :: (Traversable f, Num a) => f b -> Sparse a -> f a
 d fs (Zero) = 0 <$ fs
 d fs (Sparse _ da) = snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs
 {-# INLINE d #-}
 
-d' :: (Traversable f, Num a) => f a -> Sparse a s -> (a, f a)
+d' :: (Traversable f, Num a) => f a -> Sparse a -> (a, f a)
 d' fs Zero = (0, 0 <$ fs)
 d' fs (Sparse a da) = (a, snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs)
 {-# INLINE d' #-}
 
-ds :: (Traversable f, Num a) => f b -> Sparse a s -> Cofree f a
+ds :: (Traversable f, Num a) => f b -> Sparse a -> Cofree f a
 ds fs Zero = r where r = 0 :< (r <$ fs)
 ds fs (as@(Sparse a _)) = a :< (go emptyIndex <$> fns) where
   fns = skeleton fs
@@ -139,13 +139,13 @@ vds n (AD as@(Sparse a _)) = a :< Vector.generate n (go emptyIndex)
 {-# INLINE vds #-}
 -}
 
-partial :: Num a => [Int] -> Sparse a s -> a
+partial :: Num a => [Int] -> Sparse a -> a
 partial []     (Sparse a _)  = a
 partial (n:ns) (Sparse _ da) = partial ns $ findWithDefault (auto 0) n da
 partial _      Zero          = 0
 {-# INLINE partial #-}
 
-spartial :: Num a => [Int] -> Sparse a s -> Maybe a
+spartial :: Num a => [Int] -> Sparse a -> Maybe a
 spartial [] (Sparse a _) = Just a
 spartial (n:ns) (Sparse _ da) = do
   a' <- lookup n da
@@ -153,19 +153,19 @@ spartial (n:ns) (Sparse _ da) = do
 spartial _  Zero         = Nothing
 {-# INLINE spartial #-}
 
-primal :: Num a => Sparse a s -> a
+primal :: Num a => Sparse a -> a
 primal (Sparse a _) = a
 primal Zero = 0
 
-(<**>) :: Floating a => Sparse a s -> Sparse a s -> Sparse a s
+(<**>) :: Floating a => Sparse a -> Sparse a -> Sparse a
 Zero <**> y    = auto (0 ** primal y)
 _    <**> Zero = auto 1
 x    <**> y@(Sparse b bs)
   | IntMap.null bs = lift1 (**b) (\z -> b *^ z <**> Sparse (b-1) IntMap.empty) x
   | otherwise      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
-instance Num a => Mode (Sparse a s) where
-  type Scalar (Sparse a s) = a
+instance Num a => Mode (Sparse a) where
+  type Scalar (Sparse a) = a
   auto a = Sparse a IntMap.empty
   zero = Zero
   Zero        ^* _ = Zero
@@ -177,13 +177,13 @@ instance Num a => Mode (Sparse a s) where
 
 infixr 6 <+>
 
-(<+>) :: Num a => Sparse a s -> Sparse a s -> Sparse a s
+(<+>) :: Num a => Sparse a -> Sparse a -> Sparse a
 Zero <+> a = a
 a <+> Zero = a
 Sparse a as <+> Sparse b bs = Sparse (a + b) $ unionWith (<+>) as bs
 
-instance Num a => Jacobian (Sparse a s) where
-  type D (Sparse a s) = Sparse a s
+instance Num a => Jacobian (Sparse a) where
+  type D (Sparse a) = Sparse a
   unary f _ Zero = auto (f 0)
   unary f dadb (Sparse pb bs) = Sparse (f pb) $ mapWithKey (times dadb) bs
 
@@ -221,20 +221,20 @@ instance Num a => Jacobian (Sparse a s) where
       (mapWithKey (times dadb) db)
       (mapWithKey (times dadc) dc)
 
-#define HEAD Sparse a s
+#define HEAD Sparse a
 #include "instances.h"
 
 class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
-  pack :: i -> [Sparse a ()] -> Sparse a ()
+  pack :: i -> [Sparse a] -> Sparse a
   unpack :: ([a] -> [a]) -> o
   unpack' :: ([a] -> (a, [a])) -> o'
 
-instance Num a => Grad (Sparse a ()) [a] (a, [a]) a where
+instance Num a => Grad (Sparse a) [a] (a, [a]) a where
   pack i _ = i
   unpack f = f []
   unpack' f = f []
 
-instance Grad i o o' a => Grad (Sparse a () -> i) (a -> o) (a -> o') a where
+instance Grad i o o' a => Grad (Sparse a -> i) (a -> o) (a -> o') a where
   pack f (a:as) = pack (f a) as
   pack _ [] = error "Grad.pack: logic error"
   unpack f a = unpack (f . (a:))
@@ -251,14 +251,14 @@ vgrad' i = unpack' (unsafeGrad' (pack i)) where
 {-# INLINE vgrad' #-}
 
 class Num a => Grads i o a | i -> a o, o -> a i where
-  packs :: i -> [Sparse a ()] -> Sparse a ()
+  packs :: i -> [Sparse a] -> Sparse a
   unpacks :: ([a] -> Cofree [] a) -> o
 
-instance Num a => Grads (Sparse a ()) (Cofree [] a) a where
+instance Num a => Grads (Sparse a) (Cofree [] a) a where
   packs i _ = i
   unpacks f = f []
 
-instance Grads i o a => Grads (Sparse a () -> i) (a -> o) a where
+instance Grads i o a => Grads (Sparse a -> i) (a -> o) a where
   packs f (a:as) = packs (f a) as
   packs _ [] = error "Grad.pack: logic error"
   unpacks f a = unpacks (f . (a:))

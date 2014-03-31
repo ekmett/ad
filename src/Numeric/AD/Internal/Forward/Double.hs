@@ -44,23 +44,23 @@ import Numeric.AD.Internal.Identity
 import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 
-data ForwardDouble a = ForwardDouble { primal, tangent :: {-# UNPACK #-} !Double }
+data ForwardDouble = ForwardDouble { primal, tangent :: {-# UNPACK #-} !Double }
   deriving (Read, Show)
 
-unbundle :: ForwardDouble s -> (Double, Double)
+unbundle :: ForwardDouble -> (Double, Double)
 unbundle (ForwardDouble a da) = (a, da)
 {-# INLINE unbundle #-}
 
-bundle :: Double -> Double -> ForwardDouble s
+bundle :: Double -> Double -> ForwardDouble
 bundle = ForwardDouble
 {-# INLINE bundle #-}
 
-apply :: (ForwardDouble s -> b) -> Double -> b
+apply :: (ForwardDouble -> b) -> Double -> b
 apply f a = f (bundle a 1)
 {-# INLINE apply #-}
 
-instance Mode (ForwardDouble s) where
-  type Scalar (ForwardDouble s) = Double
+instance Mode ForwardDouble where
+  type Scalar ForwardDouble = Double
 
   auto = flip ForwardDouble 0
 
@@ -76,11 +76,11 @@ instance Mode (ForwardDouble s) where
   ForwardDouble a da ^* b = ForwardDouble (a * b) (da * b)
   ForwardDouble a da ^/ b = ForwardDouble (a / b) (da / b)
 
-(<+>) :: ForwardDouble s -> ForwardDouble s -> ForwardDouble s
+(<+>) :: ForwardDouble -> ForwardDouble -> ForwardDouble
 ForwardDouble a da <+> ForwardDouble b db = ForwardDouble (a + b) (da + db)
 
-instance Jacobian (ForwardDouble s) where
-  type D (ForwardDouble s) = Id Double s
+instance Jacobian ForwardDouble where
+  type D ForwardDouble = Id Double
 
   unary f (Id dadb) (ForwardDouble b db) = ForwardDouble (f b) (dadb * db)
 
@@ -103,13 +103,13 @@ instance Jacobian (ForwardDouble s) where
     (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
     da = dadb * db + dc * dadc
 
-instance Eq (ForwardDouble s) where
+instance Eq ForwardDouble where
   (==)          = on (==) primal
 
-instance Ord (ForwardDouble s) where
+instance Ord ForwardDouble where
   compare       = on compare primal
 
-instance Num (ForwardDouble s) where
+instance Num ForwardDouble where
   fromInteger 0  = zero
   fromInteger n = auto (fromInteger n)
   (+)          = (<+>) -- binary (+) 1 1
@@ -119,13 +119,13 @@ instance Num (ForwardDouble s) where
   abs          = lift1 abs signum
   signum a     = lift1 signum (const zero) a
 
-instance Fractional (ForwardDouble s) where
+instance Fractional ForwardDouble where
   fromRational 0 = zero
   fromRational r = auto (fromRational r)
   x / y        = x * recip y
   recip        = lift1_ recip (const . negate . join (*))
 
-instance Floating (ForwardDouble s) where
+instance Floating ForwardDouble where
   pi       = auto pi
   exp      = lift1_ exp const
   log      = lift1 log recip
@@ -148,7 +148,7 @@ instance Floating (ForwardDouble s) where
   acosh    = lift1 acosh $ \x -> recip (sqrt (join (*) x - 1))
   atanh    = lift1 atanh $ \x -> recip (1 - join (*) x)
 
-instance Enum (ForwardDouble s) where
+instance Enum ForwardDouble where
   succ                 = lift1 succ (const 1)
   pred                 = lift1 pred (const 1)
   toEnum               = auto . toEnum
@@ -158,10 +158,10 @@ instance Enum (ForwardDouble s) where
   enumFromThen a b     = zipWith (fromBy a delta) [0..] $ enumFromThen (primal a) (primal b) where delta = b - a
   enumFromThenTo a b c = zipWith (fromBy a delta) [0..] $ enumFromThenTo (primal a) (primal b) (primal c) where delta = b - a
 
-instance Real (ForwardDouble s) where
+instance Real ForwardDouble where
   toRational      = toRational . primal
 
-instance RealFloat (ForwardDouble s) where
+instance RealFloat ForwardDouble where
   floatRadix      = floatRadix . primal
   floatDigits     = floatDigits . primal
   floatRange      = floatRange . primal
@@ -177,7 +177,7 @@ instance RealFloat (ForwardDouble s) where
   significand x =  unary significand (scaleFloat (- floatDigits x) 1) x
   atan2 = lift2 atan2 $ \vx vy -> let r = recip (join (*) vx + join (*) vy) in (vy * r, negate vx * r)
 
-instance RealFrac (ForwardDouble s) where
+instance RealFrac ForwardDouble where
   properFraction a = (w, a `withPrimal` pb) where
     pa = primal a
     (w, pb) = properFraction pa
@@ -186,34 +186,34 @@ instance RealFrac (ForwardDouble s) where
   ceiling  = ceiling . primal
   floor    = floor . primal
 
-instance Erf (ForwardDouble s) where
+instance Erf ForwardDouble where
   erf = lift1 erf $ \x -> (2 / sqrt pi) * exp (negate x * x)
   erfc = lift1 erfc $ \x -> ((-2) / sqrt pi) * exp (negate x * x)
   normcdf = lift1 normcdf $ \x -> ((-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt 2)
 
-instance InvErf (ForwardDouble s) where
+instance InvErf ForwardDouble where
   inverf = lift1 inverfc $ \x -> recip $ (2 / sqrt pi) * exp (negate x * x)
   inverfc = lift1 inverfc $ \x -> recip $ negate (2 / sqrt pi) * exp (negate x * x)
   invnormcdf = lift1 invnormcdf $ \x -> recip $ ((-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt 2)
 
-bind :: (Traversable f) => (f (ForwardDouble s) -> b) -> f Double -> f b
+bind :: Traversable f => (f ForwardDouble -> b) -> f Double -> f b
 bind f as = snd $ mapAccumL outer (0 :: Int) as where
   outer !i _ = (i + 1, f $ snd $ mapAccumL (inner i) 0 as)
   inner !i !j a = (j + 1, if i == j then bundle a 1 else auto a)
 
-bind' :: (Traversable f) => (f (ForwardDouble s) -> b) -> f Double -> (b, f b)
+bind' :: Traversable f => (f ForwardDouble -> b) -> f Double -> (b, f b)
 bind' f as = dropIx $ mapAccumL outer (0 :: Int, b0) as where
   outer (!i, _) _ = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), b)
   inner !i !j a = (j + 1, if i == j then bundle a 1 else auto a)
   b0 = f (auto <$> as)
   dropIx ((_,b),bs) = (b,bs)
 
-bindWith :: (Traversable f) => (Double -> b -> c) -> (f (ForwardDouble s) -> b) -> f Double -> f c
+bindWith :: Traversable f => (Double -> b -> c) -> (f ForwardDouble -> b) -> f Double -> f c
 bindWith g f as = snd $ mapAccumL outer (0 :: Int) as where
   outer !i a = (i + 1, g a $ f $ snd $ mapAccumL (inner i) 0 as)
   inner !i !j a = (j + 1, if i == j then bundle a 1 else auto a)
 
-bindWith' :: (Traversable f) => (Double -> b -> c) -> (f (ForwardDouble s) -> b) -> f Double -> (b, f c)
+bindWith' :: Traversable f => (Double -> b -> c) -> (f ForwardDouble -> b) -> f Double -> (b, f c)
 bindWith' g f as = dropIx $ mapAccumL outer (0 :: Int, b0) as where
   outer (!i, _) a = let b = f $ snd $ mapAccumL (inner i) (0 :: Int) as in ((i + 1, b), g a b)
   inner !i !j a = (j + 1, if i == j then bundle a 1 else auto a)

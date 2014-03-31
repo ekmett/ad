@@ -133,6 +133,8 @@ library
     Numeric.AD.Mode.Tower
     Numeric.AD.Mode.Sparse
 
+    Numeric.AD.Rank1.Forward.Double
+
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Forward.Double

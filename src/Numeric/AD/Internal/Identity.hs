@@ -29,29 +29,29 @@ import Data.Number.Erf
 import Data.Typeable (Typeable)
 import Numeric.AD.Mode
 
-newtype Id a s = Id { runId :: a } deriving
+newtype Id a = Id { runId :: a } deriving
   (Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable, Erf, InvErf)
 
-probe :: a -> Id a s
+probe :: a -> Id a
 probe = Id
 
-unprobe :: Id a s -> a
+unprobe :: Id a -> a
 unprobe = runId
 
-pid :: Functor f => f a -> f (Id a s)
+pid :: Functor f => f a -> f (Id a)
 pid = fmap probe
 
-unpid :: Functor f => f (Id a s) -> f a
+unpid :: Functor f => f (Id a) -> f a
 unpid = fmap unprobe
 
-probed :: Functor f => f a -> f (Id a s)
+probed :: Functor f => f a -> f (Id a)
 probed = pid
 
-unprobed :: Functor f => f (Id a s) -> f a
+unprobed :: Functor f => f (Id a) -> f a
 unprobed = unpid
 
-instance Num a => Mode (Id a s) where
-  type Scalar (Id a s) = a
+instance Num a => Mode (Id a) where
+  type Scalar (Id a) = a
   auto = Id
   Id a ^* b = Id (a * b)
   a *^ Id b = Id (a * b)

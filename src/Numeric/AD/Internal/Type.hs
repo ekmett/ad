@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 ---- |
@@ -17,11 +18,11 @@ import Data.Number.Erf
 import Numeric.AD.Mode
 import Data.Typeable
 
-newtype AD a s = AD { runAD :: a }
-  deriving (Eq,Ord,Show,Read,Bounded,Num,Real,Fractional,Floating,Enum,RealFrac,RealFloat,Erf,InvErf,Typable)
+newtype AD s a = AD { runAD :: a }
+  deriving (Eq,Ord,Show,Read,Bounded,Num,Real,Fractional,Floating,Enum,RealFrac,RealFloat,Erf,InvErf,Typeable)
 
-instance Mode a => Mode (AD a s) where
-  type Scalar (AD a s) = Scalar a
+instance Mode a => Mode (AD s a) where
+  type Scalar (AD s a) = Scalar a
   isKnownConstant = isKnownConstant . runAD
   isKnownZero = isKnownZero . runAD
   zero = AD zero

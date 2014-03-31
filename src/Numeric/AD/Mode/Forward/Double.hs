@@ -1,6 +1,7 @@
 {-# LANGUAGE Rank2Types #-}
 module Numeric.AD.Mode.Forward.Double
-  ( ForwardDouble
+  ( AD
+  , ForwardDouble
   -- * Gradient
   , grad
   , grad'

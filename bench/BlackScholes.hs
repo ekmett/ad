@@ -63,12 +63,12 @@ main = defaultMain
         , bench "higherGreeks Float" $ nf (runFloat $ \r s v t k -> (Sparse.hessian (fst . bs) [r, s, v, t, k], Sparse.hessian (snd . bs) [r, s, v, t, k])) 2
         , bench "highererGreeks Float" $ nf (runFloat $ \r s v t k -> Sparse.hessianF (fromPair . bs) [r, s, v, t, k]) 2
         ]
---    , bgroup "Mixed"
---        [ bench "greeks Double" $ nf (runDouble $ \r s v t k -> Mixed.jacobian (fromPair . bs) [r, s, v, t, k]) 2
---        , bench "higherGreeks Double" $ nf (runDouble $ \r s v t k -> (Mixed.hessian (fst . bs) [r, s, v, t, k], Mixed.hessian (snd . bs) [r, s, v, t, k])) 2
---        , bench "highererGreeks Double" $ nf (runDouble $ \r s v t k -> Mixed.hessianF (fromPair . bs) [r, s, v, t, k]) 2
---        , bench "greeks Float" $ nf (runFloat $ \r s v t k -> Mixed.jacobian (fromPair . bs) [r, s, v, t, k]) 2
---        , bench "higherGreeks Float" $ nf (runFloat $ \r s v t k -> (Mixed.hessian (fst . bs) [r, s, v, t, k], Mixed.hessian (snd . bs) [r, s, v, t, k])) 2
---        , bench "highererGreeks Float" $ nf (runFloat $ \r s v t k -> Mixed.hessianF (fromPair . bs) [r, s, v, t, k]) 2
---        ]
+   , bgroup "Mixed"
+       [ bench "greeks Double" $ nf (runDouble $ \r s v t k -> Mixed.jacobian (fromPair . bs) [r, s, v, t, k]) 2
+       , bench "higherGreeks Double" $ nf (runDouble $ \r s v t k -> (Mixed.hessian (fst . bs) [r, s, v, t, k], Mixed.hessian (snd . bs) [r, s, v, t, k])) 2
+       , bench "highererGreeks Double" $ nf (runDouble $ \r s v t k -> Mixed.hessianF (fromPair . bs) [r, s, v, t, k]) 2
+       , bench "greeks Float" $ nf (runFloat $ \r s v t k -> Mixed.jacobian (fromPair . bs) [r, s, v, t, k]) 2
+       , bench "higherGreeks Float" $ nf (runFloat $ \r s v t k -> (Mixed.hessian (fst . bs) [r, s, v, t, k], Mixed.hessian (snd . bs) [r, s, v, t, k])) 2
+       , bench "highererGreeks Float" $ nf (runFloat $ \r s v t k -> Mixed.hessianF (fromPair . bs) [r, s, v, t, k]) 2
+       ]
     ]

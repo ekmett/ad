@@ -12,6 +12,7 @@
 
 module Numeric.AD.Rank1.Sparse
   ( Sparse
+  , auto
   -- * Sparse Gradients
   , grad
   , grad'
@@ -49,6 +50,7 @@ import Control.Comonad.Cofree
 import Numeric.AD.Jet
 import Numeric.AD.Internal.Sparse
 import Numeric.AD.Internal.Combinators
+import Numeric.AD.Mode
 
 second :: (a -> b) -> (c, a) -> (c, b)
 second g (a,b) = (a, g b)

@@ -13,6 +13,7 @@
 module Numeric.AD.Mode.Tower
   ( AD
   , Tower
+  , auto
   -- * Taylor Series
   , taylor
   , taylor0
@@ -40,6 +41,8 @@ module Numeric.AD.Mode.Tower
 import qualified Numeric.AD.Rank1.Tower as Rank1
 import Numeric.AD.Internal.Tower (Tower)
 import Numeric.AD.Internal.Type (AD(..))
+import Numeric.AD.Mode
+
 
 diffs :: Num a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
 diffs f = Rank1.diffs (runAD.f.AD)

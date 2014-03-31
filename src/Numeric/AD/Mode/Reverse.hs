@@ -20,7 +20,7 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Reverse
-  ( Reverse
+  ( Reverse, auto
   -- * Gradient
   , grad
   , grad'
@@ -50,6 +50,8 @@ import Data.Reflection (Reifies)
 import Data.Traversable (Traversable)
 import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Reverse
+import Numeric.AD.Mode
+
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with reverse-mode AD in a single pass.
 --

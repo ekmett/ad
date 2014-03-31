@@ -24,7 +24,7 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Kahn
-  ( AD, Kahn
+  ( AD, Kahn, auto
   -- * Gradient
   , grad
   , grad'
@@ -49,7 +49,9 @@ import Data.Traversable (Traversable)
 import Numeric.AD.Internal.Kahn (Kahn)
 import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Type (AD(..))
+import Numeric.AD.Mode
 import qualified Numeric.AD.Rank1.Kahn as Rank1
+
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with kahn-mode AD in a single pass.
 --

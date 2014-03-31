@@ -44,7 +44,7 @@ module Numeric.AD
   ( AD
 
   -- * AD modes
-  , Mode(auto, type Scalar)
+  , Mode(auto, Scalar)
 
   -- * Gradients (Reverse Mode)
   , grad

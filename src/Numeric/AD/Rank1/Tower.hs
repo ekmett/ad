@@ -14,6 +14,7 @@
 
 module Numeric.AD.Rank1.Tower
   ( Tower
+  , auto
   -- * Taylor Series
   , taylor
   , taylor0
@@ -40,6 +41,7 @@ module Numeric.AD.Rank1.Tower
 
 import Control.Applicative ((<$>))
 import Numeric.AD.Internal.Tower
+import Numeric.AD.Mode
 
 diffs :: Num a => (Tower a -> Tower a) -> a -> [a]
 diffs f a = getADTower $ apply f a

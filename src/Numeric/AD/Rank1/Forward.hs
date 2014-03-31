@@ -13,6 +13,7 @@
 
 module Numeric.AD.Rank1.Forward
   ( Forward
+  , auto
   -- * Gradient
   , grad
   , grad'
@@ -45,6 +46,8 @@ import Data.Traversable (Traversable)
 import Control.Applicative
 import Numeric.AD.Internal.Forward
 import Numeric.AD.Internal.On
+import Numeric.AD.Mode
+
 
 -- | Compute the directional derivative of a function given a zipped up 'Functor' of the input values and their derivatives
 du :: (Functor f, Num a) => (f (Forward a) -> Forward a) -> f (a, a) -> a

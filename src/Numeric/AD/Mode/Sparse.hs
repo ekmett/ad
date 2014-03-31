@@ -12,7 +12,7 @@
 -----------------------------------------------------------------------------
 
 module Numeric.AD.Mode.Sparse
-  ( Sparse
+  ( AD, Sparse, auto
   -- * Sparse Gradients
   , grad
   , grad'
@@ -40,6 +40,8 @@ import Data.Traversable (Traversable)
 import Numeric.AD.Internal.Sparse (Sparse)
 import qualified Numeric.AD.Rank1.Sparse as Rank1
 import Numeric.AD.Internal.Type
+import Numeric.AD.Mode
+
 
 grad :: (Traversable f, Num a) => (forall s. f (AD s (Sparse a)) -> AD s (Sparse a)) -> f a -> f a
 grad f = Rank1.grad (runAD.f.fmap AD)

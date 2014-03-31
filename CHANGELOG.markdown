@@ -1,3 +1,8 @@
+4.2
+---
+* Removed broken `Directed` mode.
+* Added `Numeric.AD.Rank1` combinators and moved most infinitesimal handling back out of the modes and into an `AD` wrapper.
+
 4.1
 ---
 * Fixed a bug in the type of `conjugateGradientAscent` and `conjugateGradientDescent` that prevent users from being able to ever call it.

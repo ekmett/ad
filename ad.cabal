@@ -118,26 +118,25 @@ library
 
 
 
---    Numeric.AD
---
---    Numeric.AD.Halley
---    Numeric.AD.Newton
-     -- Numeric.AD.Mode.Kahn
---
   exposed-modules:
+    Numeric.AD
+    Numeric.AD.Halley
+    Numeric.AD.Jacobian
+    Numeric.AD.Jet
     Numeric.AD.Mode
     Numeric.AD.Mode.Forward
     Numeric.AD.Mode.Forward.Double
+    Numeric.AD.Mode.Kahn
     Numeric.AD.Mode.Reverse
     Numeric.AD.Mode.Sparse
     Numeric.AD.Mode.Tower
-    Numeric.AD.Jet
-    Numeric.AD.Jacobian
+    Numeric.AD.Newton
     Numeric.AD.Rank1.Forward
     Numeric.AD.Rank1.Forward.Double
     Numeric.AD.Rank1.Sparse
     Numeric.AD.Rank1.Tower
     Numeric.AD.Rank1.Kahn
+    Numeric.AD.Rank1.Newton
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Forward.Double

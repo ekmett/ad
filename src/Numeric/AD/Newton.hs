@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- |
--- Copyright   :  (c) Edward Kmett 2010
+-- Copyright   :  (c) Edward Kmett 2010-2014
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -27,19 +27,20 @@ module Numeric.AD.Newton
   , conjugateGradientAscent
   ) where
 
-import Prelude hiding (all, mapM, sum)
 import Data.Foldable (all, sum)
 import Data.Reflection (Reifies)
 import Data.Traversable
-import Numeric.AD.Mode
-import Numeric.AD.Mode.Forward (diff, diff')
-import Numeric.AD.Mode.Reverse as Reverse (gradWith')
-import Numeric.AD.Mode.Kahn as Kahn (Kahn, grad)
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Forward (Forward)
-import Numeric.AD.Internal.Or
 import Numeric.AD.Internal.On
+import Numeric.AD.Internal.Or
 import Numeric.AD.Internal.Reverse (Reverse, Tape)
+import Numeric.AD.Internal.Type (AD(..))
+import Numeric.AD.Mode
+import Numeric.AD.Mode.Reverse as Reverse (gradWith')
+import Numeric.AD.Rank1.Kahn as Kahn (Kahn, grad)
+import qualified Numeric.AD.Rank1.Newton as Rank1
+import Prelude hiding (all, mapM, sum)
 
 -- $setup
 -- >>> import Data.Complex
@@ -56,11 +57,8 @@ import Numeric.AD.Internal.Reverse (Reverse, Tape)
 --
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
-findZero :: (Fractional a, Eq a) => (forall s. Forward a s -> Forward a s) -> a -> [a]
-findZero f = go where
-  go x = x : if x == xn then [] else go xn where
-    (y,y') = diff' f x
-    xn = x - y/y'
+findZero :: (Fractional a, Eq a) => (forall s. AD s (Forward a) -> AD s (Forward a)) -> a -> [a]
+findZero f = Rank1.findZero (runAD.f.AD)
 {-# INLINE findZero #-}
 
 -- | The 'inverse' function inverts a scalar function using
@@ -72,8 +70,8 @@ findZero f = go where
 --
 -- >>> last $ take 10 $ inverse sqrt 1 (sqrt 10)
 -- 10.0
-inverse :: (Fractional a, Eq a) => (forall s. Forward a s -> Forward a s) -> a -> a -> [a]
-inverse f x0 y = findZero (\x -> f x - auto y) x0
+inverse :: (Fractional a, Eq a) => (forall s. AD s (Forward a) -> AD s (Forward a)) -> a -> a -> [a]
+inverse f = Rank1.inverse (runAD.f.AD)
 {-# INLINE inverse  #-}
 
 -- | The 'fixedPoint' function find a fixedpoint of a scalar
@@ -85,8 +83,8 @@ inverse f x0 y = findZero (\x -> f x - auto y) x0
 --
 -- >>> last $ take 10 $ fixedPoint cos 1
 -- 0.7390851332151607
-fixedPoint :: (Fractional a, Eq a) => (forall s. Forward a s -> Forward a s) -> a -> [a]
-fixedPoint f = findZero (\x -> f x - x)
+fixedPoint :: (Fractional a, Eq a) => (forall s. AD s (Forward a) -> AD s (Forward a)) -> a -> [a]
+fixedPoint f = Rank1.fixedPoint (runAD.f.AD)
 {-# INLINE fixedPoint #-}
 
 -- | The 'extremum' function finds an extremum of a scalar
@@ -96,8 +94,8 @@ fixedPoint f = findZero (\x -> f x - x)
 --
 -- >>> last $ take 10 $ extremum cos 1
 -- 0.0
-extremum :: (Fractional a, Eq a) => (forall s s'. On (Forward (Forward a s') s) -> On (Forward (Forward a s') s)) -> a -> [a]
-extremum f = findZero (diff (off . f . On))
+extremum :: (Fractional a, Eq a) => (forall s. AD s (On (Forward (Forward a))) -> AD s (On (Forward (Forward a)))) -> a -> [a]
+extremum f = Rank1.extremum (runAD.f.AD)
 {-# INLINE extremum #-}
 
 -- | The 'gradientDescent' function performs a multivariate
@@ -139,7 +137,7 @@ gradientAscent f = gradientDescent (negate . f)
 -- True
 conjugateGradientDescent
   :: (Traversable f, Ord a, Fractional a)
-  => (forall s1 s2 s3 s4. Chosen s4 => f (Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4) -> Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4)
+  => (forall s. Chosen s => f (Or (On (Forward (Forward a))) (Kahn a) s) -> Or (On (Forward (Forward a))) (Kahn a) s)
   -> f a -> [f a]
 conjugateGradientDescent f = conjugateGradientAscent (negate . f)
 {-# INLINE conjugateGradientDescent #-}
@@ -153,7 +151,7 @@ rfu f = runR . f . fmap R
 -- | Perform a conjugate gradient ascent using reverse mode automatic differentiation to compute the gradient.
 conjugateGradientAscent
   :: (Traversable f, Ord a, Fractional a)
-  => (forall s1 s2 s3 s4. Chosen s4 => f (Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4) -> Or (On (Forward (Forward a s1) s2)) (Kahn a s3) s4)
+  => (forall s. Chosen s => f (Or (On (Forward (Forward a))) (Kahn a) s) -> Or (On (Forward (Forward a))) (Kahn a) s)
   -> f a -> [f a]
 conjugateGradientAscent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0 delta0)
   where
@@ -162,7 +160,7 @@ conjugateGradientAscent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0 delta
     delta0 = dot d0 d0
     go xi _ri di deltai = xi : go xi1 ri1 di1 deltai1
       where
-        ai = last $ take 20 $ extremum (\a -> lfu f $ zipWithT (\x d -> auto x + a * auto d) xi di) 0
+        ai = last $ take 20 $ Rank1.extremum (\a -> lfu f $ zipWithT (\x d -> auto x + a * auto d) xi di) 0
         xi1 = zipWithT (\x d -> x + ai*d) xi di
         ri1 = Kahn.grad (rfu f) xi1
         deltai1 = dot ri1 ri1

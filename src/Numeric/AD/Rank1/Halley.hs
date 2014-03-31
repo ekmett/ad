@@ -1,5 +1,3 @@
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 -----------------------------------------------------------------------------
 -- |
 -- Copyright   :  (c) Edward Kmett 2010-2014
@@ -15,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Numeric.AD.Halley
+module Numeric.AD.Rank1.Halley
   (
   -- * Halley's Method (Tower AD)
     findZero
@@ -24,12 +22,13 @@ module Numeric.AD.Halley
   , extremum
   ) where
 
-import Prelude
+import Prelude hiding (all)
 import Numeric.AD.Internal.Forward (Forward)
 import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Tower (Tower)
-import Numeric.AD.Internal.Type (AD(..))
-import qualified Numeric.AD.Rank1.Halley as Rank1
+import Numeric.AD.Mode
+import Numeric.AD.Rank1.Tower (diffs0)
+import Numeric.AD.Rank1.Forward (diff)
 
 -- $setup
 -- >>> import Data.Complex
@@ -46,8 +45,11 @@ import qualified Numeric.AD.Rank1.Halley as Rank1
 --
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
-findZero :: (Fractional a, Eq a) => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
-findZero f = Rank1.findZero (runAD.f.AD)
+findZero :: (Fractional a, Eq a) => (Tower a -> Tower a) -> a -> [a]
+findZero f = go where
+  go x = x : if x == xn then [] else go xn where
+    (y:y':y'':_) = diffs0 f x
+    xn = x - 2*y*y'/(2*y'*y'-y*y'')
 {-# INLINE findZero #-}
 
 -- | The 'inverse' function inverts a scalar function using
@@ -57,8 +59,8 @@ findZero f = Rank1.findZero (runAD.f.AD)
 --
 -- Note: the @take 10 $ inverse sqrt 1 (sqrt 10)@ example that works for Newton's method
 -- fails with Halley's method because the preconditions do not hold!
-inverse :: (Fractional a, Eq a) => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> a -> [a]
-inverse f = Rank1.inverse (runAD.f.AD)
+inverse :: (Fractional a, Eq a) => (Tower a -> Tower a) -> a -> a -> [a]
+inverse f x0 y = findZero (\x -> f x - auto y) x0
 {-# INLINE inverse  #-}
 
 -- | The 'fixedPoint' function find a fixedpoint of a scalar
@@ -70,8 +72,8 @@ inverse f = Rank1.inverse (runAD.f.AD)
 --
 -- >>> last $ take 10 $ fixedPoint cos 1
 -- 0.7390851332151607
-fixedPoint :: (Fractional a, Eq a) => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
-fixedPoint f = Rank1.fixedPoint (runAD.f.AD)
+fixedPoint :: (Fractional a, Eq a) => (Tower a -> Tower a) -> a -> [a]
+fixedPoint f = findZero (\x -> f x - x)
 {-# INLINE fixedPoint #-}
 
 
@@ -82,6 +84,6 @@ fixedPoint f = Rank1.fixedPoint (runAD.f.AD)
 --
 -- >>> take 10 $ extremum cos 1
 -- [1.0,0.29616942658570555,4.59979519460002e-3,1.6220740159042513e-8,0.0]
-extremum :: (Fractional a, Eq a) => (forall s. AD s (On (Forward (Tower a))) -> AD s (On (Forward (Tower a)))) -> a -> [a]
-extremum f = Rank1.extremum (runAD.f.AD)
+extremum :: (Fractional a, Eq a) => (On (Forward (Tower a)) -> On (Forward (Tower a))) -> a -> [a]
+extremum f = findZero (diff (off . f . On))
 {-# INLINE extremum #-}

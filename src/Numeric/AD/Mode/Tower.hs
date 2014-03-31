@@ -1,5 +1,4 @@
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE BangPatterns #-}
 -----------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Edward Kmett 2010-2014
@@ -11,9 +10,9 @@
 -- Higher order derivatives via a \"dual number tower\".
 --
 -----------------------------------------------------------------------------
-
 module Numeric.AD.Mode.Tower
-  ( Tower
+  ( AD
+  , Tower
   -- * Taylor Series
   , taylor
   , taylor0
@@ -38,78 +37,77 @@ module Numeric.AD.Mode.Tower
   , dus0F   -- answer and all zero padded directional derivatives of (a -> a)
   ) where
 
-import Control.Applicative ((<$>))
-import Numeric.AD.Internal.Tower
+import qualified Numeric.AD.Rank1.Tower as Rank1
+import Numeric.AD.Internal.Tower (Tower)
+import Numeric.AD.Internal.Type (AD(..))
 
-diffs :: Num a => (forall s. Tower a s -> Tower a s) -> a -> [a]
-diffs f a = getADTower $ apply f a
+diffs :: Num a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
+diffs f = Rank1.diffs (runAD.f.AD)
 {-# INLINE diffs #-}
 
-diffs0 :: Num a => (forall s. Tower a s -> Tower a s) -> a -> [a]
-diffs0 f a = zeroPad (diffs f a)
+diffs0 :: Num a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
+diffs0 f = Rank1.diffs0 (runAD.f.AD)
 {-# INLINE diffs0 #-}
 
-diffsF :: (Functor f, Num a) => (forall s. Tower a s -> f (Tower a s)) -> a -> f [a]
-diffsF f a = getADTower <$> apply f a
+diffsF :: (Functor f, Num a) => (forall s. AD s (Tower a) -> f (AD s (Tower a))) -> a -> f [a]
+diffsF f = Rank1.diffsF (fmap runAD.f.AD)
 {-# INLINE diffsF #-}
 
-diffs0F :: (Functor f, Num a) => (forall s. Tower a s -> f (Tower a s)) -> a -> f [a]
-diffs0F f a = (zeroPad . getADTower) <$> apply f a
+diffs0F :: (Functor f, Num a) => (forall s. AD s (Tower a) -> f (AD s (Tower a))) -> a -> f [a]
+diffs0F f = Rank1.diffs0F (fmap runAD.f.AD)
 {-# INLINE diffs0F #-}
 
-taylor :: Fractional a => (forall s. Tower a s -> Tower a s) -> a -> a -> [a]
-taylor f x dx = go 1 1 (diffs f x) where
-  go !n !acc (a:as) = a * acc : go (n + 1) (acc * dx / n) as
-  go _ _ [] = []
+taylor :: Fractional a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> a -> [a]
+taylor f = Rank1.taylor (runAD.f.AD)
 
-taylor0 :: Fractional a => (forall s. Tower a s -> Tower a s) -> a -> a -> [a]
-taylor0 f x dx = zeroPad (taylor f x dx)
+taylor0 :: Fractional a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> a -> [a]
+taylor0 f = Rank1.taylor0 (runAD.f.AD)
 {-# INLINE taylor0 #-}
 
-maclaurin :: Fractional a => (forall s. Tower a s -> Tower a s) -> a -> [a]
-maclaurin f = taylor f 0
+maclaurin :: Fractional a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
+maclaurin f = Rank1.maclaurin (runAD.f.AD)
 {-# INLINE maclaurin #-}
 
-maclaurin0 :: Fractional a => (forall s. Tower a s -> Tower a s) -> a -> [a]
-maclaurin0 f = taylor0 f 0
+maclaurin0 :: Fractional a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
+maclaurin0 f = Rank1.maclaurin0 (runAD.f.AD)
 {-# INLINE maclaurin0 #-}
 
-diff :: Num a => (forall s. Tower a s -> Tower a s) -> a -> a
-diff f = d . diffs f
+diff :: Num a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> a
+diff f = Rank1.diff (runAD.f.AD)
 {-# INLINE diff #-}
 
-diff' :: Num a => (forall s. Tower a s -> Tower a s) -> a -> (a, a)
-diff' f = d' . diffs f
+diff' :: Num a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> (a, a)
+diff' f = Rank1.diff' (runAD.f.AD)
 {-# INLINE diff' #-}
 
-du :: (Functor f, Num a) => (forall s. f (Tower a s) -> Tower a s) -> f (a, a) -> a
-du f = d . getADTower . f . fmap withD
+du :: (Functor f, Num a) => (forall s. f (AD s (Tower a)) -> AD s (Tower a)) -> f (a, a) -> a
+du f = Rank1.du (runAD.f. fmap AD)
 {-# INLINE du #-}
 
-du' :: (Functor f, Num a) => (forall s. f (Tower a s) -> Tower a s) -> f (a, a) -> (a, a)
-du' f = d' . getADTower . f . fmap withD
+du' :: (Functor f, Num a) => (forall s. f (AD s (Tower a)) -> AD s (Tower a)) -> f (a, a) -> (a, a)
+du' f = Rank1.du' (runAD.f.fmap AD)
 {-# INLINE du' #-}
 
-duF :: (Functor f, Functor g, Num a) => (forall s. f (Tower a s) -> g (Tower a s)) -> f (a, a) -> g a
-duF f = fmap (d . getADTower) . f . fmap withD
+duF :: (Functor f, Functor g, Num a) => (forall s. f (AD s (Tower a)) -> g (AD s (Tower a))) -> f (a, a) -> g a
+duF f = Rank1.duF (fmap runAD.f.fmap AD)
 {-# INLINE duF #-}
 
-duF' :: (Functor f, Functor g, Num a) => (forall s. f (Tower a s) -> g (Tower a s)) -> f (a, a) -> g (a, a)
-duF' f = fmap (d' . getADTower) . f . fmap withD
+duF' :: (Functor f, Functor g, Num a) => (forall s. f (AD s (Tower a)) -> g (AD s (Tower a))) -> f (a, a) -> g (a, a)
+duF' f = Rank1.duF' (fmap runAD.f.fmap AD)
 {-# INLINE duF' #-}
 
-dus :: (Functor f, Num a) => (forall s. f (Tower a s) -> Tower a s) -> f [a] -> [a]
-dus f = getADTower . f . fmap tower
+dus :: (Functor f, Num a) => (forall s. f (AD s (Tower a)) -> AD s (Tower a)) -> f [a] -> [a]
+dus f = Rank1.dus (runAD.f.fmap AD)
 {-# INLINE dus #-}
 
-dus0 :: (Functor f, Num a) => (forall s. f (Tower a s) -> Tower a s) -> f [a] -> [a]
-dus0 f = zeroPad . getADTower . f . fmap tower
+dus0 :: (Functor f, Num a) => (forall s. f (AD s (Tower a)) -> AD s (Tower a)) -> f [a] -> [a]
+dus0 f = Rank1.dus0 (runAD.f.fmap AD)
 {-# INLINE dus0 #-}
 
-dusF :: (Functor f, Functor g, Num a) => (forall s. f (Tower a s) -> g (Tower a s)) -> f [a] -> g [a]
-dusF f = fmap getADTower . f . fmap tower
+dusF :: (Functor f, Functor g, Num a) => (forall s. f (AD s (Tower a)) -> g (AD s (Tower a))) -> f [a] -> g [a]
+dusF f = Rank1.dusF (fmap runAD.f.fmap AD)
 {-# INLINE dusF #-}
 
-dus0F :: (Functor f, Functor g, Num a) => (forall s. f (Tower a s) -> g (Tower a s)) -> f [a] -> g [a]
-dus0F f = fmap getADTower . f . fmap tower
+dus0F :: (Functor f, Functor g, Num a) => (forall s. f (AD s (Tower a)) -> g (AD s (Tower a))) -> f [a] -> g [a]
+dus0F f = Rank1.dus0F (fmap runAD.f.fmap AD)
 {-# INLINE dus0F #-}

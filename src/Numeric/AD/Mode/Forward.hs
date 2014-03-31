@@ -44,6 +44,7 @@ module Numeric.AD.Mode.Forward
   ) where
 
 import Data.Traversable (Traversable)
+import Numeric.AD.Internal.Forward
 import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Type
 import qualified Numeric.AD.Rank1.Forward as Rank1
@@ -65,7 +66,7 @@ duF f = Rank1.duF (fmap runAD.f.fmap AD)
 
 -- | Compute a vector of answers and directional derivatives for a function given a zipped up 'Functor' of the input values and their derivatives.
 duF' :: (Functor f, Functor g, Num a) => (forall s. f (AD s (Forward a)) -> g (AD s (Forward a))) -> f (a, a) -> g (a, a)
-duF' f = Rank1.duF (fmap runAD.f.fmap AD)
+duF' f = Rank1.duF' (fmap runAD.f.fmap AD)
 {-# INLINE duF' #-}
 
 -- | The 'diff' function calculates the first derivative of a scalar-to-scalar function by forward-mode 'AD'
@@ -178,10 +179,10 @@ gradWith' g f = Rank1.gradWith' g (runAD.f.fmap AD)
 -- | Compute the product of a vector with the Hessian using forward-on-forward-mode AD.
 --
 hessianProduct :: (Traversable f, Num a) => (forall s. f (AD s (On (Forward (Forward a)))) -> AD s (On (Forward (Forward a)))) -> f (a, a) -> f a
-hessianProduct f = Rank1.hessianProduct (fmap runAD.f.fmap AD)
+hessianProduct f = Rank1.hessianProduct (runAD.f.fmap AD)
 {-# INLINE hessianProduct #-}
 
 -- | Compute the gradient and hessian product using forward-on-forward-mode AD.
 hessianProduct' :: (Traversable f, Num a) => (forall s. f (AD s (On (Forward (Forward a)))) -> AD s (On (Forward (Forward a)))) -> f (a, a) -> f (a, a)
-hessianProduct f = Rank1.hessianProduct' (fmap runAD.f.fmap AD)
+hessianProduct' f = Rank1.hessianProduct' (runAD.f.fmap AD)
 {-# INLINE hessianProduct' #-}

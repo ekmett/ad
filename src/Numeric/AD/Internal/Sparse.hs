@@ -68,9 +68,6 @@ data Sparse a s
   | Zero
   deriving (Show, Data, Typeable)
 
-type instance Scalar (Sparse a s) = a
-
--- | drop keys below a given value
 dropMap :: Int -> IntMap a -> IntMap a
 dropMap n = snd . IntMap.split (n - 1)
 {-# INLINE dropMap #-}
@@ -168,9 +165,9 @@ x    <**> y@(Sparse b bs)
   | otherwise      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
 instance Num a => Mode (Sparse a s) where
+  type Scalar (Sparse a s) = a
   auto a = Sparse a IntMap.empty
   zero = Zero
-
   Zero        ^* _ = Zero
   Sparse a as ^* b = Sparse (a * b) $ fmap (^* b) as
   _ *^ Zero        = Zero

@@ -49,8 +49,6 @@ import Numeric.AD.Mode
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'
 newtype Tower a s = Tower { getTower :: [a] } deriving (Data, Typeable)
 
-type instance Scalar (Tower a s) = a
-
 instance Show a => Show (Tower a s) where
   showsPrec n (Tower as) = showParen (n > 10) $ showString "Tower " . showList as
 
@@ -120,9 +118,9 @@ primal (Tower (x:_)) = x
 primal _ = 0
 
 instance Num a => Mode (Tower a s) where
+  type Scalar (Tower a s) = a
   auto a = Tower [a]
   zero = Tower []
-
   a *^ Tower bs = Tower (map (a*) bs)
   Tower as ^* b = Tower (map (*b) as)
   Tower as ^/ b = Tower (map (/b) as)

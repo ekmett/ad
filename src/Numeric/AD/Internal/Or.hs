@@ -188,9 +188,9 @@ instance (RealFloat a, RealFloat b, Chosen s) => RealFloat (Or a b s) where
   isIEEE = chosen isIEEE isIEEE
   atan2 = binary atan2 atan2
 
-type instance Scalar (Or a b s) = Scalar a
 
 instance (Mode a, Mode b, Chosen s, Scalar a ~ Scalar b) => Mode (Or a b s) where
+  type Scalar (Or a b s) = Scalar a
   auto = choose <$> auto <*> auto
   isKnownConstant = chosen isKnownConstant isKnownConstant
   isKnownZero = chosen isKnownZero isKnownZero

@@ -41,9 +41,8 @@ newtype On t = On { off :: t } deriving
   , InvErf, RealFloat, Typeable
   )
 
-type instance Scalar (On t) = Scalar (Scalar t)
-
 instance (Mode t, Mode (Scalar t)) => Mode (On t) where
+  type Scalar (On t) = Scalar (Scalar t)
   auto = On . auto . auto
   a *^ On b = On (auto a *^ b)
   On a ^* b = On (a ^* auto b)

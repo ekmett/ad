@@ -58,8 +58,6 @@ data Forward a s
   | Zero
   deriving (Show, Data, Typeable)
 
-type instance Scalar (Forward a s) = a
-
 -- | Calculate the 'tangent' using forward mode AD.
 tangent :: Num a => Forward a s -> a
 tangent (Forward _ da) = da
@@ -86,6 +84,8 @@ primal (Lift a) = a
 primal Zero = 0
 
 instance Num a => Mode (Forward a s) where
+  type Scalar (Forward a s) = a
+
   auto = Lift
   zero = Zero
 

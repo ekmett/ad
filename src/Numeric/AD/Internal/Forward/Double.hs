@@ -47,8 +47,6 @@ import Numeric.AD.Mode
 data ForwardDouble a = ForwardDouble { primal, tangent :: {-# UNPACK #-} !Double }
   deriving (Read, Show)
 
-type instance Scalar (ForwardDouble s) = Double
-
 unbundle :: ForwardDouble s -> (Double, Double)
 unbundle (ForwardDouble a da) = (a, da)
 {-# INLINE unbundle #-}
@@ -62,7 +60,10 @@ apply f a = f (bundle a 1)
 {-# INLINE apply #-}
 
 instance Mode (ForwardDouble s) where
+  type Scalar (ForwardDouble s) = Double
+
   auto = flip ForwardDouble 0
+
   zero = ForwardDouble 0 0
 
   isKnownZero (ForwardDouble 0 0) = True
@@ -72,9 +73,7 @@ instance Mode (ForwardDouble s) where
   isKnownConstant _ = False
 
   a *^ ForwardDouble b db = ForwardDouble (a * b) (a * db)
-
   ForwardDouble a da ^* b = ForwardDouble (a * b) (da * b)
-
   ForwardDouble a da ^/ b = ForwardDouble (a / b) (da / b)
 
 (<+>) :: ForwardDouble s -> ForwardDouble s -> ForwardDouble s

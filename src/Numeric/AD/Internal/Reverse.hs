@@ -132,9 +132,9 @@ data Reverse a s where
   deriving (Show, Typeable)
 #endif
 
-type instance Scalar (Reverse a s) = a
-
 instance (Num a, Reifies s Tape) => Mode (Reverse a s) where
+  type Scalar (Reverse a s) = a
+
   isKnownZero Zero = True
   isKnownZero _    = False
 

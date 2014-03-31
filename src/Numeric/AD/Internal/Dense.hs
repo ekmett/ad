@@ -56,7 +56,6 @@ data Dense f a s
   | Dense !a (f a)
   | Zero
 
-type instance Scalar (Dense f a s) = a
 
 instance Show a => Show (Dense f a s) where
   showsPrec d (Lift a)    = showsPrec d a
@@ -91,10 +90,9 @@ primal (Lift a) = a
 primal (Dense a _) = a
 
 instance (Num a, Traversable f) => Mode (Dense f a s) where
+  type Scalar (Dense f a s) = a
   auto = Lift
   zero = Zero
-
-
   _ *^ Zero       = Zero
   a *^ Lift b     = Lift (a * b)
   a *^ Dense b db = Dense (a * b) $ fmap (a*) db

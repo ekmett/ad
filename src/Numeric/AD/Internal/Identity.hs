@@ -32,8 +32,6 @@ import Numeric.AD.Mode
 newtype Id a s = Id { runId :: a } deriving
   (Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable, Erf, InvErf)
 
-type instance Scalar (Id a s) = a
-
 probe :: a -> Id a s
 probe = Id
 
@@ -53,6 +51,7 @@ unprobed :: Functor f => f (Id a s) -> f a
 unprobed = unpid
 
 instance Num a => Mode (Id a s) where
+  type Scalar (Id a s) = a
   auto = Id
   Id a ^* b = Id (a * b)
   a *^ Id b = Id (a * b)

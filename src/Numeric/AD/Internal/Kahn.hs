@@ -82,10 +82,6 @@ data Tape a t
 -- | @Kahn@ is a 'Mode' using reverse-mode automatic differentiation that provides fast 'diffFU', 'diff2FU', 'grad', 'grad2' and a fast 'jacobian' when you have a significantly smaller number of outputs than inputs.
 newtype Kahn a s = Kahn (Tape a (Kahn a s)) deriving (Show, Typeable)
 
-type instance Scalar (Kahn a s) = a
-
--- deriving instance (Data (Tape a (Kahn a)) => Data (Kahn a)
-
 instance MuRef (Kahn a s) where
   type DeRef (Kahn a s) = Tape a
 
@@ -96,6 +92,8 @@ instance MuRef (Kahn a s) where
   mapDeRef f (Kahn (Unary a dadb b)) = Unary a dadb <$> f b
 
 instance Num a => Mode (Kahn a s) where
+  type Scalar (Kahn a s) = a
+
   isKnownZero (Kahn Zero) = True
   isKnownZero _    = False
 

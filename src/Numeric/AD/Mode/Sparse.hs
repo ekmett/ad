@@ -16,17 +16,9 @@ module Numeric.AD.Mode.Sparse
   -- * Sparse Gradients
   , grad
   , grad'
+  , grads
   , gradWith
   , gradWith'
-  -- * Variadic Gradients
-  -- $vgrad
-  , Grad
-  , vgrad
-  -- * Higher-Order Gradients
-  , grads
-  -- * Variadic Higher-Order Gradients
-  , Grads
-  , vgrads
 
   -- * Sparse Jacobians (synonyms)
   , jacobian
@@ -41,89 +33,66 @@ module Numeric.AD.Mode.Sparse
 
   , hessianF
   , hessianF'
-
   ) where
 
-import Control.Comonad
-import Data.Traversable
-import Control.Comonad.Cofree
-import Numeric.AD.Jet
-import Numeric.AD.Internal.Sparse
-import Numeric.AD.Internal.Combinators
+import Control.Comonad.Cofree (Cofree)
+import Data.Traversable (Traversable)
+import Numeric.AD.Internal.Sparse (Sparse)
+import qualified Numeric.AD.Rank1.Sparse as Rank1
+import Numeric.AD.Internal.Type
 
-second :: (a -> b) -> (c, a) -> (c, b)
-second g (a,b) = (a, g b)
-{-# INLINE second #-}
-
-grad :: (Traversable f, Num a) => (forall s. f (Sparse a s) -> Sparse a s) -> f a -> f a
-grad f as = d as $ apply f as
+grad :: (Traversable f, Num a) => (forall s. f (AD s (Sparse a)) -> AD s (Sparse a)) -> f a -> f a
+grad f = Rank1.grad (runAD.f.fmap AD)
 {-# INLINE grad #-}
 
-grad' :: (Traversable f, Num a) => (forall s. f (Sparse a s) -> Sparse a s) -> f a -> (a, f a)
-grad' f as = d' as $ apply f as
+grad' :: (Traversable f, Num a) => (forall s. f (AD s (Sparse a)) -> AD s (Sparse a)) -> f a -> (a, f a)
+grad' f = Rank1.grad' (runAD.f.fmap AD)
 {-# INLINE grad' #-}
 
-gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (Sparse a s) -> Sparse a s) -> f a -> f b
-gradWith g f as = zipWithT g as $ grad f as
+gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (AD s (Sparse a)) -> AD s (Sparse a)) -> f a -> f b
+gradWith g f = Rank1.gradWith g (runAD.f.fmap AD)
 {-# INLINE gradWith #-}
 
-gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (Sparse a s) -> Sparse a s) -> f a -> (a, f b)
-gradWith' g f as = second (zipWithT g as) $ grad' f as
+gradWith' :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (AD s (Sparse a)) -> AD s (Sparse a)) -> f a -> (a, f b)
+gradWith' g f = Rank1.gradWith' g (runAD.f.fmap AD)
 {-# INLINE gradWith' #-}
 
-jacobian :: (Traversable f, Functor g, Num a) => (forall s. f (Sparse a s) -> g (Sparse a s)) -> f a -> g (f a)
-jacobian f as = d as <$> apply f as
+jacobian :: (Traversable f, Functor g, Num a) => (forall s. f (AD s (Sparse a)) -> g (AD s (Sparse a))) -> f a -> g (f a)
+jacobian f = Rank1.jacobian (fmap runAD.f.fmap AD)
 {-# INLINE jacobian #-}
 
-jacobian' :: (Traversable f, Functor g, Num a) => (forall s. f (Sparse a s) -> g (Sparse a s)) -> f a -> g (a, f a)
-jacobian' f as = d' as <$> apply f as
+jacobian' :: (Traversable f, Functor g, Num a) => (forall s. f (AD s (Sparse a)) -> g (AD s (Sparse a))) -> f a -> g (a, f a)
+jacobian' f = Rank1.jacobian' (fmap runAD.f.fmap AD)
 {-# INLINE jacobian' #-}
 
-jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. f (Sparse a s) -> g (Sparse a s)) -> f a -> g (f b)
-jacobianWith g f as = zipWithT g as <$> jacobian f as
+jacobianWith :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. f (AD s (Sparse a)) -> g (AD s (Sparse a))) -> f a -> g (f b)
+jacobianWith g f = Rank1.jacobianWith g (fmap runAD.f.fmap AD)
 {-# INLINE jacobianWith #-}
 
-jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. f (Sparse a s) -> g (Sparse a s)) -> f a -> g (a, f b)
-jacobianWith' g f as = second (zipWithT g as) <$> jacobian' f as
+jacobianWith' :: (Traversable f, Functor g, Num a) => (a -> a -> b) -> (forall s. f (AD s (Sparse a)) -> g (AD s (Sparse a))) -> f a -> g (a, f b)
+jacobianWith' g f = Rank1.jacobianWith' g (fmap runAD.f.fmap AD)
 {-# INLINE jacobianWith' #-}
 
-grads :: (Traversable f, Num a) => (forall s. f (Sparse a s) -> Sparse a s) -> f a -> Cofree f a
-grads f as = ds as $ apply f as
+grads :: (Traversable f, Num a) => (forall s. f (AD s (Sparse a)) -> AD s (Sparse a)) -> f a -> Cofree f a
+grads f = Rank1.grads (runAD.f.fmap AD)
 {-# INLINE grads #-}
 
-jacobians :: (Traversable f, Functor g, Num a) => (forall s. f (Sparse a s) -> g (Sparse a s)) -> f a -> g (Cofree f a)
-jacobians f as = ds as <$> apply f as
+jacobians :: (Traversable f, Functor g, Num a) => (forall s. f (AD s (Sparse a)) -> g (AD s (Sparse a))) -> f a -> g (Cofree f a)
+jacobians f = Rank1.jacobians (fmap runAD.f.fmap AD)
 {-# INLINE jacobians #-}
 
-d2 :: Functor f => Cofree f a -> f (f a)
-d2 = headJet . tailJet . tailJet . jet
-{-# INLINE d2 #-}
-
-d2' :: Functor f => Cofree f a -> (a, f (a, f a))
-d2' (a :< as) = (a, fmap (\(da :< das) -> (da, extract <$> das)) as)
-{-# INLINE d2' #-}
-
-hessian :: (Traversable f, Num a) => (forall s. f (Sparse a s) -> Sparse a s) -> f a -> f (f a)
-hessian f as = d2 $ grads f as
+hessian :: (Traversable f, Num a) => (forall s. f (AD s (Sparse a)) -> AD s (Sparse a)) -> f a -> f (f a)
+hessian f = Rank1.hessian (runAD.f.fmap AD)
 {-# INLINE hessian #-}
 
-hessian' :: (Traversable f, Num a) => (forall s. f (Sparse a s) -> Sparse a s) -> f a -> (a, f (a, f a))
-hessian' f as = d2' $ grads f as
+hessian' :: (Traversable f, Num a) => (forall s. f (AD s (Sparse a)) -> AD s (Sparse a)) -> f a -> (a, f (a, f a))
+hessian' f = Rank1.hessian' (runAD.f.fmap AD)
 {-# INLINE hessian' #-}
 
-hessianF :: (Traversable f, Functor g, Num a) => (forall s. f (Sparse a s) -> g (Sparse a s)) -> f a -> g (f (f a))
-hessianF f as = d2 <$> jacobians f as
+hessianF :: (Traversable f, Functor g, Num a) => (forall s. f (AD s (Sparse a)) -> g (AD s (Sparse a))) -> f a -> g (f (f a))
+hessianF f = Rank1.hessianF (fmap runAD.f.fmap AD)
 {-# INLINE hessianF #-}
 
-hessianF' :: (Traversable f, Functor g, Num a) => (forall s. f (Sparse a s) -> g (Sparse a s)) -> f a -> g (a, f (a, f a))
-hessianF' f as = d2' <$> jacobians f as
+hessianF' :: (Traversable f, Functor g, Num a) => (forall s. f (AD s (Sparse a)) -> g (AD s (Sparse a))) -> f a -> g (a, f (a, f a))
+hessianF' f = Rank1.hessianF' (fmap runAD.f.fmap AD)
 {-# INLINE hessianF' #-}
-
--- $vgrad
---
--- Variadic combinators for variadic mixed-mode automatic differentiation.
---
--- Unfortunately, variadicity comes at the expense of being able to use
--- quantification to avoid sensitivity confusion, so be careful when
--- counting the number of 'auto' calls you use when taking the gradient
--- of a function that takes gradients!

@@ -9,13 +9,13 @@ AD employs the fact that any program `y = F(x)` that computes one or more value 
 
 This library contains at its core a single implementation that describes how to compute the partial derivatives of a wide array of primitive operations. It then exposes an API that enables a user to safely combine them using standard higher-order functions, just as you would with any other Haskell numerical type.
 
-There are several ways to compose these individual [Jacobian matrices](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant). We hide the choice used by the API behind an explicit "Mode" type-class and universal quantification. This prevents the end user from exploiting the properties of an individual mode, and thereby potentially violating invariants or [confusing infinitesimals](http://conway.rutgers.edu/~ccshan/wiki/blog/posts/Differentiation/).
+There are several ways to compose these individual [Jacobian matrices](http://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant). We hide the choice used by the API behind an explicit "Mode" type-class and universal quantification. This prevents users from [confusing infinitesimals](http://conway.rutgers.edu/~ccshan/wiki/blog/posts/Differentiation/). If you want to risk infinitesimal confusion in order to get greater flexibility in how you curry, flip and generally combine the differential operators, then the `Rank1.*` modules are probably your cup of tea.
 
 Features
 --------
 
  * Provides forward- and reverse- mode AD combinators with a common API.
- * Type-level "branding" is used to both prevent the end user from confusing infinitesimals and to limit unsafe access to the implementation details of each mode.
+ * Optional type-level "branding" is available to prevent the end user from confusing infinitesimals
  * Each mode has a separate module full of combinators, with a consistent look and feel.
 
 Examples
@@ -94,12 +94,12 @@ Overview
  * `Numeric.AD` computes using whichever mode or combination thereof is suitable to each individual combinator. This mode is the default, re-exported by `Numeric.AD`
  * `Numeric.AD.Mode.Forward` provides basic forward-mode AD. It is good for computing simple derivatives.
  * `Numeric.AD.Mode.Sparse` computes a sparse forward-mode AD tower. It is good for higher derivatives or large numbers of outputs.
- * `Numeric.AD.Mode.Reverse` computes with reverse-mode AD. It is good for computing a few outputs given many inputs.
- * `Numeric.AD.Mode.Wengert` computes with reverse-mode AD. It is good for computing a few outputs given many inputs, when not using sparks.
+ * `Numeric.AD.Mode.Kahn` computes with reverse-mode AD. It is good for computing a few outputs given many inputs.
+ * `Numeric.AD.Mode.Reverse` computes with reverse-mode AD. It is good for computing a few outputs given many inputs, when not using sparks heavily.
  * `Numeric.AD.Mode.Tower` computes a dense forward-mode AD tower useful for higher derivatives of single input functions.
-
  * `Numeric.AD.Newton` provides a number of combinators for root finding using Newton's method with quadratic convergence.
  * `Numeric.AD.Halley` provides a number of combinators for root finding using Halley's method with cubic convergence.
+ * `Numeric.AD.Rank1.*` provides combinators for AD that are strictly rank-1. This makes it easier to flip and contort them with higher order functions at the expense of type safety when it comes to infinitsimal confusion.
 
 ### Combinators
 

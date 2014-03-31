@@ -137,21 +137,21 @@ gradientAscent f = gradientDescent (negate . f)
 -- True
 conjugateGradientDescent
   :: (Traversable f, Ord a, Fractional a)
-  => (forall s. Chosen s => f (Or (On (Forward (Forward a))) (Kahn a) s) -> Or (On (Forward (Forward a))) (Kahn a) s)
+  => (forall s. Chosen s => f (Or s (On (Forward (Forward a))) (Kahn a)) -> Or s (On (Forward (Forward a))) (Kahn a))
   -> f a -> [f a]
 conjugateGradientDescent f = conjugateGradientAscent (negate . f)
 {-# INLINE conjugateGradientDescent #-}
 
-lfu :: Functor f => (f (Or a b F) -> Or a b F) -> f a -> a
+lfu :: Functor f => (f (Or F a b) -> Or F a b) -> f a -> a
 lfu f = runL . f . fmap L
 
-rfu :: Functor f => (f (Or a b T) -> Or a b T) -> f b -> b
+rfu :: Functor f => (f (Or T a b) -> Or T a b) -> f b -> b
 rfu f = runR . f . fmap R
 
 -- | Perform a conjugate gradient ascent using reverse mode automatic differentiation to compute the gradient.
 conjugateGradientAscent
   :: (Traversable f, Ord a, Fractional a)
-  => (forall s. Chosen s => f (Or (On (Forward (Forward a))) (Kahn a) s) -> Or (On (Forward (Forward a))) (Kahn a) s)
+  => (forall s. Chosen s => f (Or s (On (Forward (Forward a))) (Kahn a)) -> Or s (On (Forward (Forward a))) (Kahn a))
   -> f a -> [f a]
 conjugateGradientAscent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0 delta0)
   where

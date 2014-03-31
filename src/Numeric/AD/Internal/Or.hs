@@ -35,25 +35,25 @@ import Data.Typeable
 #endif
 import Numeric.AD.Mode
 
-runL :: Or a b F -> a
+runL :: Or F a b -> a
 runL (L a) = a
 
-runR :: Or a b T -> b
+runR :: Or T a b -> b
 runR (R b) = b
 
 ------------------------------------------------------------------------------
 -- On
 ------------------------------------------------------------------------------
 
-chosen :: (a -> r) -> (b -> r) -> Or a b s -> r
+chosen :: (a -> r) -> (b -> r) -> Or s a b -> r
 chosen f _ (L a) = f a
 chosen _ g (R b) = g b
 
-unary :: (a -> a) -> (b -> b) -> Or a b s -> Or a b s
+unary :: (a -> a) -> (b -> b) -> Or s a b -> Or s a b
 unary f _ (L a) = L (f a)
 unary _ g (R a) = R (g a)
 
-binary :: (a -> a -> a) -> (b -> b -> b) -> Or a b s -> Or a b s -> Or a b s
+binary :: (a -> a -> a) -> (b -> b -> b) -> Or s a b -> Or s a b -> Or s a b
 binary f _ (L a) (L b) = L (f a b)
 binary _ g (R a) (R b) = R (g a b)
 binary _ _ _ _ = impossible
@@ -62,7 +62,7 @@ data F
 data T
 
 class Chosen s where
-  choose :: a -> b -> Or a b s
+  choose :: a -> b -> Or s a b
 
 instance Chosen F where
   choose x _ = L x
@@ -72,9 +72,9 @@ instance Chosen T where
 
 #ifndef HLINT
 -- | The choice between two AD modes is an AD mode in its own right
-data Or a b s where
-  L :: a -> Or a b F
-  R :: b -> Or a b T
+data Or s a b where
+  L :: a -> Or F a b
+  R :: b -> Or T a b
 #if __GLASGOW_HASKELL__ >= 707
   deriving Typeable
 #endif
@@ -83,17 +83,17 @@ data Or a b s where
 impossible :: a
 impossible = error "Numeric.AD.Internal.Or: impossible case"
 
-instance (Eq a, Eq b) => Eq (Or a b s) where
+instance (Eq a, Eq b) => Eq (Or s a b) where
   L a == L b = a == b
   R a == R b = a == b
   _ == _ = impossible
 
-instance (Ord a, Ord b) => Ord (Or a b s) where
+instance (Ord a, Ord b) => Ord (Or s a b) where
   L a `compare` L b = compare a b
   R a `compare` R b = compare a b
   _ `compare` _ = impossible
 
-instance (Enum a, Enum b, Chosen s) => Enum (Or a b s) where
+instance (Enum a, Enum b, Chosen s) => Enum (Or s a b) where
   pred = unary pred pred
   succ = unary succ succ
   toEnum i = choose (toEnum i) (toEnum i)
@@ -110,11 +110,11 @@ instance (Enum a, Enum b, Chosen s) => Enum (Or a b s) where
   enumFromThenTo (R a) (R b) (R c) = R <$> enumFromThenTo a b c
   enumFromThenTo _     _     _     = impossible
 
-instance (Bounded a, Bounded b, Chosen s) => Bounded (Or a b s) where
+instance (Bounded a, Bounded b, Chosen s) => Bounded (Or s a b) where
   maxBound = choose maxBound maxBound
   minBound = choose minBound minBound
 
-instance (Num a, Num b, Chosen s) => Num (Or a b s) where
+instance (Num a, Num b, Chosen s) => Num (Or s a b) where
   (+) = binary (+) (+)
   (-) = binary (-) (-)
   (*) = binary (*) (*)
@@ -123,15 +123,15 @@ instance (Num a, Num b, Chosen s) => Num (Or a b s) where
   signum = unary signum signum
   fromInteger = choose <$> fromInteger <*> fromInteger
 
-instance (Real a, Real b, Chosen s) => Real (Or a b s) where
+instance (Real a, Real b, Chosen s) => Real (Or s a b) where
   toRational = chosen toRational toRational
 
-instance (Fractional a, Fractional b, Chosen s) => Fractional (Or a b s) where
+instance (Fractional a, Fractional b, Chosen s) => Fractional (Or s a b) where
   (/) = binary (/) (/)
   recip = unary recip recip
   fromRational = choose <$> fromRational <*> fromRational
 
-instance (RealFrac a, RealFrac b, Chosen s) => RealFrac (Or a b s) where
+instance (RealFrac a, RealFrac b, Chosen s) => RealFrac (Or s a b) where
   properFraction (L a) = case properFraction a of
     (b, c) -> (b, L c)
   properFraction (R a) = case properFraction a of
@@ -141,7 +141,7 @@ instance (RealFrac a, RealFrac b, Chosen s) => RealFrac (Or a b s) where
   ceiling = chosen ceiling ceiling
   floor = chosen floor floor
 
-instance (Floating a, Floating b, Chosen s) => Floating (Or a b s) where
+instance (Floating a, Floating b, Chosen s) => Floating (Or s a b) where
   pi = choose pi pi
   exp = unary exp exp
   sqrt = unary sqrt sqrt
@@ -161,18 +161,18 @@ instance (Floating a, Floating b, Chosen s) => Floating (Or a b s) where
   atanh = unary atanh atanh
   acosh = unary acosh acosh
 
-instance (Erf a, Erf b, Chosen s) => Erf (Or a b s) where
+instance (Erf a, Erf b, Chosen s) => Erf (Or s a b) where
   erf = unary erf erf
   erfc = unary erfc erfc
   erfcx = unary erfcx erfcx
   normcdf = unary normcdf normcdf
 
-instance (InvErf a, InvErf b, Chosen s) => InvErf (Or a b s) where
+instance (InvErf a, InvErf b, Chosen s) => InvErf (Or s a b) where
   inverf = unary inverf inverf
   inverfc = unary inverfc inverfc
   invnormcdf = unary invnormcdf invnormcdf
 
-instance (RealFloat a, RealFloat b, Chosen s) => RealFloat (Or a b s) where
+instance (RealFloat a, RealFloat b, Chosen s) => RealFloat (Or s a b) where
   floatRadix = chosen floatRadix floatRadix
   floatDigits = chosen floatDigits floatDigits
   floatRange = chosen floatRange floatRange
@@ -189,8 +189,8 @@ instance (RealFloat a, RealFloat b, Chosen s) => RealFloat (Or a b s) where
   atan2 = binary atan2 atan2
 
 
-instance (Mode a, Mode b, Chosen s, Scalar a ~ Scalar b) => Mode (Or a b s) where
-  type Scalar (Or a b s) = Scalar a
+instance (Mode a, Mode b, Chosen s, Scalar a ~ Scalar b) => Mode (Or s a b) where
+  type Scalar (Or s a b) = Scalar a
   auto = choose <$> auto <*> auto
   isKnownConstant = chosen isKnownConstant isKnownConstant
   isKnownZero = chosen isKnownZero isKnownZero

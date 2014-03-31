@@ -3,6 +3,7 @@ import Criterion.Main
 import Data.Number.Erf
 import qualified Numeric.AD as Mixed
 import qualified Numeric.AD.Mode.Forward as Forward
+import qualified Numeric.AD.Mode.Forward.Double as ForwardDouble
 import qualified Numeric.AD.Mode.Kahn as Kahn
 import qualified Numeric.AD.Mode.Reverse as Reverse
 import qualified Numeric.AD.Mode.Sparse as Sparse
@@ -38,6 +39,9 @@ main = defaultMain
     [ bgroup "Forward"
         [ bench "greeks Double" $ nf (runDouble $ \r s v t k -> Forward.jacobian (fromPair . bs) [r, s, v, t, k]) 2
         , bench "greeks Float" $ nf (runFloat $ \r s v t k -> Forward.jacobian (fromPair . bs) [r, s, v, t, k]) 2
+        ]
+    , bgroup "ForwardDouble"
+        [ bench "greeks Double" $ nf (runDouble $ \r s v t k -> ForwardDouble.jacobian (fromPair . bs) [r, s, v, t, k]) 2
         ]
     , bgroup "Kahn"
         [ bench "greeks Double" $ nf (runDouble $ \r s v t k -> Kahn.jacobian (fromPair . bs) [r, s, v, t, k]) 2

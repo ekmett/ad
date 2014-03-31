@@ -125,8 +125,9 @@ library
 --    Numeric.AD.Mode.Directed
 --    Numeric.AD.Mode.Kahn
 --    Numeric.AD.Mode.Reverse
---    Numeric.AD.Mode.Tower
 --
+--    Numeric.AD.Mode.Tower
+--    Numeric.AD.Mode.Sparse
   exposed-modules:
     Numeric.AD.Mode
     Numeric.AD.Mode.Forward
@@ -136,6 +137,7 @@ library
     Numeric.AD.Rank1.Forward
     Numeric.AD.Rank1.Forward.Double
     Numeric.AD.Rank1.Sparse
+    Numeric.AD.Rank1.Tower
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Forward.Double

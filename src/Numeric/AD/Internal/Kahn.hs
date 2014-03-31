@@ -80,10 +80,10 @@ data Tape a t
   deriving (Show, Data, Typeable)
 
 -- | @Kahn@ is a 'Mode' using reverse-mode automatic differentiation that provides fast 'diffFU', 'diff2FU', 'grad', 'grad2' and a fast 'jacobian' when you have a significantly smaller number of outputs than inputs.
-newtype Kahn a s = Kahn (Tape a (Kahn a s)) deriving (Show, Typeable)
+newtype Kahn a = Kahn (Tape a (Kahn a)) deriving (Show, Typeable)
 
-instance MuRef (Kahn a s) where
-  type DeRef (Kahn a s) = Tape a
+instance MuRef (Kahn a) where
+  type DeRef (Kahn a) = Tape a
 
   mapDeRef _ (Kahn Zero) = pure Zero
   mapDeRef _ (Kahn (Lift a)) = pure (Lift a)
@@ -91,8 +91,8 @@ instance MuRef (Kahn a s) where
   mapDeRef f (Kahn (Binary a dadb dadc b c)) = Binary a dadb dadc <$> f b <*> f c
   mapDeRef f (Kahn (Unary a dadb b)) = Unary a dadb <$> f b
 
-instance Num a => Mode (Kahn a s) where
-  type Scalar (Kahn a s) = a
+instance Num a => Mode (Kahn a) where
+  type Scalar (Kahn a) = a
 
   isKnownZero (Kahn Zero) = True
   isKnownZero _    = False
@@ -107,24 +107,24 @@ instance Num a => Mode (Kahn a s) where
   a ^* b = lift1 (* b) (\_ -> auto b) a
   a ^/ b = lift1 (/ b) (\_ -> auto (recip b)) a
 
-(<+>) :: Num a => Kahn a s -> Kahn a s -> Kahn a s
+(<+>) :: Num a => Kahn a -> Kahn a -> Kahn a
 (<+>)  = binary (+) 1 1
 
-(<**>) :: Floating a => Kahn a s -> Kahn a s -> Kahn a s
+(<**>) :: Floating a => Kahn a -> Kahn a -> Kahn a
 Kahn Zero <**> y             = auto (0 ** primal y)
 _         <**> Kahn Zero     = auto 1
 x         <**> Kahn (Lift y) = lift1 (**y) (\z -> y *^ z ** Id (y-1)) x
 x         <**> y             = lift2_ (**) (\z xi yi -> (yi * z / xi, z * xi)) x y
 
-primal :: Num a => Kahn a s -> a
+primal :: Num a => Kahn a -> a
 primal (Kahn Zero) = 0
 primal (Kahn (Lift a)) = a
 primal (Kahn (Var a _)) = a
 primal (Kahn (Binary a _ _ _ _)) = a
 primal (Kahn (Unary a _ _)) = a
 
-instance Num a => Jacobian (Kahn a s) where
-  type D (Kahn a s) = Id a s
+instance Num a => Jacobian (Kahn a) where
+  type D (Kahn a) = Id a
 
   unary f _         (Kahn Zero)     = Kahn (Lift (f 0))
   unary f _         (Kahn (Lift a)) = Kahn (Lift (f a))
@@ -156,14 +156,14 @@ instance Num a => Jacobian (Kahn a s) where
     a = f pb pc
     (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
-#define HEAD Kahn a s
+#define HEAD Kahn a
 #include <instances.h>
 
-derivative :: Num a => Kahn a s -> a
+derivative :: Num a => Kahn a -> a
 derivative = sum . map snd . partials
 {-# INLINE derivative #-}
 
-derivative' :: Num a => Kahn a s -> (a, a)
+derivative' :: Num a => Kahn a -> (a, a)
 derivative' r = (primal r, derivative r)
 {-# INLINE derivative' #-}
 
@@ -206,8 +206,8 @@ topSortAcyclic g = reverse $ runST $ do
 
 -- | This returns a list of contributions to the partials.
 -- The variable ids returned in the list are likely /not/ unique!
-{-# SPECIALIZE partials :: Kahn Double s -> [(Int, Double)] #-}
-partials :: forall s a . Num a => Kahn a s -> [(Int, a)]
+{-# SPECIALIZE partials :: Kahn Double -> [(Int, Double)] #-}
+partials :: forall a. Num a => Kahn a -> [(Int, a)]
 partials tape = [ let v = sensitivities ! ix in seq v (ident, v) | (ix, Var _ ident) <- xs ] where
   Reified.Graph xs start = unsafePerformIO $ reifyGraph tape
   g = array xsBounds [ (i, successors t) | (i, t) <- xs ]
@@ -231,26 +231,26 @@ partials tape = [ let v = sensitivities ! ix in seq v (ident, v) | (ix, Var _ id
   successors _ = []
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.
-partialArray :: Num a => (Int, Int) -> Kahn a s -> Array Int a
+partialArray :: Num a => (Int, Int) -> Kahn a -> Array Int a
 partialArray vbounds tape = accumArray (+) 0 vbounds (partials tape)
 {-# INLINE partialArray #-}
 
 -- | Return an 'IntMap' of sparse partials
-partialMap :: Num a => Kahn a s -> IntMap a
+partialMap :: Num a => Kahn a -> IntMap a
 partialMap = fromListWith (+) . partials
 {-# INLINE partialMap #-}
 
 class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
-  pack :: i -> [Kahn a ()] -> Kahn a ()
+  pack :: i -> [Kahn a] -> Kahn a
   unpack :: ([a] -> [a]) -> o
   unpack' :: ([a] -> (a, [a])) -> o'
 
-instance Num a => Grad (Kahn a ()) [a] (a, [a]) a where
+instance Num a => Grad (Kahn a) [a] (a, [a]) a where
   pack i _ = i
   unpack f = f []
   unpack' f = f []
 
-instance Grad i o o' a => Grad (Kahn a () -> i) (a -> o) (a -> o') a where
+instance Grad i o o' a => Grad (Kahn a -> i) (a -> o) (a -> o') a where
   pack f (a:as) = pack (f a) as
   pack _ [] = error "Grad.pack: logic error"
   unpack f a = unpack (f . (a:))
@@ -267,26 +267,26 @@ vgrad' i = unpack' (unsafeGrad' (pack i)) where
     r = f vs
     (vs,bds) = bind as
 
-var :: a -> Int -> Kahn a s
+var :: a -> Int -> Kahn a
 var a v = Kahn (Var a v)
 
-varId :: Kahn a s -> Int
+varId :: Kahn a -> Int
 varId (Kahn (Var _ v)) = v
 varId _ = error "varId: not a Var"
 
-bind :: Traversable f => f a -> (f (Kahn a s), (Int,Int))
+bind :: Traversable f => f a -> (f (Kahn a), (Int,Int))
 bind xs = (r,(0,hi)) where
   (r,hi) = runState (mapM freshVar xs) 0
   freshVar a = state $ \s -> let s' = s + 1 in s' `seq` (var a s, s')
 
-unbind :: Functor f => f (Kahn a s) -> Array Int a -> f a
+unbind :: Functor f => f (Kahn a) -> Array Int a -> f a
 unbind xs ys = fmap (\v -> ys ! varId v) xs
 
-unbindWith :: (Functor f, Num a) => (a -> b -> c) -> f (Kahn a s) -> Array Int b -> f c
+unbindWith :: (Functor f, Num a) => (a -> b -> c) -> f (Kahn a) -> Array Int b -> f c
 unbindWith f xs ys = fmap (\v -> f (primal v) (ys ! varId v)) xs
 
-unbindMap :: (Functor f, Num a) => f (Kahn a s) -> IntMap a -> f a
+unbindMap :: (Functor f, Num a) => f (Kahn a) -> IntMap a -> f a
 unbindMap xs ys = fmap (\v -> findWithDefault 0 (varId v) ys) xs
 
-unbindMapWithDefault :: (Functor f, Num a) => b -> (a -> b -> c) -> f (Kahn a s) -> IntMap b -> f c
+unbindMapWithDefault :: (Functor f, Num a) => b -> (a -> b -> c) -> f (Kahn a) -> IntMap b -> f c
 unbindMapWithDefault z f xs ys = fmap (\v -> f (primal v) $ findWithDefault z (varId v) ys) xs

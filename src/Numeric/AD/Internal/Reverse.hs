@@ -162,7 +162,7 @@ primal (Lift a) = a
 primal (Reverse _ a) = a
 
 instance (Reifies s Tape, Num a) => Jacobian (Reverse a s) where
-  type D (Reverse a s) = Id a s
+  type D (Reverse a s) = Id a
 
   unary f _         (Zero)   = Lift (f 0)
   unary f _         (Lift a) = Lift (f a)

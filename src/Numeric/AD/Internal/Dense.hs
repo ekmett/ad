@@ -51,46 +51,45 @@ import Numeric.AD.Internal.Identity
 import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 
-data Dense f a s
+data Dense f a
   = Lift !a
   | Dense !a (f a)
   | Zero
 
-
-instance Show a => Show (Dense f a s) where
+instance Show a => Show (Dense f a) where
   showsPrec d (Lift a)    = showsPrec d a
   showsPrec d (Dense a _) = showsPrec d a
   showsPrec _ Zero        = showString "0"
 
-ds :: f a -> Dense f a s -> f a
+ds :: f a -> Dense f a -> f a
 ds _ (Dense _ da) = da
 ds z _ = z
 {-# INLINE ds #-}
 
-ds' :: Num a => f a -> Dense f a s -> (a, f a)
+ds' :: Num a => f a -> Dense f a -> (a, f a)
 ds' _ (Dense a da) = (a, da)
 ds' z (Lift a) = (a, z)
 ds' z Zero = (0, z)
 {-# INLINE ds' #-}
 
 -- Bind variables and count inputs
-vars :: (Traversable f, Num a) => f a -> f (Dense f a s)
+vars :: (Traversable f, Num a) => f a -> f (Dense f a)
 vars as = snd $ mapAccumL outer (0 :: Int) as where
   outer !i a = (i + 1, Dense a $ snd $ mapAccumL (inner i) 0 as)
   inner !i !j _ = (j + 1, if i == j then 1 else 0)
 {-# INLINE vars #-}
 
-apply :: (Traversable f, Num a) => (f (Dense f a s) -> b) -> f a -> b
+apply :: (Traversable f, Num a) => (f (Dense f a) -> b) -> f a -> b
 apply f as = f (vars as)
 {-# INLINE apply #-}
 
-primal :: Num a => Dense f a s -> a
+primal :: Num a => Dense f a -> a
 primal Zero = 0
 primal (Lift a) = a
 primal (Dense a _) = a
 
-instance (Num a, Traversable f) => Mode (Dense f a s) where
-  type Scalar (Dense f a s) = a
+instance (Num a, Traversable f) => Mode (Dense f a) where
+  type Scalar (Dense f a) = a
   auto = Lift
   zero = Zero
   _ *^ Zero       = Zero
@@ -103,7 +102,7 @@ instance (Num a, Traversable f) => Mode (Dense f a s) where
   Lift a     ^/ b = Lift (a / b)
   Dense a da ^/ b = Dense (a / b) $ fmap (/b) da
 
-(<+>) :: (Traversable f, Num a) => Dense f a s -> Dense f a s -> Dense f a s
+(<+>) :: (Traversable f, Num a) => Dense f a -> Dense f a -> Dense f a
 Zero       <+> a          = a
 a          <+> Zero       = a
 Lift a     <+> Lift b     = Lift (a + b)
@@ -111,14 +110,14 @@ Lift a     <+> Dense b db = Dense (a + b) db
 Dense a da <+> Lift b     = Dense (a + b) da
 Dense a da <+> Dense b db = Dense (a + b) $ zipWithT (+) da db
 
-(<**>) :: (Traversable f, Floating a) => Dense f a s -> Dense f a s -> Dense f a s
+(<**>) :: (Traversable f, Floating a) => Dense f a -> Dense f a -> Dense f a
 Zero <**> y      = auto (0 ** primal y)
 _    <**> Zero   = auto 1
 x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
 x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
-instance (Traversable f, Num a) => Jacobian (Dense f a s) where
-  type D (Dense f a s) = Id a s
+instance (Traversable f, Num a) => Jacobian (Dense f a) where
+  type D (Dense f a) = Id a
   unary f _         Zero        = Lift (f 0)
   unary f _         (Lift b)    = Lift (f b)
   unary f (Id dadb) (Dense b db) = Dense (f b) (fmap (dadb *) db)
@@ -179,7 +178,7 @@ instance (Traversable f, Num a) => Jacobian (Dense f a s) where
     (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
     productRule dbi dci = dadb * dbi + dci * dadc
 
-#define BODY1(x)    (Traversable f, x)
+#define BODY1(x)   (Traversable f, x)
 #define BODY2(x,y) (Traversable f, x, y)
-#define HEAD Dense f a s
+#define HEAD Dense f a
 #include "instances.h"

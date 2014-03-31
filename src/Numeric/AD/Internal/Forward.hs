@@ -175,7 +175,7 @@ instance Num a => Jacobian (Forward a) where
     (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
     da = dadb * db + dc * dadc
 
-#define HEAD Forward a s
+#define HEAD Forward a
 #include "instances.h"
 
 bind :: (Traversable f, Num a) => (f (Forward a) -> b) -> f a -> f b

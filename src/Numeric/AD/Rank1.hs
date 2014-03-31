@@ -149,9 +149,9 @@ import Numeric.AD.Rank1.Tower
   , taylor, taylor0, maclaurin, maclaurin0
   , dus, dus0, dusF, dus0F )
 
-import qualified Numeric.AD.Rank1.Kahn as Reverse
+import qualified Numeric.AD.Rank1.Kahn as Kahn
 import Numeric.AD.Rank1.Kahn
-  ( grad, grad', gradWith, gradWith'
+  ( Kahn, grad, grad', gradWith, gradWith'
   , jacobian, jacobian', jacobianWith, jacobianWith')
 
 -- temporary until we make a full sparse mode

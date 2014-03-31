@@ -123,6 +123,7 @@ library
     Numeric.AD.Jacobian
     Numeric.AD.Jet
     Numeric.AD.Newton
+    Numeric.AD.Type
 
     Numeric.AD.Mode
     Numeric.AD.Mode.Directed

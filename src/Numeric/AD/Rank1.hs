@@ -40,19 +40,20 @@
 -- * @0@ means that the resulting derivative list is padded with 0s at the end.
 -----------------------------------------------------------------------------
 
-module Numeric.AD
-  ( AD
+module Numeric.AD.Rank1
+  (
 
   -- * AD modes
-  , Mode(auto, type Scalar)
+    Mode(auto)
+  , Scalar
 
-  -- * Gradients (Reverse Mode)
+  -- * Gradients (Kahn Mode)
   , grad
   , grad'
   , gradWith
   , gradWith'
 
-  -- * Higher Order Gradients (Sparse-on-Reverse)
+  -- * Higher Order Gradients (Sparse-on-Kahn)
   , grads
 
   -- * Variadic Gradients (Sparse or Kahn)
@@ -60,30 +61,30 @@ module Numeric.AD
   , Grad , vgrad, vgrad'
   , Grads, vgrads
 
-  -- * Jacobians (Sparse or Reverse)
+  -- * Jacobians (Kahn)
   , jacobian
   , jacobian'
   , jacobianWith
   , jacobianWith'
 
-  -- * Higher Order Jacobian (Sparse-on-Reverse)
+  -- * Higher Order Jacobian (Sparse-on-Kahn)
   , jacobians
 
   -- * Transposed Jacobians (Forward Mode)
   , jacobianT
   , jacobianWithT
 
-  -- * Hessian (Sparse-On-Reverse)
+  -- * Hessian (Sparse-On-Kahn)
   , hessian
   , hessian'
 
-  -- * Hessian Tensors (Sparse or Sparse-On-Reverse)
+  -- * Hessian Tensors (Sparse or Sparse-On-Kahn)
   , hessianF
 
   -- * Hessian Tensors (Sparse)
   , hessianF'
 
-  -- * Hessian Vector Products (Forward-On-Reverse)
+  -- * Hessian Vector Products (Forward-On-Kahn)
   , hessianProduct
   , hessianProduct'
 
@@ -124,10 +125,9 @@ module Numeric.AD
   -- * Gradient Descent
   , gradientDescent
   , gradientAscent
-  , conjugateGradientDescent
-  , conjugateGradientAscent
   ) where
 
+import Control.Applicative
 import Data.Functor.Compose
 import Data.Traversable (Traversable)
 import Data.Reflection (Reifies)
@@ -137,35 +137,29 @@ import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Reverse (Reverse, Tape)
 import Numeric.AD.Internal.Sparse (Sparse, Grads, vgrads)
 
-import Numeric.AD.Internal.Type
 import Numeric.AD.Mode
 
-import qualified Numeric.AD.Rank1.Forward as Forward1
-import Numeric.AD.Mode.Forward
+import Numeric.AD.Rank1.Forward
   ( diff, diff', diffF, diffF'
   , du, du', duF, duF'
-  , jacobianT, jacobianWithT
-  )
+  , jacobianT, jacobianWithT )
 
-import Numeric.AD.Mode.Tower
+import Numeric.AD.Rank1.Tower
   ( diffsF, diffs0F, diffs, diffs0
   , taylor, taylor0, maclaurin, maclaurin0
-  , dus, dus0, dusF, dus0F
-  )
+  , dus, dus0, dusF, dus0F )
 
-import qualified Numeric.AD.Mode.Reverse as Reverse
-import Numeric.AD.Mode.Reverse
+import qualified Numeric.AD.Rank1.Kahn as Reverse
+import Numeric.AD.Rank1.Kahn
   ( grad, grad', gradWith, gradWith'
-  , jacobian, jacobian', jacobianWith, jacobianWith'
-  )
+  , jacobian, jacobian', jacobianWith, jacobianWith')
 
 -- temporary until we make a full sparse mode
-import qualified Numeric.AD.Rank1.Sparse as Sparse1
-import Numeric.AD.Mode.Sparse
-  ( grads, jacobians, hessian', hessianF'
-  )
+import qualified Numeric.AD.Rank1.Sparse as Sparse
+import Numeric.AD.Rank1.Sparse
+  ( grads, jacobians, hessian', hessianF')
 
-import Numeric.AD.Newton
+import Numeric.AD.Rank1.Newton
 
 -- | @'hessianProduct' f wv@ computes the product of the hessian @H@ of a non-scalar-to-scalar function @f@ at @w = 'fst' <$> wv@ with a vector @v = snd <$> wv@ using \"Pearlmutter\'s method\" from <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.29.6143>, which states:
 --
@@ -173,30 +167,30 @@ import Numeric.AD.Newton
 --
 -- Or in other words, we take the directional derivative of the gradient. The gradient is calculated in reverse mode, then the directional derivative is calculated in forward mode.
 --
-hessianProduct :: (Traversable f, Num a) => (forall s. Reifies s Tape => f (On (Reverse (Forward a) s)) -> On (Reverse (Forward a) s)) -> f (a, a) -> f a
-hessianProduct f = Forward1.duF (grad (off . f . fmap On))
+hessianProduct :: (Traversable f, Num a) => (f (On (Kahn (Forward a))) -> On (Kahn (Forward a))) -> f (a, a) -> f a
+hessianProduct f = duF (grad (off . f . fmap On))
 
 -- | @'hessianProduct'' f wv@ computes both the gradient of a non-scalar-to-scalar @f@ at @w = 'fst' <$> wv@ and the product of the hessian @H@ at @w@ with a vector @v = snd <$> wv@ using \"Pearlmutter's method\". The outputs are returned wrapped in the same functor.
 --
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
 --
 -- Or in other words, we return the gradient and the directional derivative of the gradient. The gradient is calculated in reverse mode, then the directional derivative is calculated in forward mode.
-hessianProduct' :: (Traversable f, Num a) => (forall s. Reifies s Tape => f (On (Reverse (Forward a) s)) -> On (Reverse (Forward a) s)) -> f (a, a) -> f (a, a)
-hessianProduct' f = Forward1.duF' (grad (off . f . fmap On))
+hessianProduct' :: (Traversable f, Num a) => (f (On (Kahn (Forward a))) -> On (Kahn (Forward a))) -> f (a, a) -> f (a, a)
+hessianProduct' f = duF' (grad (off . f . fmap On))
 
 -- | Compute the Hessian via the Jacobian of the gradient. gradient is computed in reverse mode and then the Jacobian is computed in sparse (forward) mode.
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
 -- [[0,1],[1,0]]
-hessian :: (Traversable f, Num a) => (forall s. Reifies s Tape => f (On (Reverse (Sparse a) s)) -> On (Reverse (Sparse a) s)) -> f a -> f (f a)
-hessian f = Sparse1.jacobian (grad (off . f . fmap On))
+hessian :: (Traversable f, Num a) => (f (On (Kahn (Sparse a))) -> On (Kahn (Sparse a))) -> f a -> f (f a)
+hessian f = Sparse.jacobian (grad (off . f . fmap On))
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function using 'Sparse'-on-'Reverse'
 --
 -- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
 -- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
-hessianF :: (Traversable f, Functor g, Num a) => (forall s. Reifies s Tape => f (On (Reverse (Sparse a) s)) -> g (On (Reverse (Sparse a) s))) -> f a -> g (f (f a))
-hessianF f as = getCompose $ Sparse1.jacobian (Compose . Reverse.jacobian (fmap off . f . fmap On)) as
+hessianF :: (Traversable f, Functor g, Num a) => (f (On (Kahn (Sparse a))) -> g (On (Kahn (Sparse a)))) -> f a -> g (f (f a))
+hessianF f as = getCompose $ Sparse.jacobian (Compose . Kahn.jacobian (fmap off . f . fmap On)) as
 
 -- $vgrad
 --

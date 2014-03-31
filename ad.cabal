@@ -116,11 +116,20 @@ library
     template-haskell,
     transformers     >= 0.3   && < 0.4
 
-
-
   exposed-modules:
     Numeric.AD
     Numeric.AD.Halley
+    Numeric.AD.Internal.Dense
+    Numeric.AD.Internal.Forward
+    Numeric.AD.Internal.Forward.Double
+    Numeric.AD.Internal.Identity
+    Numeric.AD.Internal.Kahn
+    Numeric.AD.Internal.On
+    Numeric.AD.Internal.Or
+    Numeric.AD.Internal.Reverse
+    Numeric.AD.Internal.Sparse
+    Numeric.AD.Internal.Tower
+    Numeric.AD.Internal.Type
     Numeric.AD.Jacobian
     Numeric.AD.Jet
     Numeric.AD.Mode
@@ -137,17 +146,6 @@ library
     Numeric.AD.Rank1.Tower
     Numeric.AD.Rank1.Kahn
     Numeric.AD.Rank1.Newton
-    Numeric.AD.Internal.Dense
-    Numeric.AD.Internal.Forward
-    Numeric.AD.Internal.Forward.Double
-    Numeric.AD.Internal.Identity
-    Numeric.AD.Internal.Kahn
-    Numeric.AD.Internal.On
-    Numeric.AD.Internal.Or
-    Numeric.AD.Internal.Reverse
-    Numeric.AD.Internal.Sparse
-    Numeric.AD.Internal.Tower
-    Numeric.AD.Internal.Type
 
   other-modules:
     Numeric.AD.Internal.Combinators

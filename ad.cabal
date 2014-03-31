@@ -1,5 +1,5 @@
 name:         ad
-version:      4.1
+version:      4.2
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2014,
@@ -123,7 +123,6 @@ library
     Numeric.AD.Jacobian
     Numeric.AD.Jet
     Numeric.AD.Newton
-    Numeric.AD.Type
 
     Numeric.AD.Mode
     Numeric.AD.Mode.Directed
@@ -144,6 +143,7 @@ library
     Numeric.AD.Internal.Reverse
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Tower
+    Numeric.AD.Internal.Type
 
   other-modules:
     Numeric.AD.Internal.Combinators

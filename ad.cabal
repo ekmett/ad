@@ -1,5 +1,5 @@
 name:         ad
-version:      4.2
+version:      4.2.0.1
 license:      BSD3
 license-File: LICENSE
 copyright:    (c) Edward Kmett 2010-2014,
@@ -142,10 +142,11 @@ library
     Numeric.AD.Newton
     Numeric.AD.Rank1.Forward
     Numeric.AD.Rank1.Forward.Double
-    Numeric.AD.Rank1.Sparse
-    Numeric.AD.Rank1.Tower
+    Numeric.AD.Rank1.Halley
     Numeric.AD.Rank1.Kahn
     Numeric.AD.Rank1.Newton
+    Numeric.AD.Rank1.Sparse
+    Numeric.AD.Rank1.Tower
 
   other-modules:
     Numeric.AD.Internal.Combinators

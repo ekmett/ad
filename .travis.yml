@@ -7,11 +7,14 @@ before_install:
   - travis/cabal-apt-install $mode
 
 install:
+  - cabal install packunused packdeps
   - cabal configure -flib-Werror $mode
-  - cabal build
+  - cabal build --ghc-options=-ddump-minimal-imports
 
 script:
   - $script
+  - packdeps
+  - packunused
   - hlint src --cpp-define HLINT --cpp-include include
 
 notifications:

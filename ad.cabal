@@ -167,8 +167,7 @@ test-suite doctests
     base,
     directory,
     doctest >= 0.9.0.1 && <= 0.10,
-    filepath,
-    mtl
+    filepath
   ghc-options: -Wall -threaded
   if impl(ghc<7.6)
     ghc-options: -Werror

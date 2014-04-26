@@ -109,12 +109,12 @@ library
     data-reify       >= 0.6   && < 0.7,
     erf              >= 2.0   && < 2.1,
     free             >= 4.6.1 && < 5,
-    mtl              >= 2     && < 2.2,
     nats             >= 0.1.2 && < 1,
     reflection       >= 1.4   && < 2,
-    tagged           >= 0.7   && < 1,
-    template-haskell,
     transformers     >= 0.3   && < 0.4
+
+  if impl(ghc < 7.8)
+    build-depends: tagged >= 0.7 && < 1
 
   exposed-modules:
     Numeric.AD

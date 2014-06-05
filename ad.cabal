@@ -111,7 +111,7 @@ library
     free             >= 4.6.1 && < 5,
     nats             >= 0.1.2 && < 1,
     reflection       >= 1.4   && < 2,
-    transformers     >= 0.3   && < 0.4
+    transformers     >= 0.3   && < 0.5
 
   if impl(ghc < 7.8)
     build-depends: tagged >= 0.7 && < 1

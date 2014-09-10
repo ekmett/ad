@@ -25,6 +25,8 @@ module Numeric.AD.Newton
   , gradientAscent
   , conjugateGradientDescent
   , conjugateGradientAscent
+  , stochasticGradientDescent
+  , gradientDescentSeperated
   ) where
 
 import Data.Foldable (all, sum)
@@ -121,6 +123,14 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
         x1 = fmap (\(xi,gxi) -> xi - eta * gxi) xgx
         (fx1, xgx1) = Reverse.gradWith' (,) f x1
 {-# INLINE gradientDescent #-}
+
+-- gradient descent where cost function and data are seperated
+gradientDescentSeperated :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> [f a]
+gradientDescentSeperated = gradientDescent;
+
+-- Stchastic gradient descent
+stochasticGradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> [f a]
+stochasticGradientDescent = gradientDescent
 
 -- | Perform a gradient descent using reverse mode automatic differentiation to compute the gradient.
 gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> [f a]

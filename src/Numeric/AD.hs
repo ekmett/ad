@@ -127,6 +127,8 @@ module Numeric.AD
   , gradientAscent
   , conjugateGradientDescent
   , conjugateGradientAscent
+  , stochasticGradientDescent
+  , gradientDescentSeperated
   ) where
 
 import Data.Functor.Compose

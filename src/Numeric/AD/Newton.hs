@@ -125,12 +125,21 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
 {-# INLINE gradientDescent #-}
 
 -- gradient descent where cost function and data are seperated
-gradientDescentSeperated :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> [f a]
-gradientDescentSeperated = gradientDescent;
+gradientDescentSeperated :: 
+  (Traversable f, Fractional a, Ord a) 
+  => (forall s. Reifies s Tape => f (Reverse s a) -> f (Scalar a) -> Reverse s a) 
+  -> [f (Scalar a)]
+  -> f a 
+  -> [f a]
+gradientDescentSeperated errorFunction d = gradientDescent (\theta -> sum $ map (errorFunction theta) d)
 
 -- Stchastic gradient descent
-stochasticGradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> [f a]
-stochasticGradientDescent = gradientDescent
+stochasticGradientDescent :: (Traversable f, Fractional a, Ord a) 
+  => (forall s. Reifies s Tape => f (Reverse s a) -> f (Scalar a) -> Reverse s a) 
+  -> [f (Scalar a)]
+  -> f a 
+  -> [f a]
+stochasticGradientDescent = gradientDescentSeperated
 
 -- | Perform a gradient descent using reverse mode automatic differentiation to compute the gradient.
 gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> [f a]

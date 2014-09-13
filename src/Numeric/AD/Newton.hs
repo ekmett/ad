@@ -145,7 +145,7 @@ stochasticGradientDescent errorSingle d0 x0 = go xgx0 0.1 dLeft
     (fx0, xgx0) = Reverse.gradWith' (,) (errorSingle (head d0)) x0
     go xgx !eta d
       | eta ==0       = []
-      | otherwise     = go xgx1 eta (tail d)
+      | otherwise     = x1 : go xgx1 eta (tail d)
       where
         x1 = fmap (\(xi, gxi) -> xi - eta * gxi) xgx
         (_, xgx1) = Reverse.gradWith' (,) (errorSingle (head d)) x1

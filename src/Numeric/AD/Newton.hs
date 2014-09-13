@@ -127,11 +127,11 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
 -- gradient descent where cost function and data are seperated
 gradientDescentSeperated :: 
   (Traversable f, Fractional a, Ord a) 
-  => (forall s. Reifies s Tape => f (Reverse s a) -> f (Scalar a) -> Reverse s a) 
+  => (forall s. Reifies s Tape => f (Scalar a) -> f (Reverse s a) -> Reverse s a) 
   -> [f (Scalar a)]
   -> f a 
   -> [f a]
-gradientDescentSeperated errorFunction d = gradientDescent (\theta -> sum $ map (errorFunction theta) d)
+gradientDescentSeperated errorFunction d = gradientDescent (\theta -> sum $ map (`errorFunction` theta) d)
 
 -- Stchastic gradient descent
 stochasticGradientDescent :: (Traversable f, Fractional a, Ord a) 

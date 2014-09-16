@@ -26,7 +26,6 @@ module Numeric.AD.Newton
   , conjugateGradientDescent
   , conjugateGradientAscent
   , stochasticGradientDescent
-  , gradientDescentSeperated
   ) where
 
 import Data.Foldable (all, sum)
@@ -124,22 +123,19 @@ gradientDescent f x0 = go x0 fx0 xgx0 0.1 (0 :: Int)
         (fx1, xgx1) = Reverse.gradWith' (,) f x1
 {-# INLINE gradientDescent #-}
 
--- gradient descent where cost function and data are seperated
-gradientDescentSeperated :: 
-  (Traversable f, Fractional a, Ord a) 
-  => (forall s. Reifies s Tape => f (Scalar a) -> f (Reverse s a) -> Reverse s a) 
-  -> [f (Scalar a)]
-  -> f a 
-  -> [f a]
-gradientDescentSeperated errorFunction d = gradientDescent (\theta -> sum $ map (`errorFunction` theta) d)
-
--- Stchastic gradient descent
+-- | The 'stochasticGradientDescent' function approximates
+-- the true gradient of the constFunction by a gradient at
+-- a single example. As the algorithm sweeps through the training 
+-- set, it performs the update for each training example.
+--
+-- It uses reverse mode automatic differentiation to compute the gradient
+-- The learning rate is constant through out, and is set to 0.001
 stochasticGradientDescent :: (Traversable f, Fractional a, Ord a) 
   => (forall s. Reifies s Tape => f (Scalar a) -> f (Reverse s a) -> Reverse s a) 
   -> [f (Scalar a)]
   -> f a 
   -> [f a]
-stochasticGradientDescent errorSingle d0 x0 = go xgx0 0.1 dLeft
+stochasticGradientDescent errorSingle d0 x0 = go xgx0 0.001 dLeft
   where
     dLeft = tail $ cycle d0
     (fx0, xgx0) = Reverse.gradWith' (,) (errorSingle (head d0)) x0
@@ -149,6 +145,7 @@ stochasticGradientDescent errorSingle d0 x0 = go xgx0 0.1 dLeft
       where
         x1 = fmap (\(xi, gxi) -> xi - eta * gxi) xgx
         (_, xgx1) = Reverse.gradWith' (,) (errorSingle (head d)) x1
+{-# INLINE stochasticGradientDescent #-}
 
 -- | Perform a gradient descent using reverse mode automatic differentiation to compute the gradient.
 gradientAscent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> [f a]

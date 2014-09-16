@@ -1,3 +1,7 @@
+4.2.1
+-----
+* Added `stochasticGradientDescent`.
+
 4.2
 ---
 * Removed broken `Directed` mode.

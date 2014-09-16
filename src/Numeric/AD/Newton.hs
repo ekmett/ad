@@ -38,7 +38,7 @@ import Numeric.AD.Internal.Or
 import Numeric.AD.Internal.Reverse (Reverse, Tape)
 import Numeric.AD.Internal.Type (AD(..))
 import Numeric.AD.Mode
-import Numeric.AD.Mode.Reverse as Reverse (gradWith')
+import Numeric.AD.Mode.Reverse as Reverse (gradWith, gradWith')
 import Numeric.AD.Rank1.Kahn as Kahn (Kahn, grad)
 import qualified Numeric.AD.Rank1.Newton as Rank1
 import Prelude hiding (all, mapM, sum)
@@ -138,7 +138,7 @@ stochasticGradientDescent :: (Traversable f, Fractional a, Ord a)
 stochasticGradientDescent errorSingle d0 x0 = go xgx0 0.001 dLeft
   where
     dLeft = tail $ cycle d0
-    (fx0, xgx0) = Reverse.gradWith' (,) (errorSingle (head d0)) x0
+    xgx0 = Reverse.gradWith (,) (errorSingle (head d0)) x0
     go xgx !eta d
       | eta ==0       = []
       | otherwise     = x1 : go xgx1 eta (tail d)

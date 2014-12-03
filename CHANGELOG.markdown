@@ -1,3 +1,7 @@
+4.2.1.1
+-------
+* Support `nats` version 1
+
 4.2.1
 -----
 * Added `stochasticGradientDescent`.

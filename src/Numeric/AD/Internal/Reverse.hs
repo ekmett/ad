@@ -24,7 +24,7 @@
 --
 -- This version uses @Data.Reflection@ to find and update the tape.
 --
--- This is asymptotically faster than using @Reverse@, which
+-- This is asymptotically faster than using @Kahn@, which
 -- is forced to reify and topologically sort the graph, but it requires
 -- a fairly expensive rendezvous during construction when updated using
 -- multiple threads.

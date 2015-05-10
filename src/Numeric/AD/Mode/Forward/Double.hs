@@ -1,4 +1,17 @@
 {-# LANGUAGE Rank2Types #-}
+-----------------------------------------------------------------------------
+-- |
+-- Copyright   :  (c) Edward Kmett 2010-2015
+-- License     :  BSD3
+-- Maintainer  :  ekmett@gmail.com
+-- Stability   :  experimental
+-- Portability :  GHC only
+--
+-- Forward Mode AD specialized to `Double`. This enables the entire structure
+-- to be unboxed.
+--
+-----------------------------------------------------------------------------
+
 module Numeric.AD.Mode.Forward.Double
   ( AD
   , ForwardDouble

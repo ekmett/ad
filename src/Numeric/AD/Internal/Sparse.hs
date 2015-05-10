@@ -113,32 +113,6 @@ ds fs (as@(Sparse a _)) = a :< (go emptyIndex <$> fns) where
     ix' = addToIndex i ix
 {-# INLINE ds #-}
 
-{-
-vvars :: Num a => Vector a -> Vector (AD Sparse a)
-vvars = Vector.imap (\n a -> AD $ Sparse a $ singleton n $ auto 1)
-{-# INLINE vvars #-}
-
-vapply :: Num a => (Vector (AD Sparse a) -> b) -> Vector a -> b
-vapply f = f . vvars
-{-# INLINE vapply #-}
-
-
-vd :: Num a => Int -> AD Sparse a -> Vector a
-vd n (AD (Sparse _ da)) = Vector.generate n $ \i -> maybe 0 primal $ lookup i da
-{-# INLINE vd #-}
-
-vd' :: Num a => Int -> AD Sparse a -> (a, Vector a)
-vd' n (AD (Sparse a da)) = (a , Vector.generate n $ \i -> maybe 0 primal $ lookup i da)
-{-# INLINE vd' #-}
-
-vds :: Num a => Int -> AD Sparse a -> Cofree Vector a
-vds n (AD as@(Sparse a _)) = a :< Vector.generate n (go emptyIndex)
-    where
-        go ix i = partial (indices ix') as :< Vector.generate n (go ix')
-            where ix' = addToIndex i ix
-{-# INLINE vds #-}
--}
-
 partial :: Num a => [Int] -> Sparse a -> a
 partial []     (Sparse a _)  = a
 partial (n:ns) (Sparse _ da) = partial ns $ findWithDefault (auto 0) n da

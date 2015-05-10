@@ -75,10 +75,10 @@ dropMap n = snd . IntMap.split (n - 1)
 times :: Num a => Sparse a -> Int -> Sparse a -> Sparse a
 times Zero _ _ = Zero
 times _ _ Zero = Zero
-times (Sparse a as) n (Sparse b bs) = Sparse (a * b) $
+times a@(Sparse pa da) n b@(Sparse pb db) = Sparse (pa * pb) $
   unionWith (+)
-    (fmap (^* b) (dropMap n as))
-    (fmap (a *^) (dropMap n bs))
+    (fmap (* b) (dropMap n da))
+    (fmap (a *) (dropMap n db))
 {-# INLINE times #-}
 
 vars :: (Traversable f, Num a) => f a -> f (Sparse a)

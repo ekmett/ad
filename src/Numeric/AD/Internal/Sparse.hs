@@ -10,7 +10,18 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# OPTIONS_HADDOCK not-home #-}
-
+-----------------------------------------------------------------------------
+-- |
+-- Copyright   :  (c) Edward Kmett 2010-2015
+-- License     :  BSD3
+-- Maintainer  :  ekmett@gmail.com
+-- Stability   :  experimental
+-- Portability :  GHC only
+--
+-- Unsafe and often partial combinators intended for internal usage.
+--
+-- Handle with care.
+-----------------------------------------------------------------------------
 module Numeric.AD.Internal.Sparse
   ( Index(..)
   , emptyIndex

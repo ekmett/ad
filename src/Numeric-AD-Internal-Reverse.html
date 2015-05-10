@@ -23,7 +23,7 @@
 <a name="line-14"></a>
 <a name="line-15"></a><span class='hs-comment'>-----------------------------------------------------------------------------</span>
 <a name="line-16"></a><span class='hs-comment'>-- |</span>
-<a name="line-17"></a><span class='hs-comment'>-- Copyright   :  (c) Edward Kmett 2012-2014</span>
+<a name="line-17"></a><span class='hs-comment'>-- Copyright   :  (c) Edward Kmett 2012-2015</span>
 <a name="line-18"></a><span class='hs-comment'>-- License     :  BSD3</span>
 <a name="line-19"></a><span class='hs-comment'>-- Maintainer  :  ekmett@gmail.com</span>
 <a name="line-20"></a><span class='hs-comment'>-- Stability   :  experimental</span>
@@ -33,7 +33,7 @@
 <a name="line-24"></a><span class='hs-comment'>--</span>
 <a name="line-25"></a><span class='hs-comment'>-- This version uses @Data.Reflection@ to find and update the tape.</span>
 <a name="line-26"></a><span class='hs-comment'>--</span>
-<a name="line-27"></a><span class='hs-comment'>-- This is asymptotically faster than using @Reverse@, which</span>
+<a name="line-27"></a><span class='hs-comment'>-- This is asymptotically faster than using @Kahn@, which</span>
 <a name="line-28"></a><span class='hs-comment'>-- is forced to reify and topologically sort the graph, but it requires</span>
 <a name="line-29"></a><span class='hs-comment'>-- a fairly expensive rendezvous during construction when updated using</span>
 <a name="line-30"></a><span class='hs-comment'>-- multiple threads.</span>

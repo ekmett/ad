@@ -14,7 +14,7 @@
 
 -----------------------------------------------------------------------------
 -- |
--- Copyright   :  (c) Edward Kmett 2012-2014
+-- Copyright   :  (c) Edward Kmett 2012-2015
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental

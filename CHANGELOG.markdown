@@ -1,3 +1,8 @@
+4.2.2
+-----
+* *Major* bug fix for `grads`, `jacobians`, and anything that uses `Sparse` mode in `Numeric.AD`. Derivatives after the first two
+  were previously incorrect.
+
 4.2.1.1
 -------
 * Support `nats` version 1

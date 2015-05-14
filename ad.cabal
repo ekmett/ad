@@ -1,17 +1,19 @@
-name:         ad
-version:      4.2.2
-license:      BSD3
-license-File: LICENSE
-copyright:    (c) Edward Kmett 2010-2015,
-              (c) Barak Pearlmutter and Jeffrey Mark Siskind 2008-2009
-author:       Edward Kmett
-maintainer:   ekmett@gmail.com
-stability:    Experimental
-category:     Math
-homepage:     http://github.com/ekmett/ad
-bug-reports:  http://github.com/ekmett/ad/issues
-build-type:   Custom
+name:          ad
+version:       4.2.2
+license:       BSD3
+license-File:  LICENSE
+copyright:     (c) Edward Kmett 2010-2015,
+               (c) Barak Pearlmutter and Jeffrey Mark Siskind 2008-2009
+author:        Edward Kmett
+maintainer:    ekmett@gmail.com
+stability:     Experimental
+category:      Math
+homepage:      http://github.com/ekmett/ad
+bug-reports:   http://github.com/ekmett/ad/issues
+build-type:    Custom
 cabal-version: >= 1.10
+tested-with:   GHC==7.0.1, GHC == 7.0.4, GHC == 7.2.2, GHC == 7.4.2, GHC == 7.6.3, GHC == 7.8.4, GHC == 7.10.1
+synopsis:      Automatic Differentiation
 extra-source-files:
   .ghci
   .gitignore
@@ -23,7 +25,6 @@ extra-source-files:
   travis/cabal-apt-install
   travis/config
   include/instances.h
-synopsis:     Automatic Differentiation
 description:
     Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.
     .

@@ -50,7 +50,6 @@ install:
 script:
   - $CABAL build
   - $CABAL test --show-details=always
-  - scripts/stats
 
   - hlint --cpp-include=include -cpp-define=HLINT src
   # tests that a source-distribution can be generated

@@ -28,7 +28,7 @@ before_install:
       # Install the GHC we want from hvr's PPA
       travis_retry sudo add-apt-repository -y ppa:hvr/ghc
       travis_retry sudo apt-get update
-      travis_retry sudo apt-get install cabal-install-1.18 ghc-$GHCVER happy hlint
+      travis_retry sudo apt-get install cabal-install-1.18 ghc-$GHCVER happy
       export CABAL=cabal-1.18
       export PATH=/opt/ghc/$GHCVER/bin:$PATH
     fi
@@ -51,7 +51,6 @@ script:
   - $CABAL build
   - $CABAL test --show-details=always
 
-  - hlint --cpp-include=include -cpp-define=HLINT src
   # tests that a source-distribution can be generated
   - cabal sdist
 

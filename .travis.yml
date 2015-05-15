@@ -22,6 +22,7 @@ before_install:
 
 install:
  - travis_retry cabal update
+ - travis_retry sudo cabal-install Cabal-$CABALVER
  - $CABAL install --enable-tests --only-dependencies
 
 script:

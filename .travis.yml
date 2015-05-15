@@ -22,7 +22,7 @@ before_install:
 
 install:
  - travis_retry $CABAL update
- - $CABAL install Cabal-$CABALVER
+ - $CABAL install "Cabal == $CABALVER.*"
  - $CABAL install --enable-tests --only-dependencies
 
 script:

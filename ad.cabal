@@ -100,7 +100,7 @@ library
 
   build-depends:
     array            >= 0.2   && < 0.6,
-    base             >= 4.5   && < 5,
+    base             >= 4.3   && < 5,
     comonad          >= 4     && < 5,
     containers       >= 0.2   && < 0.6,
     data-reify       >= 0.6   && < 0.7,

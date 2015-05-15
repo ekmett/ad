@@ -17,20 +17,21 @@ before_install:
  - travis_retry sudo apt-get update
  - travis_retry sudo apt-get install cabal-install-$CABALVER ghc-$GHCVER
  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
- - cabal --version
+ - export CABAL=cabal-$CABALVER
+ - $CABAL --version
 
 install:
  - travis_retry cabal update
- - cabal install --enable-tests --only-dependencies
+ - $CABAL install --enable-tests --only-dependencies
 
 script:
- - cabal configure -v2 --enable-tests
- - cabal build
- - cabal sdist
- - export SRC_TGZ=$(cabal info . | awk '{print $2 ".tar.gz";exit}') ;
+ - $CABAL configure -v2 --enable-tests
+ - $CABAL build
+ - $CABAL sdist
+ - export SRC_TGZ=$($CABAL info . | awk '{print $2 ".tar.gz";exit}') ;
    cd dist/;
    if [ -f "$SRC_TGZ" ]; then
-      cabal install "$SRC_TGZ";
+      $CABAL install "$SRC_TGZ";
    else
       echo "expected '$SRC_TGZ' not found";
       exit 1;

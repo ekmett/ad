@@ -21,10 +21,6 @@ before_install:
 
 install:
  - travis_retry cabal update
- - git clone https://github.com/ekmett/bifunctors.git
- - cd bifunctors
- - $CABAL install
- - cd ..
  - cabal install --enable-tests --only-dependencies
 
 script:

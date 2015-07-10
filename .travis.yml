@@ -41,7 +41,6 @@ script:
  - $CABAL configure -v2 --enable-tests
  - $CABAL build $JOPTS --ghc-options=$GHCOPTS
  - $CABAL test
- - $CABAL check
 
 notifications:
   irc:

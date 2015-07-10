@@ -19,7 +19,6 @@ extra-source-files:
   .gitignore
   .travis.yml
   .vim.custom
-  TODO
   CHANGELOG.markdown
   README.markdown
   travis/cabal-apt-install

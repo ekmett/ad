@@ -10,26 +10,26 @@ matrix:
   include:
     - env: CABALVER=1.16 GHCVER=7.4.2 GHCOPTS="-Werror" JOPTS=""
       addons: {apt: {packages: [cabal-install-1.16, ghc-7.4.2], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 GHCOPTS="-Werror" JOPTS="-j2"
+    - env: CABALVER=1.18 GHCVER=7.6.3 GHCOPTS="-Werror" JOPTS=""
       addons: {apt: {packages: [cabal-install-1.18, ghc-7.6.3], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 GHCOPTS="-Werror" JOPTS="-j2"
+    - env: CABALVER=1.18 GHCVER=7.8.4 GHCOPTS="-Werror" JOPTS=""
       addons: {apt: {packages: [cabal-install-1.18, ghc-7.8.4], sources: [hvr-ghc]}}
-    - env: CABALVER=1.22 GHCVER=7.10.1 GHCOPTS="" JOPTS="-j2"
+    - env: CABALVER=1.22 GHCVER=7.10.1 GHCOPTS="" JOPTS=""
       addons: {apt: {packages: [cabal-install-1.22, ghc-7.10.1],sources: [hvr-ghc]}}
-    - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS="-j2"
+    - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS=""
       addons: {apt: {packages: [cabal-install-head,ghc-head],  sources: [hvr-ghc]}}
 
   allow_failures:
-   - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS="-j2"
+   - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS=""
 
 before_install:
  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
  - export CABAL=cabal-$CABALVER
  - $CABAL --version
- - ghc-pkg check || rm -rf $HOME/.cabal $HOME/.ghc
+ - ghc-pkg check || rm -rf $HOME/.cabal $HOME/.ghc # temporary
+ - travis_retry $CABAL update || (rm -rf $HOME/.cabal $HOME/.ghc && travis_retry $CABAL update)
 
 install:
- - travis_retry $CABAL update
  - |    
    if [ $GHCVER = "head" ] || [ $GHCVER = "7.8.4" ] || [ $GHCVER = "7.10.1" ]; then
      $CABAL install --constraint=transformers\ installed happy alex

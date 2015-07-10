@@ -45,7 +45,9 @@ module Numeric.AD.Rank1.Sparse
   ) where
 
 import Control.Comonad
+#if __GLASGOW_HASKELL__ < 710
 import Data.Traversable
+#endif
 import Control.Comonad.Cofree
 import Numeric.AD.Jet
 import Numeric.AD.Internal.Sparse

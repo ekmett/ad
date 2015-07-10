@@ -17,8 +17,13 @@ module Numeric.AD.Internal.Combinators
   , fromBy
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Data.Traversable (Traversable, mapAccumL)
 import Data.Foldable (Foldable, toList)
+#else
+import Data.Traversable (mapAccumL)
+import Data.Foldable (toList)
+#endif
 import Numeric.AD.Mode
 import Numeric.AD.Jacobian
 

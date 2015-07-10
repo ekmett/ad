@@ -131,7 +131,9 @@ module Numeric.AD
   ) where
 
 import Data.Functor.Compose
+#if __GLASGOW_HASKELL__ < 710
 import Data.Traversable (Traversable)
+#endif
 import Data.Reflection (Reifies)
 import Numeric.AD.Internal.Forward (Forward)
 import Numeric.AD.Internal.Kahn (Grad, vgrad, vgrad')

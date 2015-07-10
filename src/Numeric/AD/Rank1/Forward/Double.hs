@@ -25,8 +25,10 @@ module Numeric.AD.Rank1.Forward.Double
   , duF'
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative
 import Data.Traversable (Traversable)
+#endif
 import Numeric.AD.Mode
 import Numeric.AD.Internal.Forward.Double
 

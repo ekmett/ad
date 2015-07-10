@@ -42,7 +42,9 @@ module Numeric.AD.Internal.Sparse
   ) where
 
 import Prelude hiding (lookup)
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative hiding ((<**>))
+#endif
 import Control.Comonad.Cofree
 import Control.Monad (join)
 import Data.Data

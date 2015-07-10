@@ -50,9 +50,11 @@ module Numeric.AD.Rank1.Kahn
   , Grad
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative ((<$>))
-import Data.Functor.Compose
 import Data.Traversable (Traversable)
+#endif
+import Data.Functor.Compose
 import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Kahn
 import Numeric.AD.Mode

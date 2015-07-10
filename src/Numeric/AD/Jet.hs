@@ -26,10 +26,13 @@ module Numeric.AD.Jet
 #define MIN_VERSION_base(x,y,z) 1
 #endif
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative
 import Data.Foldable
 import Data.Traversable
 import Data.Monoid
+#endif
+
 import Data.Typeable
 import Control.Comonad.Cofree
 

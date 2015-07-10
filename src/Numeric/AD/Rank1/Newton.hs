@@ -26,7 +26,9 @@ module Numeric.AD.Rank1.Newton
 
 import Prelude hiding (all, mapM)
 import Data.Foldable (all)
+#if __GLASGOW_HASKELL__ < 710
 import Data.Traversable
+#endif
 import Numeric.AD.Mode
 import Numeric.AD.Rank1.Forward (Forward, diff, diff')
 import Numeric.AD.Rank1.Kahn as Kahn (Kahn, gradWith')

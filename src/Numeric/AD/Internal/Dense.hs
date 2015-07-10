@@ -41,9 +41,16 @@ module Numeric.AD.Internal.Dense
   ) where
 
 import Control.Monad (join)
+#if __GLASGOW_HASKELL__ < 710
 import Data.Functor
+#endif
 import Data.Typeable ()
-import Data.Traversable (Traversable, mapAccumL)
+import Data.Traversable
+  ( mapAccumL
+#if __GLASGOW_HASKELL__ < 710
+  , Traversable
+#endif
+  )
 import Data.Data ()
 import Data.Number.Erf
 import Numeric.AD.Internal.Combinators

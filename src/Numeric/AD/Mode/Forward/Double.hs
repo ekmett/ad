@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- |
@@ -40,7 +41,9 @@ module Numeric.AD.Mode.Forward.Double
   , duF'
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Data.Traversable (Traversable)
+#endif
 import Numeric.AD.Internal.Type (AD(AD), runAD)
 import Numeric.AD.Internal.Forward.Double (ForwardDouble)
 import qualified Numeric.AD.Rank1.Forward.Double as Rank1

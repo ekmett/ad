@@ -39,7 +39,9 @@ module Numeric.AD.Rank1.Tower
   , dus0F   -- answer and all zero padded directional derivatives of (f a -> g a)
   ) where
 
-import Control.Applicative ((<$>))
+#if __GLASGOW_HASKELL__ < 710
+import Data.Functor ((<$>))
+#endif
 import Numeric.AD.Internal.Tower
 import Numeric.AD.Mode
 

@@ -28,7 +28,9 @@ module Numeric.AD.Internal.Or
   , binary
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative
+#endif
 import Data.Number.Erf
 #if __GLASGOW_HASKELL__ >= 707
 import Data.Typeable

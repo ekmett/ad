@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- |
@@ -36,7 +37,9 @@ module Numeric.AD.Mode.Sparse
   ) where
 
 import Control.Comonad.Cofree (Cofree)
+#if __GLASGOW_HASKELL__ < 710
 import Data.Traversable (Traversable)
+#endif
 import Numeric.AD.Internal.Sparse (Sparse)
 import qualified Numeric.AD.Rank1.Sparse as Rank1
 import Numeric.AD.Internal.Type

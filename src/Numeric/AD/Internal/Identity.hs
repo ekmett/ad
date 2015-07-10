@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -24,7 +25,9 @@ module Numeric.AD.Internal.Identity
   ) where
 
 import Data.Data (Data)
+#if __GLASGOW_HASKELL__ < 710
 import Data.Monoid
+#endif
 import Data.Number.Erf
 import Data.Typeable (Typeable)
 import Numeric.AD.Mode

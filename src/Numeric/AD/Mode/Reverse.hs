@@ -44,10 +44,12 @@ module Numeric.AD.Mode.Reverse
   , diffF'
   ) where
 
-import Control.Applicative ((<$>))
+#if __GLASGOW_HASKELL__ < 710
+import Data.Functor ((<$>))
+import Data.Traversable (Traversable)
+#endif
 import Data.Functor.Compose
 import Data.Reflection (Reifies)
-import Data.Traversable (Traversable)
 import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Reverse
 import Numeric.AD.Mode

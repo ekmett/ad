@@ -33,12 +33,17 @@ module Numeric.AD.Internal.Forward.Double
   , transposeWith
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative hiding ((<**>))
-import Control.Monad (join)
 import Data.Foldable (Foldable, toList)
+import Data.Traversable (Traversable, mapAccumL)
+#else
+import Data.Foldable (toList)
+import Data.Traversable (mapAccumL)
+#endif
+import Control.Monad (join)
 import Data.Function (on)
 import Data.Number.Erf
-import Data.Traversable (Traversable, mapAccumL)
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Jacobian

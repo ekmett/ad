@@ -48,8 +48,11 @@ module Numeric.AD.Internal.Kahn
   , varId
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Prelude hiding (mapM)
 import Control.Applicative (Applicative(..),(<$>))
+import Data.Traversable (Traversable, mapM)
+#endif
 import Control.Monad.ST
 import Control.Monad hiding (mapM)
 import Control.Monad.Trans.State
@@ -63,7 +66,6 @@ import Data.Reify (reifyGraph, MuRef(..))
 import qualified Data.Reify.Graph as Reified
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Data (Data)
-import Data.Traversable (Traversable, mapM)
 import Data.Typeable (Typeable)
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity

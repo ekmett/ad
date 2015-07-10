@@ -3,6 +3,7 @@ sudo: false
 
 cache:
   directories:
+    - $HOME/.cabal
     - $HOME/.ghc
 
 matrix:
@@ -25,7 +26,7 @@ before_install:
  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
  - export CABAL=cabal-$CABALVER
  - $CABAL --version
- - ghc-pkg check
+ - ghc-pkg check || rm -rf $HOME/.cabal $HOME/.ghc
 
 install:
  - travis_retry $CABAL update
@@ -34,14 +35,9 @@ install:
      $CABAL install --constraint=transformers\ installed happy alex
      export PATH=$HOME/.cabal/bin:$PATH
    fi
- - $CABAL install $JOPTS --enable-tests --only-dependencies
+ - $CABAL install $JOPTS --enable-tests --only-dependencies --force
 
 script:
-# - |
-#   if [ "${CABALVER}" != "1.16" ]; then
-#      $CABAL sdist --output-directory=build
-#      cd build
-#   fi
  - $CABAL configure -v2 --enable-tests
  - $CABAL build $JOPTS --ghc-options=$GHCOPTS
  - $CABAL test

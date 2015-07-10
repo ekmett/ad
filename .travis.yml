@@ -1,11 +1,6 @@
 language: c
 sudo: false
 
-cache:
-  directories:
-    - $HOME/.cabal
-    - $HOME/.ghc
-
 matrix:
   include:
     - env: CABALVER=1.16 GHCVER=7.4.2 GHCOPTS="-Werror" JOPTS=""
@@ -26,8 +21,7 @@ before_install:
  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
  - export CABAL=cabal-$CABALVER
  - $CABAL --version
- - ghc-pkg check || rm -rf $HOME/.cabal $HOME/.ghc # temporary
- - travis_retry $CABAL update || (rm -rf $HOME/.cabal $HOME/.ghc && travis_retry $CABAL update)
+ - travis_retry $CABAL update
 
 install:
  - |    
@@ -40,7 +34,10 @@ install:
 script:
  - $CABAL configure -v2 --enable-tests
  - $CABAL build $JOPTS --ghc-options=$GHCOPTS
- - $CABAL test
+ - |
+   if [ $GHCVER != "head" ]; then
+     $CABAL test
+   fi
 
 notifications:
   irc:

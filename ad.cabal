@@ -1,5 +1,5 @@
 name:          ad
-version:       4.2.2
+version:       4.2.3
 license:       BSD3
 license-File:  LICENSE
 copyright:     (c) Edward Kmett 2010-2015,
@@ -107,7 +107,7 @@ library
     erf              >= 2.0   && < 2.1,
     free             >= 4.6.1 && < 5,
     nats             >= 0.1.2 && < 2,
-    reflection       >= 1.4   && < 2,
+    reflection       >= 1.4   && < 3,
     transformers     >= 0.3   && < 0.5
 
   if impl(ghc < 7.8)

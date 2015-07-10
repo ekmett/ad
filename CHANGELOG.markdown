@@ -1,3 +1,7 @@
+4.2.3
+-----
+* `reflection` 2 support
+
 4.2.2
 -----
 * *Major* bug fix for `grads`, `jacobians`, and anything that uses `Sparse` mode in `Numeric.AD`. Derivatives after the first two

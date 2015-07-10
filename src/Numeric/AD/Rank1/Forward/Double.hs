@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Numeric.AD.Rank1.Forward.Double
   ( ForwardDouble
   -- * Gradient

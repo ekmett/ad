@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -45,7 +46,9 @@ module Numeric.AD.Mode.Kahn
   , diffF'
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Data.Traversable (Traversable)
+#endif
 import Numeric.AD.Internal.Kahn (Kahn)
 import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Type (AD(..))

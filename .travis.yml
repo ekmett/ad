@@ -22,6 +22,7 @@ matrix:
    - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS="-j2"
 
 before_install:
+ - ghc-pkg check
  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
  - export CABAL=cabal-$CABALVER
  - $CABAL --version

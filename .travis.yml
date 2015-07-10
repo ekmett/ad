@@ -31,11 +31,11 @@ install:
  - $CABAL install $JOPTS --enable-tests --only-dependencies
 
 script:
- - |
-   if [ "${CABALVER}" != "1.16" ]; then
-      $CABAL sdist --output-directory=build
-      cd build
-   fi
+# - |
+#   if [ "${CABALVER}" != "1.16" ]; then
+#      $CABAL sdist --output-directory=build
+#      cd build
+#   fi
  - $CABAL configure -v2 --enable-tests
  - $CABAL build $JOPTS --ghc-options=$GHCOPTS
  - $CABAL test

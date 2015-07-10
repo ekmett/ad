@@ -1,19 +1,13 @@
 env:
- - GHCVER=7.0.1 CABALVER=1.16
- - GHCVER=7.0.4 CABALVER=1.16
- - GHCVER=7.2.2 CABALVER=1.16
  - GHCVER=7.4.2 CABALVER=1.16
  - GHCVER=7.6.3 CABALVER=1.16
  - GHCVER=7.8.4 CABALVER=1.18
  - GHCVER=7.10.1 CABALVER=1.22
- - GHCVER=head CABALVER=1.22
+ - GHCVER=head CABALVER=head
 
 matrix:
   allow_failures:
-   - env: GHCVER=7.0.1 CABALVER=1.16
-   - env: GHCVER=7.0.4 CABALVER=1.16
-   - env: GHCVER=7.2.2 CABALVER=1.16
-   - env: GHCVER=head CABALVER=1.22
+   - env: GHCVER=head CABALVER=head
 
 before_install:
  - travis_retry sudo add-apt-repository -y ppa:hvr/ghc
@@ -31,6 +25,7 @@ install:
 script:
  - $CABAL configure -v2 --enable-tests
  - $CABAL build
+ - $CABAL test
  - $CABAL sdist
  - export SRC_TGZ=$($CABAL info . | awk '{print $2 ".tar.gz";exit}') ;
    cd dist/;

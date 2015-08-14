@@ -18,10 +18,12 @@ matrix:
    - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS="-j2"
 
 before_install:
- - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
+ - export PATH=~/.cabal/bin:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
  - export CABAL=cabal-$CABALVER
- - $CABAL --version
  - travis_retry $CABAL update
+ - if [ "$CABALVER" = "1.22" ]; then cabal install Cabal-1.22.4.0; fi
+ - $CABAL --version
+ - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
 
 install:
  - |    

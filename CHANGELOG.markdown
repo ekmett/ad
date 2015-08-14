@@ -1,3 +1,7 @@
+4.2.4
+-----
+* Added `Newton.Double` modules for performance.
+
 4.2.3
 -----
 * `reflection` 2 support

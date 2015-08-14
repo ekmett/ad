@@ -29,9 +29,6 @@ import qualified Numeric.AD.Rank1.Forward as Forward
 import Numeric.AD.Rank1.Forward.Double (ForwardDouble, diff')
 import Numeric.AD.Internal.On
 
--- $setup
--- >>> import Data.Complex
-
 -- | The 'findZero' function finds a zero of a scalar function using
 -- Newton's method; its output is a stream of increasingly accurate
 -- results.  (Modulo the usual caveats.) If the stream becomes constant
@@ -41,9 +38,6 @@ import Numeric.AD.Internal.On
 --
 -- >>> take 10 $ findZero (\x->x^2-4) 1
 -- [1.0,2.5,2.05,2.000609756097561,2.0000000929222947,2.000000000000002,2.0]
---
--- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
--- 0.0 :+ 1.0
 findZero :: (ForwardDouble -> ForwardDouble) -> Double -> [Double]
 findZero f = go where
   go x = x : if x == xn then [] else go xn where

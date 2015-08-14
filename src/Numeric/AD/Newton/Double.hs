@@ -38,9 +38,6 @@ import Numeric.AD.Rank1.Kahn as Kahn (Kahn, grad)
 import qualified Numeric.AD.Rank1.Newton.Double as Rank1
 import Prelude hiding (all, mapM, sum)
 
--- $setup
--- >>> import Data.Complex
-
 -- | The 'findZero' function finds a zero of a scalar function using
 -- Newton's method; its output is a stream of increasingly accurate
 -- results.  (Modulo the usual caveats.) If the stream becomes constant
@@ -50,9 +47,6 @@ import Prelude hiding (all, mapM, sum)
 --
 -- >>> take 10 $ findZero (\x->x^2-4) 1
 -- [1.0,2.5,2.05,2.000609756097561,2.0000000929222947,2.000000000000002,2.0]
---
--- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
--- 0.0 :+ 1.0
 findZero :: (forall s. AD s ForwardDouble -> AD s ForwardDouble) -> Double -> [Double]
 findZero f = Rank1.findZero (runAD.f.AD)
 {-# INLINE findZero #-}

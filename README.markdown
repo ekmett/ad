@@ -31,10 +31,10 @@ Or both the answer and the derivative of a function:
     Prelude Numeric.AD> diff' (exp . log) 2
     (2.0,1.0)
 
-You can compute the derivative of a function with a constant parameter using `auto` from Numeric.AD.Types:
+You can compute the derivative of a function with a constant parameter using `auto`:
 
-    Prelude Numeric.AD Numeric.AD.Types> let t = 2.0 :: Double
-    Prelude Numeric.AD Numeric.AD.Types> diff (\ x -> auto t * sin x) 0
+    Prelude Numeric.AD> let t = 2.0 :: Double
+    Prelude Numeric.AD> diff (\ x -> auto t * sin x) 0
     2.0
 
 You can use a symbolic numeric type, like the one from `simple-reflect` to obtain symbolic derivatives:
@@ -65,22 +65,22 @@ inspect lazily. Somewhat more intuitive answers can be obtained by converting th
 
 The answer:
 
-    Prelude Numeric.AD Numeric.AD.Types> headJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
+    Prelude Numeric.AD> headJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
     7.38905609893065
 
 The gradient:
 
-    Prelude Numeric.AD Numeric.AD.Types> headJet $ tailJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
+    Prelude Numeric.AD> headJet $ tailJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
     [14.7781121978613,7.38905609893065]
 
 The hessian (n * n matrix of 2nd derivatives)
 
-    Prelude Numeric.AD Numeric.AD.Types> headJet $ tailJet $ tailJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
+    Prelude Numeric.AD> headJet $ tailJet $ tailJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
     [[29.5562243957226,22.16716829679195],[22.16716829679195,7.38905609893065]]
 
 Or even higher order tensors of derivatives as a jet.
 
-    Prelude Numeric.AD Numeric.AD.Types> headJet $ tailJet $ tailJet $ tailJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
+    Prelude Numeric.AD> headJet $ tailJet $ tailJet $ tailJet $ jet $  grads (\[x,y] -> exp (x * y)) [1,2]
     [[[59.1124487914452,44.3343365935839],[44.3343365935839,14.7781121978613]],[[44.3343365935839,14.7781121978613],[14.7781121978613,7.38905609893065]]]
 
 Note the redundant values caused by the various symmetries in the tensors. The `ad` library is careful to compute

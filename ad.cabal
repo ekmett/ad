@@ -75,6 +75,10 @@ source-repository head
   type: git
   location: git://github.com/ekmett/ad.git
 
+flag herbie
+  default: False
+  manual: True
+
 library
   hs-source-dirs: src
   include-dirs: include
@@ -110,6 +114,11 @@ library
 
   if impl(ghc < 7.8)
     build-depends: tagged >= 0.7 && < 1
+
+  if flag(herbie)
+    build-depends: HerbiePlugin >= 0.1 && < 0.2
+    cpp-options: -DHERBIE
+    ghc-options: -fplugin=Herbie
 
   exposed-modules:
     Numeric.AD

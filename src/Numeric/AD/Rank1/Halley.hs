@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- |
 -- Copyright   :  (c) Edward Kmett 2010-2015
@@ -49,7 +50,12 @@ findZero :: (Fractional a, Eq a) => (Tower a -> Tower a) -> a -> [a]
 findZero f = go where
   go x = x : if x == xn then [] else go xn where
     (y:y':y'':_) = diffs0 f x
-    xn = x - 2*y*y'/(2*y'*y'-y*y'')
+    xn = x - 2*y*y'/(2*y'*y'-y*y'') -- 9.606671960457536 bits error
+       -- = x - recip (y'/y - y''/ y') -- "improved error" = 6.640625e-2 bits
+       -- = x - y' / (y'/y/y' - y''/2) -- "improved error" = 1.4
+#ifdef HERBIE
+{-# ANN findZero "NoHerbie" #-}
+#endif
 {-# INLINE findZero #-}
 
 -- | The 'inverse' function inverts a scalar function using

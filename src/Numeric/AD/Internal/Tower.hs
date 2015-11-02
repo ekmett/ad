@@ -34,7 +34,7 @@ module Numeric.AD.Internal.Tower
   , tower
   ) where
 
-import Prelude hiding (all)
+import Prelude hiding (all, sum)
 #if __GLASGOW_HASKELL__ < 710
 import Control.Applicative hiding ((<**>))
 #endif

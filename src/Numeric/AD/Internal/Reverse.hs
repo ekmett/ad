@@ -199,6 +199,9 @@ instance (Reifies s Tape, Num a) => Jacobian (Reverse s a) where
     a = f pb pc
     (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
+mul :: (Reifies s Tape, Num a) => Reverse s a -> Reverse s a -> Reverse s a
+mul = lift2 (*) (\x y -> (y, x))
+
 #define BODY1(x) (Reifies s Tape,x)
 #define BODY2(x,y) (Reifies s Tape,x,y)
 #define HEAD Reverse s a

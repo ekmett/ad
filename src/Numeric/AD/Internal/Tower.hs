@@ -164,5 +164,22 @@ _        <**> Tower []  = auto 1
 x        <**> Tower [y] = lift1 (**y) (\z -> y *^ z <**> Tower [y-1]) x
 x        <**> y         = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
+-- mul xs ys = [ sum [xs!!j * ys!!(k-j)*bin k j | j <- [0..k]] | k <- [0..] ]
+-- adapted for efficiency and to handle finite lists xs, ys
+mul:: Num a => Tower a -> Tower a -> Tower a
+mul (Tower []) _ = Tower []
+mul (Tower (a:as)) (Tower bs) = Tower (convs' [1] [a] as bs)
+  where convs' _ _ _ [] = []
+        convs' ps ars as bs = sumProd3 ps ars bs :
+              case as of
+                 [] -> convs'' (next' ps) ars bs
+                 a:as -> convs' (next ps) (a:ars) as bs
+        convs'' _ _ [] = undefined -- convs'' never called with last argument empty
+        convs'' _ _ [_] = []
+        convs'' ps ars (_:bs) = sumProd3 ps ars bs : convs'' (next' ps) ars bs
+        next xs = 1 : zipWith (+) xs (tail xs) ++ [1] -- next row in Pascal's triangle
+        next' xs = zipWith (+) xs (tail xs) ++ [1] -- end part of next row in Pascal's triangle
+        sumProd3 as bs cs = sum (zipWith3 (\x y z -> x*y*z) as bs cs)
+
 #define HEAD Tower a
 #include <instances.h>

@@ -158,6 +158,10 @@ instance Num a => Jacobian (Kahn a) where
     a = f pb pc
     (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
+
+mul :: Num a => Kahn a -> Kahn a -> Kahn a
+mul = lift2 (*) (\x y -> (y, x))
+
 #define HEAD Kahn a
 #include <instances.h>
 

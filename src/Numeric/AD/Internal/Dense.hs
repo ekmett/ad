@@ -185,6 +185,9 @@ instance (Traversable f, Num a) => Jacobian (Dense f a) where
     (Id dadb, Id dadc) = df (Id a) (Id b) (Id c)
     productRule dbi dci = dadb * dbi + dci * dadc
 
+mul :: (Traversable f, Num a) => Dense f a -> Dense f a -> Dense f a
+mul = lift2 (*) (\x y -> (y, x))
+
 #define BODY1(x)   (Traversable f, x)
 #define BODY2(x,y) (Traversable f, x, y)
 #define HEAD Dense f a

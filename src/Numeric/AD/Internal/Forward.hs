@@ -214,3 +214,6 @@ transposeWith :: (Functor f, Foldable f, Traversable g) => (b -> f a -> c) -> f 
 transposeWith f as = snd . mapAccumL go xss0 where
   go xss b = (tail <$> xss, f b (head <$> xss))
   xss0 = toList <$> as
+
+mul :: (Num a) => Forward a -> Forward a -> Forward a
+mul = lift2 (*) (\x y -> (y, x))

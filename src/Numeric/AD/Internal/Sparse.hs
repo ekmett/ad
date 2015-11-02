@@ -208,6 +208,9 @@ instance Num a => Jacobian (Sparse a) where
       (mapWithKey (times dadb) db)
       (mapWithKey (times dadc) dc)
 
+mul :: Num a => Sparse a -> Sparse a -> Sparse a
+mul = lift2 (*) (\x y -> (y, x))
+
 #define HEAD Sparse a
 #include "instances.h"
 

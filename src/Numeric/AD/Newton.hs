@@ -33,7 +33,7 @@ module Numeric.AD.Newton
   , stochasticGradientDescent
   ) where
 
-import Data.Foldable (all, sum)
+import Data.Foldable (Foldable, all, sum)
 import Data.Reflection (Reifies)
 import Data.Traversable
 import Numeric.AD.Internal.Combinators
@@ -157,9 +157,8 @@ constrainedDescent objF cs env =
         -- ^ f_i' = f_i - s0  and thus f_i' <= 0
         envS     = SEnv s0 env
         -- feasible point for f_i', use gd to find feasiblity for f_i
-        getSValue (SEnv s _) = if isNaN s then 1/0 else s
         cc       = constrainedConvex' (CC sValue) cs' envS ((<=0) . sValue)
-    in case dropWhile ((0 <) . fst) (take (2^20) cc) of
+    in case dropWhile ((0 <) . fst) (take (2^(20::Int)) cc) of
         []                  -> []
         (_,envFeasible) : _ ->
             constrainedConvex' (CC objF) cs (origEnv envFeasible) (const True)
@@ -189,8 +188,7 @@ constrainedConvex' objF cs env term =
       limEnvs = zipWith id nrSteps envs
   in dropWhile (not . term . snd) (concat $ drop 1 limEnvs)
  where
-  tValues :: [a]
-  tValues = map realToFrac $ take 64 $ iterate (*2) 2
+  tValues = map realToFrac $ take 64 $ iterate (*2) (2 :: a)
   nrSteps = [take 20 | _ <- [1..length tValues]] ++ [id]
   -- | `gD f e` is gradient descent with the evaulated result
   gD e (CC f)  = (eval f e, e) :

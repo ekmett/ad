@@ -39,7 +39,6 @@ module Numeric.AD.Internal.Sparse
   , vgrads
   , Grad(..)
   , Grads(..)
-  , MultiIndex(..)
   , terms
   , deriv
   , primal
@@ -265,27 +264,26 @@ isZero :: Sparse a -> Bool
 isZero Zero = True
 isZero _ = False
 
--- A MultiIndex is used to indicate order of differentiation.
--- For a k-ary function, it is a list of k non-negative Ints.
+-- |
+-- A monomial is used to indicate order of differentiation.
+-- For a k-ary function, it represented as a list of k non-negative Ints.
 -- MI [n_0,n_1...n_{k-1}] denotes differentiation n_0 times with respect
 -- to variable 0, n_1 times to variable 1, etc.
 -- Trailing zeros omitted for efficiency.
-newtype MultiIndex = MI [Int] deriving Show
-
--- add 1 to variable k (i.e.differentiate once more wrt variable k).
-addMI :: Int -> MultiIndex -> MultiIndex
-addMI k (MI []) = MI (replicate k 0 ++ [1])
-addMI 0 (MI (a:as)) = MI (a+1:as)
-addMI k (MI (a:as)) = MI (a:as')
- where MI as' = addMI (k-1) (MI as)
+--
+-- Add 1 to variable k (i.e.differentiate once more wrt variable k).
+incMonomial :: Int -> [Int] -> [Int]
+incMonomial k [] = replicate k 0 ++ [1]
+incMonomial 0 (a:as) = a+1:as
+incMonomial k (a:as) = a:incMonomial (k-1) as
 
 -- deriv f mi is the derivative of f of order mi (including higher derivatives).
-deriv :: Sparse a -> MultiIndex -> Sparse a
+deriv :: Sparse a -> [Int] -> Sparse a
 deriv f mi = indx 0 mi f
-  where indx _ (MI []) f = f
+  where indx _ [] f = f
         indx _ _ Zero = Zero
-        indx v (MI (0:as)) f = indx (v+1) (MI as) f
-        indx v (MI (a:as))(Sparse _ df) = maybe Zero (indx v (MI (a-1 : as))) (lookup v df)
+        indx v (0:as) f = indx (v+1) as f
+        indx v (a:as) (Sparse _ df) = maybe Zero (indx v (a-1 : as)) (lookup v df)
 
 -- The value of the derivative of (f*g) of order mi is
 --       sum [a*primal (deriv f b)*primal (deriv g c) | (a,b,c) <- terms mi ]
@@ -296,13 +294,13 @@ deriv f mi = indx 0 mi f
 -- than the naive recursive differentiation with 2^(sum as) terms.
 -- The coefficients a, which collect equivalent derivatives, are suitable products
 -- of binomial coefficients.
-terms :: MultiIndex -> [(Integer,MultiIndex,MultiIndex)]
-terms (MI []) = [(1,MI [],MI [])]
-terms (MI (a:as)) = concatMap (f ps) (zip (bins!!a) [0..a])
-  where ps = terms (MI as)
+terms :: [Int]-> [(Integer,[Int],[Int])]
+terms [] = [(1,[],[])]
+terms (a:as) = concatMap (f ps) (zip (bins!!a) [0..a])
+  where ps = terms as
         bins = iterate next [1]
         next xs@(_:ts) = 1 : zipWith (+) xs ts ++ [1]
-        f ps (b,k) = map (\(w,MI ks,MI is) -> (w*b,MI (k:ks),MI(a-k:is))) ps
+        f ps (b,k) = map (\(w,ks,is) -> (w*b,(k:ks),(a-k:is))) ps
 
 mul :: Num a => Sparse a -> Sparse a -> Sparse a
 mul a b = mul' (maxKey a b) a b
@@ -311,12 +309,12 @@ mul a b = mul' (maxKey a b) a b
 mul' :: Num a => Int -> Sparse a -> Sparse a -> Sparse a
 mul' _ Zero _ = Zero
 mul' _ _ Zero = Zero
-mul' kMax f g = Sparse (primal f * primal g) (derivs 0 (MI []))
+mul' kMax f g = Sparse (primal f * primal g) (derivs 0 [])
   where derivs v mi = IntMap.unions (map fn [v..kMax])
           where fn w
                  |and zs = IntMap.empty
                  |otherwise = IntMap.singleton w (Sparse (sum ds) (derivs w mi'))
-                 where mi' = addMI w mi
+                 where mi' = incMonomial w mi
                        (zs,ds) = unzip (map derVal (terms mi'))
         derVal (bin,mif,mig) = (isZero fder || isZero gder,
                                     fromIntegral bin * primal fder * primal gder)

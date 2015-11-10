@@ -288,4 +288,4 @@ mul f@(Sparse _ am) g@(Sparse _ bm) = Sparse (primal f * primal g) (derivs 0 emp
         derVal (bin,mif,mig) = (isZero fder || isZero gder, fromIntegral bin * primal fder * primal gder) where
           fder = partialS (indices mif) f
           gder = partialS (indices mig) g
-  kMax = fst (IntMap.findMax am) `max` fst (IntMap.findMax bm)
+  kMax = maybe (-1) (fst.fst) (IntMap.maxViewWithKey am) `max` maybe (-1) (fst.fst) (IntMap.maxViewWithKey bm)

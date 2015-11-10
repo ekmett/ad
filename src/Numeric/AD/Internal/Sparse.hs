@@ -39,6 +39,10 @@ module Numeric.AD.Internal.Sparse
   , vgrads
   , Grad(..)
   , Grads(..)
+  , MultiIndex(..)
+  , terms
+  , deriv
+  , primal
   ) where
 
 import Prelude hiding (lookup)
@@ -74,12 +78,16 @@ indices (Index as) = uncurry (flip replicate) `concatMap` toAscList as
 -- | We only store partials in sorted order, so the map contained in a partial
 -- will only contain partials with equal or greater keys to that of the map in
 -- which it was found. This should be key for efficiently computing sparse hessians.
--- there are only (n + k - 1) choose k distinct nth partial derivatives of a
+-- there are only (n + k - 1) choose (k - 1) distinct nth partial derivatives of a
 -- function with k inputs.
 data Sparse a
   = Sparse !a (IntMap (Sparse a))
   | Zero
   deriving (Show, Data, Typeable)
+
+{-
+
+These functions are now unused.
 
 dropMap :: Int -> IntMap a -> IntMap a
 dropMap n = snd . IntMap.split (n - 1)
@@ -93,6 +101,7 @@ times a@(Sparse pa da) n b@(Sparse pb db) = Sparse (pa * pb) $
     (fmap (* b) (dropMap n da))
     (fmap (a *) (dropMap n db))
 {-# INLINE times #-}
+-}
 
 vars :: (Traversable f, Num a) => f a -> f (Sparse a)
 vars = snd . mapAccumL var 0 where
@@ -169,47 +178,41 @@ Zero <+> a = a
 a <+> Zero = a
 Sparse a as <+> Sparse b bs = Sparse (a + b) $ unionWith (<+>) as bs
 
+-- The instances for Jacobian for Sparse and Tower are almost identical;
+-- could easily be made exactly equal by small changes.
 instance Num a => Jacobian (Sparse a) where
   type D (Sparse a) = Sparse a
   unary f _ Zero = auto (f 0)
-  unary f dadb (Sparse pb bs) = Sparse (f pb) $ mapWithKey (times dadb) bs
+  unary f dadb (Sparse pb bs) = Sparse (f pb) $ IntMap.map (* dadb) bs
 
   lift1 f _ Zero = auto (f 0)
-  lift1 f df b@(Sparse pb bs) = Sparse (f pb) $ mapWithKey (times (df b)) bs
+  lift1 f df b@(Sparse pb bs) = Sparse (f pb) $ IntMap.map (* df b) bs
 
   lift1_ f _  Zero = auto (f 0)
   lift1_ f df b@(Sparse pb bs) = a where
-    a = Sparse (f pb) $ mapWithKey (times (df a b)) bs
+    a = Sparse (f pb) $ IntMap.map ((df a b) *) bs
 
   binary f _    _    Zero           Zero           = auto (f 0 0)
-  binary f _    dadc Zero           (Sparse pc dc) = Sparse (f 0  pc) $ mapWithKey (times dadc) dc
-  binary f dadb _    (Sparse pb db) Zero           = Sparse (f pb 0 ) $ mapWithKey (times dadb) db
+  binary f _    dadc Zero           (Sparse pc dc) = Sparse (f 0  pc) $ IntMap.map (dadc *) dc
+  binary f dadb _    (Sparse pb db) Zero           = Sparse (f pb 0 ) $ IntMap.map (dadb *) db
   binary f dadb dadc (Sparse pb db) (Sparse pc dc) = Sparse (f pb pc) $
-    unionWith (<+>)
-      (mapWithKey (times dadb) db)
-      (mapWithKey (times dadc) dc)
+    unionWith (<+>)  (IntMap.map (dadb *) db) (IntMap.map (dadc *) dc)
 
   lift2 f _  Zero             Zero = auto (f 0 0)
-  lift2 f df Zero c@(Sparse pc dc) = Sparse (f 0 pc) $ mapWithKey (times dadc) dc where dadc = snd (df zero c)
-  lift2 f df b@(Sparse pb db) Zero = Sparse (f pb 0) $ mapWithKey (times dadb) db where dadb = fst (df b zero)
+  lift2 f df Zero c@(Sparse pc dc) = Sparse (f 0 pc) $ IntMap.map (dadc *) dc where dadc = snd (df zero c)
+  lift2 f df b@(Sparse pb db) Zero = Sparse (f pb 0) $ IntMap.map (* dadb) db where dadb = fst (df b zero)
   lift2 f df b@(Sparse pb db) c@(Sparse pc dc) = Sparse (f pb pc) da where
     (dadb, dadc) = df b c
-    da = unionWith (<+>)
-      (mapWithKey (times dadb) db)
-      (mapWithKey (times dadc) dc)
+    da = unionWith (<+>) (IntMap.map (dadb *) db) (IntMap.map (dadc *) dc)
 
   lift2_ f _  Zero             Zero = auto (f 0 0)
-  lift2_ f df b@(Sparse pb db) Zero = a where a = Sparse (f pb 0) (mapWithKey (times (fst (df a b zero))) db)
-  lift2_ f df Zero c@(Sparse pc dc) = a where a = Sparse (f 0 pc) (mapWithKey (times (snd (df a zero c))) dc)
+  lift2_ f df b@(Sparse pb db) Zero = a where a = Sparse (f pb 0) (IntMap.map (fst (df a b zero) *) db)
+  lift2_ f df Zero c@(Sparse pc dc) = a where a = Sparse (f 0 pc) (IntMap.map (* snd (df a zero c)) dc)
   lift2_ f df b@(Sparse pb db) c@(Sparse pc dc) = a where
     (dadb, dadc) = df a b c
     a = Sparse (f pb pc) da
-    da = unionWith (<+>)
-      (mapWithKey (times dadb) db)
-      (mapWithKey (times dadc) dc)
+    da = unionWith (<+>) (IntMap.map (dadb *) db) (IntMap.map (dadc *) dc)
 
-mul :: Num a => Sparse a -> Sparse a -> Sparse a
-mul = lift2 (*) (\x y -> (y, x))
 
 #define HEAD Sparse a
 #include "instances.h"
@@ -257,3 +260,65 @@ vgrads :: Grads i o a => i -> o
 vgrads i = unpacks (unsafeGrads (packs i)) where
   unsafeGrads f as = ds as $ apply f as
 {-# INLINE vgrads #-}
+
+isZero :: Sparse a -> Bool
+isZero Zero = True
+isZero _ = False
+
+-- A MultiIndex is used to indicate order of differentiation.
+-- For a k-ary function, it is a list of k non-negative Ints.
+-- MI [n_0,n_1...n_{k-1}] denotes differentiation n_0 times with respect
+-- to variable 0, n_1 times to variable 1, etc.
+-- Trailing zeros omitted for efficiency.
+newtype MultiIndex = MI [Int] deriving Show
+
+-- add 1 to variable k (i.e.differentiate once more wrt variable k).
+addMI :: Int -> MultiIndex -> MultiIndex
+addMI k (MI []) = MI (replicate k 0 ++ [1])
+addMI 0 (MI (a:as)) = MI (a+1:as)
+addMI k (MI (a:as)) = MI (a:as')
+ where MI as' = addMI (k-1) (MI as)
+
+-- deriv f mi is the derivative of f of order mi (including higher derivatives).
+deriv :: Sparse a -> MultiIndex -> Sparse a
+deriv f mi = indx 0 mi f
+  where indx _ (MI []) f = f
+        indx _ _ Zero = Zero
+        indx v (MI (0:as)) f = indx (v+1) (MI as) f
+        indx v (MI (a:as))(Sparse _ df) = maybe Zero (indx v (MI (a-1 : as))) (lookup v df)
+
+-- The value of the derivative of (f*g) of order mi is
+--       sum [a*primal (deriv f b)*primal (deriv g c) | (a,b,c) <- terms mi ]
+-- It is a bit more complicated in mul' below, since we build the whole tree of
+-- derivatives and want to prune the tree with Zeros as much as possible.
+-- The number of terms in the sum for order MI as of differentiation has
+-- sum (map (+1) as) terms, so this is *much* more efficient
+-- than the naive recursive differentiation with 2^(sum as) terms.
+-- The coefficients a, which collect equivalent derivatives, are suitable products
+-- of binomial coefficients.
+terms :: MultiIndex -> [(Integer,MultiIndex,MultiIndex)]
+terms (MI []) = [(1,MI [],MI [])]
+terms (MI (a:as)) = concatMap (f ps) (zip (bins!!a) [0..a])
+  where ps = terms (MI as)
+        bins = iterate next [1]
+        next xs@(_:ts) = 1 : zipWith (+) xs ts ++ [1]
+        f ps (b,k) = map (\(w,MI ks,MI is) -> (w*b,MI (k:ks),MI(a-k:is))) ps
+
+mul :: Num a => Sparse a -> Sparse a -> Sparse a
+mul a b = mul' (maxKey a b) a b
+  where maxKey (Sparse _ am) (Sparse _ bm) = max (maximum (-1:IntMap.keys am)) (maximum (-1:IntMap.keys bm))
+
+mul' :: Num a => Int -> Sparse a -> Sparse a -> Sparse a
+mul' _ Zero _ = Zero
+mul' _ _ Zero = Zero
+mul' kMax f g = Sparse (primal f * primal g) (derivs 0 (MI []))
+  where derivs v mi = IntMap.unions (map fn [v..kMax])
+          where fn w
+                 |and zs = IntMap.empty
+                 |otherwise = IntMap.singleton w (Sparse (sum ds) (derivs w mi'))
+                 where mi' = addMI w mi
+                       (zs,ds) = unzip (map derVal (terms mi'))
+        derVal (bin,mif,mig) = (isZero fder || isZero gder,
+                                    fromIntegral bin * primal fder * primal gder)
+           where fder = deriv f mif
+                 gder = deriv g mig

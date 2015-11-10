@@ -1,3 +1,9 @@
+4.3.1
+-----
+* Further improvements have been made in the performance of `Sparse` mode, at least asymptotically, when used on functions with many variables.
+  Since this is the target use-case for `Sparse` in the first place, this seems like a good trade-off. Note: this results in an API change, but
+  only in the API of an `Internal` module, so this is treated as a minor version bump.
+
 4.3
 ---
 * Made drastic improvements in the performance of `Tower` and `Sparse` modes thanks to the help of Björn von Sydow.

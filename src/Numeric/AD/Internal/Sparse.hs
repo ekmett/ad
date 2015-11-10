@@ -51,7 +51,7 @@ import Control.Applicative hiding ((<**>))
 import Control.Comonad.Cofree
 import Control.Monad (join)
 import Data.Data
-import Data.IntMap (IntMap, mapWithKey, unionWith, findWithDefault, toAscList, singleton, insertWith, lookup)
+import Data.IntMap (IntMap, unionWith, findWithDefault, toAscList, singleton, insertWith, lookup)
 import qualified Data.IntMap as IntMap
 import Data.Number.Erf
 import Data.Traversable
@@ -279,11 +279,11 @@ incMonomial k (a:as) = a:incMonomial (k-1) as
 
 -- deriv f mi is the derivative of f of order mi (including higher derivatives).
 deriv :: Sparse a -> [Int] -> Sparse a
-deriv f mi = indx 0 mi f
-  where indx _ [] f = f
-        indx _ _ Zero = Zero
-        indx v (0:as) f = indx (v+1) as f
-        indx v (a:as) (Sparse _ df) = maybe Zero (indx v (a-1 : as)) (lookup v df)
+deriv f mi = indx 0 mi f where
+  indx _ [] f = f
+  indx _ _ Zero = Zero
+  indx v (0:as) f = indx (v+1) as f
+  indx v (a:as) (Sparse _ df) = maybe Zero (indx v (a-1 : as)) (lookup v df)
 
 -- The value of the derivative of (f*g) of order mi is
 --       sum [a*primal (deriv f b)*primal (deriv g c) | (a,b,c) <- terms mi ]
@@ -296,27 +296,25 @@ deriv f mi = indx 0 mi f
 -- of binomial coefficients.
 terms :: [Int]-> [(Integer,[Int],[Int])]
 terms [] = [(1,[],[])]
-terms (a:as) = concatMap (f ps) (zip (bins!!a) [0..a])
-  where ps = terms as
-        bins = iterate next [1]
-        next xs@(_:ts) = 1 : zipWith (+) xs ts ++ [1]
-        f ps (b,k) = map (\(w,ks,is) -> (w*b,(k:ks),(a-k:is))) ps
+terms (a:as) = concatMap (f ps) (zip (bins!!a) [0..a]) where
+  ps = terms as
+  bins = iterate next [1]
+  next xs@(_:ts) = 1 : zipWith (+) xs ts ++ [1]
+  next [] = error "impossible"
+  f ps (b,k) = map (\(w,ks,is) -> (w*b,(k:ks),(a-k:is))) ps
 
 mul :: Num a => Sparse a -> Sparse a -> Sparse a
-mul a b = mul' (maxKey a b) a b
-  where maxKey (Sparse _ am) (Sparse _ bm) = max (maximum (-1:IntMap.keys am)) (maximum (-1:IntMap.keys bm))
-
-mul' :: Num a => Int -> Sparse a -> Sparse a -> Sparse a
-mul' _ Zero _ = Zero
-mul' _ _ Zero = Zero
-mul' kMax f g = Sparse (primal f * primal g) (derivs 0 [])
-  where derivs v mi = IntMap.unions (map fn [v..kMax])
-          where fn w
-                 |and zs = IntMap.empty
-                 |otherwise = IntMap.singleton w (Sparse (sum ds) (derivs w mi'))
-                 where mi' = incMonomial w mi
-                       (zs,ds) = unzip (map derVal (terms mi'))
-        derVal (bin,mif,mig) = (isZero fder || isZero gder,
-                                    fromIntegral bin * primal fder * primal gder)
-           where fder = deriv f mif
-                 gder = deriv g mig
+mul Zero _ = Zero
+mul _ Zero = Zero
+mul f@(Sparse _ am) g@(Sparse _ bm) = Sparse (primal f * primal g) (derivs 0 []) where
+  derivs v mi = IntMap.unions (map fn [v..kMax]) where
+    fn w
+      | and zs = IntMap.empty
+      | otherwise = IntMap.singleton w (Sparse (sum ds) (derivs w mi'))
+      where
+        mi' = incMonomial w mi
+        (zs,ds) = unzip (map derVal (terms mi'))
+        derVal (bin,mif,mig) = (isZero fder || isZero gder, fromIntegral bin * primal fder * primal gder) where
+          fder = deriv f mif
+          gder = deriv g mig
+  kMax = max (maximum (-1:IntMap.keys am)) (maximum (-1:IntMap.keys bm))

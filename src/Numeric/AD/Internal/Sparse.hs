@@ -23,9 +23,9 @@
 -- Handle with care.
 -----------------------------------------------------------------------------
 module Numeric.AD.Internal.Sparse
-  ( Index(..)
-  , emptyIndex
-  , addToIndex
+  ( Monomial(..)
+  , emptyMonomial
+  , addToMonomial
   , indices
   , Sparse(..)
   , apply
@@ -59,18 +59,18 @@ import Numeric.AD.Internal.Combinators
 import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 
-newtype Index = Index (IntMap Int)
+newtype Monomial = Monomial (IntMap Int)
 
-emptyIndex :: Index
-emptyIndex = Index IntMap.empty
-{-# INLINE emptyIndex #-}
+emptyMonomial :: Monomial
+emptyMonomial = Monomial IntMap.empty
+{-# INLINE emptyMonomial #-}
 
-addToIndex :: Int -> Index -> Index
-addToIndex k (Index m) = Index (insertWith (+) k 1 m)
-{-# INLINE addToIndex #-}
+addToMonomial :: Int -> Monomial -> Monomial
+addToMonomial k (Monomial m) = Monomial (insertWith (+) k 1 m)
+{-# INLINE addToMonomial #-}
 
-indices :: Index -> [Int]
-indices (Index as) = uncurry (flip replicate) `concatMap` toAscList as
+indices :: Monomial -> [Int]
+indices (Monomial as) = uncurry (flip replicate) `concatMap` toAscList as
 {-# INLINE indices #-}
 
 -- | We only store partials in sorted order, so the map contained in a partial
@@ -82,24 +82,6 @@ data Sparse a
   = Sparse !a (IntMap (Sparse a))
   | Zero
   deriving (Show, Data, Typeable)
-
-{-
-
-These functions are now unused.
-
-dropMap :: Int -> IntMap a -> IntMap a
-dropMap n = snd . IntMap.split (n - 1)
-{-# INLINE dropMap #-}
-
-times :: Num a => Sparse a -> Int -> Sparse a -> Sparse a
-times Zero _ _ = Zero
-times _ _ Zero = Zero
-times a@(Sparse pa da) n b@(Sparse pb db) = Sparse (pa * pb) $
-  unionWith (+)
-    (fmap (* b) (dropMap n da))
-    (fmap (a *) (dropMap n db))
-{-# INLINE times #-}
--}
 
 vars :: (Traversable f, Num a) => f a -> f (Sparse a)
 vars = snd . mapAccumL var 0 where
@@ -126,11 +108,11 @@ d' fs (Sparse a da) = (a, snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lo
 
 ds :: (Traversable f, Num a) => f b -> Sparse a -> Cofree f a
 ds fs Zero = r where r = 0 :< (r <$ fs)
-ds fs (as@(Sparse a _)) = a :< (go emptyIndex <$> fns) where
+ds fs (as@(Sparse a _)) = a :< (go emptyMonomial <$> fns) where
   fns = skeleton fs
-  -- go :: Index -> Int -> Cofree f a
+  -- go :: Monomial -> Int -> Cofree f a
   go ix i = partial (indices ix') as :< (go ix' <$> fns) where
-    ix' = addToIndex i ix
+    ix' = addToMonomial i ix
 {-# INLINE ds #-}
 
 partialS :: Num a => [Int] -> Sparse a -> Sparse a
@@ -269,20 +251,25 @@ isZero :: Sparse a -> Bool
 isZero Zero = True
 isZero _ = False
 
+-- |
 -- The value of the derivative of (f*g) of order mi is
---       sum [a*primal (deriv f b)*primal (deriv g c) | (a,b,c) <- terms mi ]
--- It is a bit more complicated in mul' below, since we build the whole tree of
--- derivatives and want to prune the tree with Zeros as much as possible.
--- The number of terms in the sum for order MI as of differentiation has
--- sum (map (+1) as) terms, so this is *much* more efficient
--- than the naive recursive differentiation with 2^(sum as) terms.
--- The coefficients a, which collect equivalent derivatives, are suitable products
+--
+-- @
+-- 'sum' [a * 'primal' ('partialS' ('indices' b) f) * 'primal' ('partialS' ('indices' c) g) | (a,b,c) <- 'terms' mi ]
+-- @
+--
+-- It is a bit more complicated in 'mul' below, since we build the whole tree of
+-- derivatives and want to prune the tree with 'Zero's as much as possible.
+-- The number of terms in the sum for order mi as of differentiation has
+-- @'sum' ('map' (+1) as)@ terms, so this is *much* more efficient
+-- than the naive recursive differentiation with @2^'sum' as@ terms.
+-- The coefficients @a@, which collect equivalent derivatives, are suitable products
 -- of binomial coefficients.
-terms :: Index -> [(Integer,Index,Index)]
-terms (Index m) = t (toAscList m) where
-  t [] = [(1,emptyIndex,emptyIndex)]
+terms :: Monomial -> [(Integer,Monomial,Monomial)]
+terms (Monomial m) = t (toAscList m) where
+  t [] = [(1,emptyMonomial,emptyMonomial)]
   t ((k,a):ts) = concatMap (f (t ts)) (zip (bins!!a) [0..a]) where
-    f ps (b,i) = map (\(w,Index mf,Index mg) -> (w*b,Index (IntMap.insert k i mf), Index (IntMap.insert k (a-i) mg))) ps
+    f ps (b,i) = map (\(w,Monomial mf,Monomial mg) -> (w*b,Monomial (IntMap.insert k i mf), Monomial (IntMap.insert k (a-i) mg))) ps
   bins = iterate next [1]
   next xs@(_:ts) = 1 : zipWith (+) xs ts ++ [1]
   next [] = error "impossible"
@@ -290,13 +277,13 @@ terms (Index m) = t (toAscList m) where
 mul :: Num a => Sparse a -> Sparse a -> Sparse a
 mul Zero _ = Zero
 mul _ Zero = Zero
-mul f@(Sparse _ am) g@(Sparse _ bm) = Sparse (primal f * primal g) (derivs 0 emptyIndex) where
+mul f@(Sparse _ am) g@(Sparse _ bm) = Sparse (primal f * primal g) (derivs 0 emptyMonomial) where
   derivs v mi = IntMap.unions (map fn [v..kMax]) where
     fn w
       | and zs = IntMap.empty
       | otherwise = IntMap.singleton w (Sparse (sum ds) (derivs w mi'))
       where
-        mi' = addToIndex w mi
+        mi' = addToMonomial w mi
         (zs,ds) = unzip (map derVal (terms mi'))
         derVal (bin,mif,mig) = (isZero fder || isZero gder, fromIntegral bin * primal fder * primal gder) where
           fder = partialS (indices mif) f

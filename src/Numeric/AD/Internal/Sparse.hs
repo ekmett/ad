@@ -40,7 +40,6 @@ module Numeric.AD.Internal.Sparse
   , Grad(..)
   , Grads(..)
   , terms
-  , deriv
   , primal
   ) where
 
@@ -133,6 +132,12 @@ ds fs (as@(Sparse a _)) = a :< (go emptyIndex <$> fns) where
   go ix i = partial (indices ix') as :< (go ix' <$> fns) where
     ix' = addToIndex i ix
 {-# INLINE ds #-}
+
+partialS :: Num a => [Int] -> Sparse a -> Sparse a
+partialS []     a             = a
+partialS (n:ns) (Sparse _ da) = partialS ns $ findWithDefault Zero n da
+partialS _      Zero          = Zero
+{-# INLINE partialS #-}
 
 partial :: Num a => [Int] -> Sparse a -> a
 partial []     (Sparse a _)  = a
@@ -264,27 +269,6 @@ isZero :: Sparse a -> Bool
 isZero Zero = True
 isZero _ = False
 
--- |
--- A monomial is used to indicate order of differentiation.
--- For a k-ary function, it represented as a list of k non-negative Ints.
--- MI [n_0,n_1...n_{k-1}] denotes differentiation n_0 times with respect
--- to variable 0, n_1 times to variable 1, etc.
--- Trailing zeros omitted for efficiency.
---
--- Add 1 to variable k (i.e.differentiate once more wrt variable k).
-incMonomial :: Int -> [Int] -> [Int]
-incMonomial k [] = replicate k 0 ++ [1]
-incMonomial 0 (a:as) = a+1:as
-incMonomial k (a:as) = a:incMonomial (k-1) as
-
--- deriv f mi is the derivative of f of order mi (including higher derivatives).
-deriv :: Sparse a -> [Int] -> Sparse a
-deriv f mi = indx 0 mi f where
-  indx _ [] f = f
-  indx _ _ Zero = Zero
-  indx v (0:as) f = indx (v+1) as f
-  indx v (a:as) (Sparse _ df) = maybe Zero (indx v (a-1 : as)) (lookup v df)
-
 -- The value of the derivative of (f*g) of order mi is
 --       sum [a*primal (deriv f b)*primal (deriv g c) | (a,b,c) <- terms mi ]
 -- It is a bit more complicated in mul' below, since we build the whole tree of
@@ -294,27 +278,27 @@ deriv f mi = indx 0 mi f where
 -- than the naive recursive differentiation with 2^(sum as) terms.
 -- The coefficients a, which collect equivalent derivatives, are suitable products
 -- of binomial coefficients.
-terms :: [Int]-> [(Integer,[Int],[Int])]
-terms [] = [(1,[],[])]
-terms (a:as) = concatMap (f ps) (zip (bins!!a) [0..a]) where
-  ps = terms as
+terms :: Index -> [(Integer,Index,Index)]
+terms (Index m) = t (toAscList m) where
+  t [] = [(1,emptyIndex,emptyIndex)]
+  t ((k,a):ts) = concatMap (f (t ts)) (zip (bins!!a) [0..a]) where
+    f ps (b,i) = map (\(w,Index mf,Index mg) -> (w*b,Index (IntMap.insert k i mf), Index (IntMap.insert k (a-i) mg))) ps
   bins = iterate next [1]
   next xs@(_:ts) = 1 : zipWith (+) xs ts ++ [1]
   next [] = error "impossible"
-  f ps (b,k) = map (\(w,ks,is) -> (w*b,(k:ks),(a-k:is))) ps
 
 mul :: Num a => Sparse a -> Sparse a -> Sparse a
 mul Zero _ = Zero
 mul _ Zero = Zero
-mul f@(Sparse _ am) g@(Sparse _ bm) = Sparse (primal f * primal g) (derivs 0 []) where
+mul f@(Sparse _ am) g@(Sparse _ bm) = Sparse (primal f * primal g) (derivs 0 emptyIndex) where
   derivs v mi = IntMap.unions (map fn [v..kMax]) where
     fn w
       | and zs = IntMap.empty
       | otherwise = IntMap.singleton w (Sparse (sum ds) (derivs w mi'))
       where
-        mi' = incMonomial w mi
+        mi' = addToIndex w mi
         (zs,ds) = unzip (map derVal (terms mi'))
         derVal (bin,mif,mig) = (isZero fder || isZero gder, fromIntegral bin * primal fder * primal gder) where
-          fder = deriv f mif
-          gder = deriv g mig
-  kMax = max (maximum (-1:IntMap.keys am)) (maximum (-1:IntMap.keys bm))
+          fder = partialS (indices mif) f
+          gder = partialS (indices mig) g
+  kMax = fst (IntMap.findMax am) `max` fst (IntMap.findMax bm)

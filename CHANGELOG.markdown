@@ -1,3 +1,9 @@
+4.3
+---
+* Made drastic improvements in the performance of `Tower` and `Sparse` modes thanks to the help of Björn von Sydow.
+* Added constrained convex optimization.
+* Incorporated some suggestions from [herbie](http://herbie.uwplse.org/z) for improving floating point accuracy.
+
 4.2.4
 -----
 * Added `Newton.Double` modules for performance.

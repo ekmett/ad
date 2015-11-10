@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE BangPatterns #-}
@@ -33,7 +34,11 @@ module Numeric.AD.Newton
   , stochasticGradientDescent
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Data.Foldable (Foldable, all, sum)
+#else
+import Data.Foldable (all, sum)
+#endif
 import Data.Reflection (Reifies)
 import Data.Traversable
 import Numeric.AD.Internal.Combinators

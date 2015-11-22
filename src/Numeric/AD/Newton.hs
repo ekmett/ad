@@ -223,15 +223,15 @@ iHat t c e =
 
 -- | The 'stochasticGradientDescent' function approximates
 -- the true gradient of the constFunction by a gradient at
--- a single example. As the algorithm sweeps through the training 
+-- a single example. As the algorithm sweeps through the training
 -- set, it performs the update for each training example.
 --
 -- It uses reverse mode automatic differentiation to compute the gradient
 -- The learning rate is constant through out, and is set to 0.001
-stochasticGradientDescent :: (Traversable f, Fractional a, Ord a) 
-  => (forall s. Reifies s Tape => f (Scalar a) -> f (Reverse s a) -> Reverse s a) 
+stochasticGradientDescent :: (Traversable f, Fractional a, Ord a)
+  => (forall s. Reifies s Tape => f (Scalar a) -> f (Reverse s a) -> Reverse s a)
   -> [f (Scalar a)]
-  -> f a 
+  -> f a
   -> [f a]
 stochasticGradientDescent errorSingle d0 x0 = go xgx0 0.001 dLeft
   where

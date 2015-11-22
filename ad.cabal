@@ -1,5 +1,5 @@
 name:          ad
-version:       4.3.1
+version:       4.3.2
 license:       BSD3
 license-File:  LICENSE
 copyright:     (c) Edward Kmett 2010-2015,
@@ -70,6 +70,8 @@ description:
     * @T@ means the result is transposed with respect to the traditional formulation.
     .
     * @0@ means that the resulting derivative list is padded with 0s at the end.
+    .
+    * @NoEq@ means that an infinite list of converging values is returned rather than truncating the list when they become constant
 
 source-repository head
   type: git

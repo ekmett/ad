@@ -121,6 +121,7 @@ The following suffixes alter the meanings of the functions above as follows:
  * `s` means the function returns all higher derivatives in a list or f-branching `Stream`
  * `T` means the result is transposed with respect to the traditional formulation (usually to avoid paying for transposing back)
  * `0` means that the resulting derivative list is padded with 0s at the end.
+ * `NoEq` means that an infinite list of converging values is returned rather than truncating the list when they become constant
 
 Contact Information
 -------------------

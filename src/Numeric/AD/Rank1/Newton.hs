@@ -17,9 +17,13 @@ module Numeric.AD.Rank1.Newton
   (
   -- * Newton's Method (Forward)
     findZero
+  , findZeroNoEq
   , inverse
+  , inverseNoEq
   , fixedPoint
+  , fixedPointNoEq
   , extremum
+  , extremumNoEq
   -- * Gradient Ascent/Descent (Kahn)
   , gradientDescent
   , gradientAscent
@@ -34,6 +38,7 @@ import Numeric.AD.Mode
 import Numeric.AD.Rank1.Forward (Forward, diff, diff')
 import Numeric.AD.Rank1.Kahn as Kahn (Kahn, gradWith')
 import Numeric.AD.Internal.On
+import Numeric.AD.Internal.Combinators (takeWhileDifferent)
 
 -- $setup
 -- >>> import Data.Complex
@@ -51,11 +56,18 @@ import Numeric.AD.Internal.On
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
 findZero :: (Fractional a, Eq a) => (Forward a -> Forward a) -> a -> [a]
-findZero f = go where
-  go x = x : if x == xn then [] else go xn where
+findZero f = takeWhileDifferent . findZeroNoEq f
+{-# INLINE findZero #-}
+
+-- | The 'findZeroNoEq' function behaves the same as 'findZero' except that it
+-- doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+findZeroNoEq :: Fractional a => (Forward a -> Forward a) -> a -> [a]
+findZeroNoEq f = iterate go where
+  go x = xn where
     (y,y') = diff' f x
     xn = x - y/y'
-{-# INLINE findZero #-}
+{-# INLINE findZeroNoEq #-}
 
 -- | The 'inverse' function inverts a scalar function using
 -- Newton's method; its output is a stream of increasingly accurate
@@ -67,8 +79,15 @@ findZero f = go where
 -- >>> last $ take 10 $ inverse sqrt 1 (sqrt 10)
 -- 10.0
 inverse :: (Fractional a, Eq a) => (Forward a -> Forward a) -> a -> a -> [a]
-inverse f x0 y = findZero (\x -> f x - auto y) x0
+inverse f x0 = takeWhileDifferent . inverseNoEq f x0
 {-# INLINE inverse  #-}
+
+-- | The 'inverseNoEq' function behaves the same as 'inverse' except that it
+-- doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+inverseNoEq :: Fractional a => (Forward a -> Forward a) -> a -> a -> [a]
+inverseNoEq f x0 y = findZeroNoEq (\x -> f x - auto y) x0
+{-# INLINE inverseNoEq #-}
 
 -- | The 'fixedPoint' function find a fixedpoint of a scalar
 -- function using Newton's method; its output is a stream of
@@ -80,8 +99,15 @@ inverse f x0 y = findZero (\x -> f x - auto y) x0
 -- >>> last $ take 10 $ fixedPoint cos 1
 -- 0.7390851332151607
 fixedPoint :: (Fractional a, Eq a) => (Forward a -> Forward a) -> a -> [a]
-fixedPoint f = findZero (\x -> f x - x)
+fixedPoint f = takeWhileDifferent . fixedPointNoEq f
 {-# INLINE fixedPoint #-}
+
+-- | The 'fixedPointNoEq' function behaves the same as 'fixedPoint' except that
+-- it doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+fixedPointNoEq :: Fractional a => (Forward a -> Forward a) -> a -> [a]
+fixedPointNoEq f = findZeroNoEq (\x -> f x - x)
+{-# INLINE fixedPointNoEq #-}
 
 -- | The 'extremum' function finds an extremum of a scalar
 -- function using Newton's method; produces a stream of increasingly
@@ -91,8 +117,15 @@ fixedPoint f = findZero (\x -> f x - x)
 -- >>> last $ take 10 $ extremum cos 1
 -- 0.0
 extremum :: (Fractional a, Eq a) => (On (Forward (Forward a)) -> On (Forward (Forward a))) -> a -> [a]
-extremum f = findZero (diff (off . f . On))
+extremum f = takeWhileDifferent . extremumNoEq f
 {-# INLINE extremum #-}
+
+-- | The 'extremumNoEq' function behaves the same as 'extremum' except that it
+-- doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+extremumNoEq :: Fractional a => (On (Forward (Forward a)) -> On (Forward (Forward a))) -> a -> [a]
+extremumNoEq f = findZeroNoEq (diff (off . f . On))
+{-# INLINE extremumNoEq #-}
 
 -- | The 'gradientDescent' function performs a multivariate
 -- optimization, based on the naive-gradient-descent in the file

@@ -18,9 +18,13 @@ module Numeric.AD.Rank1.Halley
   (
   -- * Halley's Method (Tower AD)
     findZero
+  , findZeroNoEq
   , inverse
+  , inverseNoEq
   , fixedPoint
+  , fixedPointNoEq
   , extremum
+  , extremumNoEq
   ) where
 
 import Prelude hiding (all)
@@ -30,6 +34,7 @@ import Numeric.AD.Internal.Tower (Tower)
 import Numeric.AD.Mode
 import Numeric.AD.Rank1.Tower (diffs0)
 import Numeric.AD.Rank1.Forward (diff)
+import Numeric.AD.Internal.Combinators (takeWhileDifferent)
 
 -- $setup
 -- >>> import Data.Complex
@@ -47,16 +52,23 @@ import Numeric.AD.Rank1.Forward (diff)
 -- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
 -- 0.0 :+ 1.0
 findZero :: (Fractional a, Eq a) => (Tower a -> Tower a) -> a -> [a]
-findZero f = go where
-  go x = x : if x == xn then [] else go xn where
+findZero f = takeWhileDifferent . findZeroNoEq f
+{-# INLINE findZero #-}
+
+-- | The 'findZeroNoEq' function behaves the same as 'findZero' except that it
+-- doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+findZeroNoEq :: Fractional a => (Tower a -> Tower a) -> a -> [a]
+findZeroNoEq f = iterate go where
+  go x = xn where
     (y:y':y'':_) = diffs0 f x
     xn = x - 2*y*y'/(2*y'*y'-y*y'') -- 9.606671960457536 bits error
        -- = x - recip (y'/y - y''/ y') -- "improved error" = 6.640625e-2 bits
        -- = x - y' / (y'/y/y' - y''/2) -- "improved error" = 1.4
 #ifdef HERBIE
-{-# ANN findZero "NoHerbie" #-}
+{-# ANN findZeroNoEq "NoHerbie" #-}
 #endif
-{-# INLINE findZero #-}
+{-# INLINE findZeroNoEq #-}
 
 -- | The 'inverse' function inverts a scalar function using
 -- Halley's method; its output is a stream of increasingly accurate
@@ -66,8 +78,15 @@ findZero f = go where
 -- Note: the @take 10 $ inverse sqrt 1 (sqrt 10)@ example that works for Newton's method
 -- fails with Halley's method because the preconditions do not hold!
 inverse :: (Fractional a, Eq a) => (Tower a -> Tower a) -> a -> a -> [a]
-inverse f x0 y = findZero (\x -> f x - auto y) x0
+inverse f x0 = takeWhileDifferent . inverseNoEq f x0
 {-# INLINE inverse  #-}
+
+-- | The 'inverseNoEq' function behaves the same as 'inverse' except that it
+-- doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+inverseNoEq :: Fractional a => (Tower a -> Tower a) -> a -> a -> [a]
+inverseNoEq f x0 y = findZeroNoEq (\x -> f x - auto y) x0
+{-# INLINE inverseNoEq #-}
 
 -- | The 'fixedPoint' function find a fixedpoint of a scalar
 -- function using Halley's method; its output is a stream of
@@ -79,9 +98,15 @@ inverse f x0 y = findZero (\x -> f x - auto y) x0
 -- >>> last $ take 10 $ fixedPoint cos 1
 -- 0.7390851332151607
 fixedPoint :: (Fractional a, Eq a) => (Tower a -> Tower a) -> a -> [a]
-fixedPoint f = findZero (\x -> f x - x)
+fixedPoint f = takeWhileDifferent . fixedPointNoEq f
 {-# INLINE fixedPoint #-}
 
+-- | The 'fixedPointNoEq' function behaves the same as 'fixedPoint' except that
+-- it doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+fixedPointNoEq :: Fractional a => (Tower a -> Tower a) -> a -> [a]
+fixedPointNoEq f = findZeroNoEq (\x -> f x - x)
+{-# INLINE fixedPointNoEq #-}
 
 -- | The 'extremum' function finds an extremum of a scalar
 -- function using Halley's method; produces a stream of increasingly
@@ -91,5 +116,12 @@ fixedPoint f = findZero (\x -> f x - x)
 -- >>> take 10 $ extremum cos 1
 -- [1.0,0.29616942658570555,4.59979519460002e-3,1.6220740159042513e-8,0.0]
 extremum :: (Fractional a, Eq a) => (On (Forward (Tower a)) -> On (Forward (Tower a))) -> a -> [a]
-extremum f = findZero (diff (off . f . On))
+extremum f = takeWhileDifferent . extremumNoEq f
 {-# INLINE extremum #-}
+
+-- | The 'extremumNoEq' function behaves the same as 'extremum' except that it
+-- doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+extremumNoEq :: Fractional a => (On (Forward (Tower a)) -> On (Forward (Tower a))) -> a -> [a]
+extremumNoEq f = findZeroNoEq (diff (off . f . On))
+{-# INLINE extremumNoEq #-}

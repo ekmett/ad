@@ -19,9 +19,13 @@ module Numeric.AD.Halley
   (
   -- * Halley's Method (Tower AD)
     findZero
+  , findZeroNoEq
   , inverse
+  , inverseNoEq
   , fixedPoint
+  , fixedPointNoEq
   , extremum
+  , extremumNoEq
   ) where
 
 import Prelude
@@ -50,6 +54,13 @@ findZero :: (Fractional a, Eq a) => (forall s. AD s (Tower a) -> AD s (Tower a))
 findZero f = Rank1.findZero (runAD.f.AD)
 {-# INLINE findZero #-}
 
+-- | The 'findZeroNoEq' function behaves the same as 'findZero' except that it
+-- doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+findZeroNoEq :: Fractional a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
+findZeroNoEq f = Rank1.findZeroNoEq (runAD.f.AD)
+{-# INLINE findZeroNoEq #-}
+
 -- | The 'inverse' function inverts a scalar function using
 -- Halley's method; its output is a stream of increasingly accurate
 -- results.  (Modulo the usual caveats.) If the stream becomes constant
@@ -60,6 +71,13 @@ findZero f = Rank1.findZero (runAD.f.AD)
 inverse :: (Fractional a, Eq a) => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> a -> [a]
 inverse f = Rank1.inverse (runAD.f.AD)
 {-# INLINE inverse  #-}
+
+-- | The 'inverseNoEq' function behaves the same as 'inverse' except that it
+-- doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+inverseNoEq :: Fractional a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> a -> [a]
+inverseNoEq f = Rank1.inverseNoEq (runAD.f.AD)
+{-# INLINE inverseNoEq #-}
 
 -- | The 'fixedPoint' function find a fixedpoint of a scalar
 -- function using Halley's method; its output is a stream of
@@ -74,6 +92,12 @@ fixedPoint :: (Fractional a, Eq a) => (forall s. AD s (Tower a) -> AD s (Tower a
 fixedPoint f = Rank1.fixedPoint (runAD.f.AD)
 {-# INLINE fixedPoint #-}
 
+-- | The 'fixedPointNoEq' function behaves the same as 'fixedPoint' except that
+-- it doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+fixedPointNoEq :: Fractional a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
+fixedPointNoEq f = Rank1.fixedPointNoEq (runAD.f.AD)
+{-# INLINE fixedPointNoEq #-}
 
 -- | The 'extremum' function finds an extremum of a scalar
 -- function using Halley's method; produces a stream of increasingly
@@ -85,3 +109,10 @@ fixedPoint f = Rank1.fixedPoint (runAD.f.AD)
 extremum :: (Fractional a, Eq a) => (forall s. AD s (On (Forward (Tower a))) -> AD s (On (Forward (Tower a)))) -> a -> [a]
 extremum f = Rank1.extremum (runAD.f.AD)
 {-# INLINE extremum #-}
+
+-- | The 'extremumNoEq' function behaves the same as 'extremum' except that it
+-- doesn't truncate the list once the results become constant. This means it
+-- can be used with types without an 'Eq' instance.
+extremumNoEq :: Fractional a => (forall s. AD s (On (Forward (Tower a))) -> AD s (On (Forward (Tower a)))) -> a -> [a]
+extremumNoEq f = Rank1.extremumNoEq (runAD.f.AD)
+{-# INLINE extremumNoEq #-}

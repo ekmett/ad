@@ -16,6 +16,7 @@ module Numeric.AD.Internal.Combinators
   , zipWithDefaultT
   , withPrimal
   , fromBy
+  , takeWhileDifferent
   ) where
 
 #if __GLASGOW_HASKELL__ < 710
@@ -44,3 +45,11 @@ withPrimal t a = unary (const a) 1 t
 -- | Used internally to define various 'Enum' combinators.
 fromBy :: Jacobian t => t -> t -> Int -> Scalar t -> t
 fromBy a delta n x = binary (\_ _ -> x) 1 (fromIntegral n) a delta
+
+-- | Used internally to implement functions which truncate lists after the
+-- stream of results converge
+takeWhileDifferent :: Eq a => [a] -> [a]
+takeWhileDifferent (x1:x2:xs) = if x1 == x2
+                                  then [x1]
+                                  else x1 : takeWhileDifferent (x2:xs)
+takeWhileDifferent xs = xs

@@ -1,3 +1,7 @@
+4.3.2
+-----
+* Added `NoEq` versions of several combinators that can be used when `Eq` isn't available on the numeric type involved.
+
 4.3.1
 -----
 * Further improvements have been made in the performance of `Sparse` mode, at least asymptotically, when used on functions with many variables.

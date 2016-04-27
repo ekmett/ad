@@ -116,7 +116,7 @@ instance Num a => Mode (Kahn a) where
 Kahn Zero <**> y             = auto (0 ** primal y)
 _         <**> Kahn Zero     = auto 1
 x         <**> Kahn (Lift y) = lift1 (**y) (\z -> y *^ z ** Id (y-1)) x
-x         <**> y             = lift2_ (**) (\z xi yi -> (yi * z / xi, z * xi)) x y
+x         <**> y             = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
 
 primal :: Num a => Kahn a -> a
 primal (Kahn Zero) = 0

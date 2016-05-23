@@ -1,10 +1,7 @@
-{-# LANGUAGE CPP #-}
 module Main where
 
-import Build_doctests (deps)
-#if __GLASGOW_HASKELL__ < 710
+import Build_doctests (autogen_dir, deps)
 import Control.Applicative
-#endif
 import Control.Monad
 import Data.List
 import System.Directory
@@ -14,9 +11,9 @@ import Test.DocTest
 main :: IO ()
 main = getSources >>= \sources -> doctest $
     "-isrc"
-  : "-idist/build/autogen"
+  : ("-i" ++ autogen_dir)
   : "-optP-include"
-  : "-optPdist/build/autogen/cabal_macros.h"
+  : ("-optP" ++ autogen_dir ++ "/cabal_macros.h")
   : "-optP-I"
   : "-optPinclude"
   : "-hide-all-packages"

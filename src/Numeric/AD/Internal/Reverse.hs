@@ -50,6 +50,11 @@ module Numeric.AD.Internal.Reverse
   , var
   , varId
   , primal
+  -- , unarily
+  -- , binarily
+  , modifyTape
+  , un
+  , bin  
   ) where
 
 import Data.Functor

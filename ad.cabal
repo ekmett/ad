@@ -133,6 +133,7 @@ library
     Numeric.AD.Internal.On
     Numeric.AD.Internal.Or
     Numeric.AD.Internal.Reverse
+    Numeric.AD.Internal.Reverse.Double                  
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Tower
     Numeric.AD.Internal.Type
@@ -143,6 +144,7 @@ library
     Numeric.AD.Mode.Forward.Double
     Numeric.AD.Mode.Kahn
     Numeric.AD.Mode.Reverse
+    Numeric.AD.Mode.Reverse.Double                  
     Numeric.AD.Mode.Sparse
     Numeric.AD.Mode.Tower
     Numeric.AD.Newton

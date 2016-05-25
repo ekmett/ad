@@ -52,9 +52,9 @@ module Numeric.AD.Internal.Reverse
   , primal
   -- , unarily
   -- , binarily
-  , modifyTape
-  , un
-  , bin  
+  -- , modifyTape
+  -- , un
+  -- , bin  
   ) where
 
 import Data.Functor

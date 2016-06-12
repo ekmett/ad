@@ -1,3 +1,9 @@
+4.3.2.1
+-----
+* GHC 8 support
+* Fix Kahn mode's `**` implementation
+* Fix multiple problems in Erf and InvErf methods
+
 4.3.2
 -----
 * Added `NoEq` versions of several combinators that can be used when `Eq` isn't available on the numeric type involved.

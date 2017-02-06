@@ -81,6 +81,12 @@ flag herbie
   default: False
   manual: True
 
+custom-setup
+  setup-depends:
+    base          >= 4.3 && <5,
+    Cabal         >= 1.10,
+    cabal-doctest >= 1 && <1.1
+
 library
   hs-source-dirs: src
   include-dirs: include

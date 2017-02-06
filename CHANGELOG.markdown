@@ -1,3 +1,9 @@
+next
+----
+* Revamp `Setup.hs` to use `cabal-doctest`. This makes it build
+  with `Cabal-1.25`, and makes the `doctest`s work with `cabal new-build` and
+  sandboxes.
+
 4.3.2.1
 -----
 * GHC 8 support

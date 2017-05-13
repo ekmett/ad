@@ -14,6 +14,8 @@ There are several ways to compose these individual [Jacobian matrices](http://en
 Features
 --------
 
+[![Join the chat at https://gitter.im/ekmett/ad](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ekmett/ad?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
  * Provides forward- and reverse- mode AD combinators with a common API.
  * Optional type-level "branding" is available to prevent the end user from confusing infinitesimals
  * Each mode has a separate module full of combinators, with a consistent look and feel.

@@ -40,7 +40,7 @@ class (Num t, Num (Scalar t)) => Mode t where
   isKnownConstant :: t -> Bool
   isKnownConstant _ = False
 
-  -- | allowed to return False for zero, but we give more NaN's than strictly necessary then
+  -- | allowed to return False for zero, but we give more NaN's than strictly necessary
   isKnownZero :: t -> Bool
   isKnownZero _ = False
 

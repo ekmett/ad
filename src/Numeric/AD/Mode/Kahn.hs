@@ -58,8 +58,12 @@ import qualified Numeric.AD.Rank1.Kahn as Rank1
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with kahn-mode AD in a single pass.
 --
+--
 -- >>> grad (\[x,y,z] -> x*y+z) [1,2,3]
 -- [2,1,1]
+--
+-- >>> grad (\[x,y] -> x**y) [0,2]
+-- [0.0,NaN]
 grad :: (Traversable f, Num a) => (forall s. f (AD s (Kahn a)) -> AD s (Kahn a)) -> f a -> f a
 grad f = Rank1.grad (runAD.f.fmap AD)
 {-# INLINE grad #-}

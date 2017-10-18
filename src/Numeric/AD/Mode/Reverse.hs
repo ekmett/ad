@@ -61,6 +61,9 @@ import Numeric.AD.Mode
 --
 -- >>> grad (\[x,y,z] -> x*y+z) [1,2,3]
 -- [2,1,1]
+--
+-- >>> grad (\[x,y] -> x**y) [0,2]
+-- [0.0,NaN]
 grad :: (Traversable f, Num a) => (forall s. Reifies s Tape => f (Reverse s a) -> Reverse s a) -> f a -> f a
 grad f as = reifyTape (snd bds) $ \p -> unbind vs $! partialArrayOf p bds $! f vs where
   (vs, bds) = bind as

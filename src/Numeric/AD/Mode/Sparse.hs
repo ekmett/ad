@@ -45,7 +45,14 @@ import qualified Numeric.AD.Rank1.Sparse as Rank1
 import Numeric.AD.Internal.Type
 import Numeric.AD.Mode
 
-
+-- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with sparse-mode AD in a single pass.
+--
+--
+-- >>> grad (\[x,y,z] -> x*y+z) [1,2,3]
+-- [2,1,1]
+--
+-- >>> grad (\[x,y] -> x**y) [0,2]
+-- [0.0,NaN]
 grad :: (Traversable f, Num a) => (forall s. f (AD s (Sparse a)) -> AD s (Sparse a)) -> f a -> f a
 grad f = Rank1.grad (runAD.f.fmap AD)
 {-# INLINE grad #-}

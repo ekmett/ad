@@ -1,4 +1,5 @@
 dist
+dist-newstyle
 docs
 wiki
 TAGS
@@ -12,3 +13,21 @@ wip
 *~
 *#
 *.imports
+.stack-work/
+cabal-dev
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+*.prof
+*.aux
+*.hp
+*.eventlog
+cabal.project.local
+cabal.project.local~
+.HTF/
+.ghc.environment.*

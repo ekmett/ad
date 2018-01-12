@@ -119,6 +119,7 @@ library
     free             >= 4.6.1 && < 5,
     nats             >= 0.1.2 && < 2,
     reflection       >= 1.4   && < 3,
+    semigroups       >= 0.16  && < 1,
     transformers     >= 0.3   && < 0.6
 
   if impl(ghc < 7.8)

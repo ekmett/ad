@@ -1,3 +1,7 @@
+next
+----
+* Add `Semigroup` instance for `Id`.
+
 4.3.4
 -----
 * Support `doctest-0.12`

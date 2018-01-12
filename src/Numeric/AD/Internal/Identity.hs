@@ -25,15 +25,18 @@ module Numeric.AD.Internal.Identity
   ) where
 
 import Data.Data (Data)
-#if __GLASGOW_HASKELL__ < 710
-import Data.Monoid
+#if !(MIN_VERSION_base(4,8,0))
+import Data.Monoid (Monoid(..))
+#endif
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Semigroup (Semigroup(..))
 #endif
 import Data.Number.Erf
 import Data.Typeable (Typeable)
 import Numeric.AD.Mode
 
 newtype Id a = Id { runId :: a } deriving
-  (Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Monoid, Data, Typeable, Erf, InvErf)
+  (Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Semigroup, Monoid, Data, Typeable, Erf, InvErf)
 
 probe :: a -> Id a
 probe = Id

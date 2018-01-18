@@ -1,5 +1,5 @@
-next
-----
+4.3.5 [2018.01.18]
+------------------
 * Add `Semigroup` instance for `Id`.
 
 4.3.4

@@ -116,7 +116,7 @@ library
     containers       >= 0.2   && < 0.6,
     data-reify       >= 0.6   && < 0.7,
     erf              >= 2.0   && < 2.1,
-    free             >= 4.6.1 && < 5,
+    free             >= 4.6.1 && < 6,
     nats             >= 0.1.2 && < 2,
     reflection       >= 1.4   && < 3,
     semigroups       >= 0.16  && < 1,

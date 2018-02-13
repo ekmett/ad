@@ -58,7 +58,9 @@ unary _ g (R a) = R (g a)
 binary :: (a -> a -> a) -> (b -> b -> b) -> Or s a b -> Or s a b -> Or s a b
 binary f _ (L a) (L b) = L (f a b)
 binary _ g (R a) (R b) = R (g a b)
+#if __GLASGOW_HASKELL__ < 800
 binary _ _ _ _ = impossible
+#endif
 
 data F
 data T
@@ -82,18 +84,24 @@ data Or s a b where
 #endif
 #endif
 
+#if __GLASGOW_HASKELL__ < 800
 impossible :: a
 impossible = error "Numeric.AD.Internal.Or: impossible case"
+#endif
 
 instance (Eq a, Eq b) => Eq (Or s a b) where
   L a == L b = a == b
   R a == R b = a == b
+#if __GLASGOW_HASKELL__ < 800
   _ == _ = impossible
+#endif
 
 instance (Ord a, Ord b) => Ord (Or s a b) where
   L a `compare` L b = compare a b
   R a `compare` R b = compare a b
+#if __GLASGOW_HASKELL__ < 800
   _ `compare` _ = impossible
+#endif
 
 instance (Enum a, Enum b, Chosen s) => Enum (Or s a b) where
   pred = unary pred pred
@@ -104,13 +112,19 @@ instance (Enum a, Enum b, Chosen s) => Enum (Or s a b) where
   enumFrom (R a) = R <$> enumFrom a
   enumFromThen (L a) (L b) = L <$> enumFromThen a b
   enumFromThen (R a) (R b) = R <$> enumFromThen a b
+#if __GLASGOW_HASKELL__ < 800
   enumFromThen _     _     = impossible
+#endif
   enumFromTo (L a) (L b) = L <$> enumFromTo a b
   enumFromTo (R a) (R b) = R <$> enumFromTo a b
+#if __GLASGOW_HASKELL__ < 800
   enumFromTo _     _     = impossible
+#endif
   enumFromThenTo (L a) (L b) (L c) = L <$> enumFromThenTo a b c
   enumFromThenTo (R a) (R b) (R c) = R <$> enumFromThenTo a b c
+#if __GLASGOW_HASKELL__ < 800
   enumFromThenTo _     _     _     = impossible
+#endif
 
 instance (Bounded a, Bounded b, Chosen s) => Bounded (Or s a b) where
   maxBound = choose maxBound maxBound

@@ -76,7 +76,7 @@ indices (Monomial as) = uncurry (flip replicate) `concatMap` toAscList as
 -- | We only store partials in sorted order, so the map contained in a partial
 -- will only contain partials with equal or greater keys to that of the map in
 -- which it was found. This should be key for efficiently computing sparse hessians.
--- there are only (n + k - 1) choose (k - 1) distinct nth partial derivatives of a
+-- there are only @n + k - 1@ choose @k@ distinct nth partial derivatives of a
 -- function with k inputs.
 data Sparse a
   = Sparse !a (IntMap (Sparse a))

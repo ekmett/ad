@@ -12,7 +12,7 @@ homepage:      http://github.com/ekmett/ad
 bug-reports:   http://github.com/ekmett/ad/issues
 build-type:    Custom
 cabal-version: >= 1.10
-tested-with:   GHC == 7.4.2, GHC == 7.6.3, GHC == 7.8.4, GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.1
+tested-with:   GHC == 7.4.2, GHC == 7.6.3, GHC == 7.8.4, GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.2
 synopsis:      Automatic Differentiation
 extra-source-files:
   .gitignore

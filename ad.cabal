@@ -12,7 +12,14 @@ homepage:      http://github.com/ekmett/ad
 bug-reports:   http://github.com/ekmett/ad/issues
 build-type:    Custom
 cabal-version: >= 1.10
-tested-with:   GHC == 7.4.2, GHC == 7.6.3, GHC == 7.8.4, GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.3
+tested-with:   GHC == 7.4.2
+             , GHC == 7.6.3
+             , GHC == 7.8.4
+             , GHC == 7.10.3
+             , GHC == 8.0.2
+             , GHC == 8.2.2
+             , GHC == 8.4.3
+             , GHC == 8.6.1
 synopsis:      Automatic Differentiation
 extra-source-files:
   .gitignore
@@ -112,7 +119,7 @@ library
     array            >= 0.2   && < 0.6,
     base             >= 4.3   && < 5,
     comonad          >= 4     && < 6,
-    containers       >= 0.2   && < 0.6,
+    containers       >= 0.2   && < 0.7,
     data-reify       >= 0.6   && < 0.7,
     erf              >= 2.0   && < 2.1,
     free             >= 4.6.1 && < 6,

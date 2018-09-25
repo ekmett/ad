@@ -2,7 +2,7 @@
 #
 #   runghc make_travis_yml_2.hs '-o' '.travis.yml' '--ghc-head' '--irc-channel=irc.freenode.org#haskell-lens' '--no-no-tests-no-bench' '--no-unconstrained' 'cabal.project'
 #
-# For more information, see https://github.com/hvr/multi-ghc-travis
+# For more information, see https://github.com/haskell-CI/haskell-ci
 #
 language: c
 sudo: false
@@ -37,7 +37,7 @@ before_cache:
 matrix:
   include:
     - compiler: "ghc-8.6.1"
-      env: GHCHEAD=true
+    # env: TEST=--disable-tests BENCH=--disable-benchmarks
       addons: {apt: {packages: [ghc-ppa-tools,cabal-install-head,ghc-8.6.1], sources: [hvr-ghc]}}
     - compiler: "ghc-8.4.3"
     # env: TEST=--disable-tests BENCH=--disable-benchmarks
@@ -66,7 +66,6 @@ matrix:
 
   allow_failures:
     - compiler: "ghc-head"
-    - compiler: "ghc-8.6.1"
 
 before_install:
   - HC=${CC}
@@ -111,7 +110,7 @@ install:
   - grep -Ev -- '^\s*--' ${HOME}/.cabal/config | grep -Ev '^\s*$'
   - "printf 'packages: \".\"\\n' > cabal.project"
   - touch cabal.project.local
-  - "if ! $NOINSTALLEDCONSTRAINTS; then for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/^/constraints: /' | sed 's/-[^-]*$/ installed/' >> cabal.project.local; done; fi"
+  - "if ! $NOINSTALLEDCONSTRAINTS; then for pkg in $($HCPKG list --simple-output); do echo $pkg  | grep -vw -- ad | sed 's/^/constraints: /' | sed 's/-[^-]*$/ installed/' >> cabal.project.local; done; fi"
   - cat cabal.project || true
   - cat cabal.project.local || true
   - if [ -f "./configure.ac" ]; then
@@ -132,7 +131,7 @@ script:
   - find . -maxdepth 1 -name '*.tar.gz' -exec tar -xvf '{}' \;
   - "printf 'packages: ad-*/*.cabal\\n' > cabal.project"
   - touch cabal.project.local
-  - "if ! $NOINSTALLEDCONSTRAINTS; then for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/^/constraints: /' | sed 's/-[^-]*$/ installed/' >> cabal.project.local; done; fi"
+  - "if ! $NOINSTALLEDCONSTRAINTS; then for pkg in $($HCPKG list --simple-output); do echo $pkg  | grep -vw -- ad | sed 's/^/constraints: /' | sed 's/-[^-]*$/ installed/' >> cabal.project.local; done; fi"
   - cat cabal.project || true
   - cat cabal.project.local || true
 

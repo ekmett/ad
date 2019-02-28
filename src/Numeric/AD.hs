@@ -172,6 +172,10 @@ import Numeric.AD.Mode.Sparse
 
 import Numeric.AD.Newton
 
+-- $setup
+--
+-- >>> import Numeric.AD.Internal.Doctest
+
 -- | @'hessianProduct' f wv@ computes the product of the hessian @H@ of a non-scalar-to-scalar function @f@ at @w = 'fst' <$> wv@ with a vector @v = snd <$> wv@ using \"Pearlmutter\'s method\" from <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.29.6143>, which states:
 --
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
@@ -198,8 +202,8 @@ hessian f = Sparse1.jacobian (grad (off . f . fmap On))
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function using 'Sparse'-on-'Reverse'
 --
--- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
--- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
+-- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2 :: RDouble]
+-- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.131204383757,-2.471726672005],[-2.471726672005,1.131204383757]]]
 hessianF :: (Traversable f, Functor g, Num a) => (forall s. Reifies s Tape => f (On (Reverse s (Sparse a))) -> g (On (Reverse s (Sparse a)))) -> f a -> g (f (f a))
 hessianF f as = getCompose $ Sparse1.jacobian (Compose . Reverse.jacobian (fmap off . f . fmap On)) as
 

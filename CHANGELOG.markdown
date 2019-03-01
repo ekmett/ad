@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+4.3.6 [2019.02.28]
+------------------
 * Make the test suite pass when built against `musl` `libc`.
 
 4.3.5 [2018.01.18]

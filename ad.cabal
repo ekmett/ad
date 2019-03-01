@@ -171,6 +171,7 @@ library
     Numeric.AD.Rank1.Tower
 
   other-modules:
+    Numeric.AD.Internal.Doctest
     Numeric.AD.Internal.Combinators
 
   ghc-options: -Wall

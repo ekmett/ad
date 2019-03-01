@@ -55,6 +55,9 @@ import Numeric.AD.Internal.Type (AD(..))
 import Numeric.AD.Mode
 import qualified Numeric.AD.Rank1.Kahn as Rank1
 
+-- $setup
+--
+-- >>> import Numeric.AD.Internal.Doctest
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with kahn-mode AD in a single pass.
 --
@@ -191,7 +194,7 @@ hessian f = Rank1.hessian (runAD.f.fmap AD)
 --
 -- Less efficient than 'Numeric.AD.Mode.Mixed.hessianF'.
 --
--- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2]
--- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.1312043837568135,-2.4717266720048188],[-2.4717266720048188,1.1312043837568135]]]
+-- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2 :: RDouble]
+-- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.131204383757,-2.471726672005],[-2.471726672005,1.131204383757]]]
 hessianF :: (Traversable f, Functor g, Num a) => (forall s. f (AD s (On (Kahn (Kahn a)))) -> g (AD s (On (Kahn (Kahn a))))) -> f a -> g (f (f a))
 hessianF f = Rank1.hessianF (fmap runAD.f.fmap AD)

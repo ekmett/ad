@@ -111,7 +111,6 @@ library
     PatternGuards
     Rank2Types
     ScopedTypeVariables
-    TemplateHaskell
     TypeFamilies
     TypeOperators
     UndecidableInstances

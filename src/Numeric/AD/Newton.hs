@@ -261,8 +261,8 @@ iHat t c e =
 -- It uses reverse mode automatic differentiation to compute the gradient
 -- The learning rate is constant through out, and is set to 0.001
 stochasticGradientDescent :: (Traversable f, Fractional a, Ord a)
-  => (forall s. Reifies s Tape => f (Scalar a) -> f (Reverse s a) -> Reverse s a)
-  -> [f (Scalar a)]
+  => (forall s. Reifies s Tape => e -> f (Reverse s a) -> Reverse s a)
+  -> [e]
   -> f a
   -> [f a]
 stochasticGradientDescent errorSingle d0 x0 = go xgx0 0.001 dLeft

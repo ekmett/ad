@@ -129,6 +129,12 @@ module Numeric.AD
   , conjugateGradientDescent
   , conjugateGradientAscent
   , stochasticGradientDescent
+
+  -- * Working with towers
+  , Jet(..)
+  , headJet
+  , tailJet
+  , jet
   ) where
 
 import Data.Functor.Compose
@@ -143,6 +149,7 @@ import Numeric.AD.Internal.Reverse (Reverse, Tape)
 import Numeric.AD.Internal.Sparse (Sparse, Grads, vgrads)
 
 import Numeric.AD.Internal.Type
+import Numeric.AD.Jet
 import Numeric.AD.Mode
 
 import qualified Numeric.AD.Rank1.Forward as Forward1

@@ -194,12 +194,12 @@ instance RealFrac ForwardDouble where
 instance Erf ForwardDouble where
   erf = lift1 erf $ \x -> (2 / sqrt pi) * exp (negate x * x)
   erfc = lift1 erfc $ \x -> ((-2) / sqrt pi) * exp (negate x * x)
-  normcdf = lift1 normcdf $ \x -> ((-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt 2)
+  normcdf = lift1 normcdf $ \x -> (recip $ sqrt (2 * pi)) * exp (- x * x / 2)
 
 instance InvErf ForwardDouble where
-  inverf = lift1 inverfc $ \x -> recip $ (2 / sqrt pi) * exp (negate x * x)
-  inverfc = lift1 inverfc $ \x -> recip $ negate (2 / sqrt pi) * exp (negate x * x)
-  invnormcdf = lift1 invnormcdf $ \x -> recip $ ((-1) / sqrt pi) * exp (x * x * fromRational (- recip 2) / sqrt 2)
+  inverf = lift1_ inverf $ \x _ -> sqrt pi / 2 * exp (x * x)
+  inverfc = lift1_ inverfc $ \x _ -> negate (sqrt pi / 2) * exp (x * x)
+  invnormcdf = lift1_ invnormcdf $ \x _ -> sqrt (2 * pi) * exp (x * x / 2)
 
 bind :: Traversable f => (f ForwardDouble -> b) -> f Double -> f b
 bind f as = snd $ mapAccumL outer (0 :: Int) as where

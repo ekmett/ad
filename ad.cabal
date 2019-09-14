@@ -24,6 +24,7 @@ tested-with:   GHC == 7.4.2
 synopsis:      Automatic Differentiation
 extra-source-files:
   .gitignore
+  .hlint.yaml
   .travis.yml
   .vim.custom
   CHANGELOG.markdown

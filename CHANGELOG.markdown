@@ -1,4 +1,4 @@
-4.4 [????.??.??]
+4.4 [2020.02.03]
 ----------------
 * Generalize the type of `stochasticGradientDescent`:
 

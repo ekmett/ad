@@ -176,7 +176,7 @@ import Numeric.AD.Newton
 --
 -- >>> import Numeric.AD.Internal.Doctest
 
--- | @'hessianProduct' f wv@ computes the product of the hessian @H@ of a non-scalar-to-scalar function @f@ at @w = 'fst' <$> wv@ with a vector @v = snd <$> wv@ using \"Pearlmutter\'s method\" from <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.29.6143>, which states:
+-- | @'hessianProduct' f wv@ computes the product of the hessian @H@ of a non-scalar-to-scalar function @f@ at @w = 'fst' '<$>' wv@ with a vector @v = snd '<$>' wv@ using \"Pearlmutter\'s method\" from <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.29.6143>, which states:
 --
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
 --
@@ -185,7 +185,7 @@ import Numeric.AD.Newton
 hessianProduct :: (Traversable f, Num a) => (forall s. Reifies s Tape => f (On (Reverse s (Forward a))) -> On (Reverse s (Forward a))) -> f (a, a) -> f a
 hessianProduct f = Forward1.duF (grad (off . f . fmap On))
 
--- | @'hessianProduct'' f wv@ computes both the gradient of a non-scalar-to-scalar @f@ at @w = 'fst' <$> wv@ and the product of the hessian @H@ at @w@ with a vector @v = snd <$> wv@ using \"Pearlmutter's method\". The outputs are returned wrapped in the same functor.
+-- | @'hessianProduct'' f wv@ computes both the gradient of a non-scalar-to-scalar @f@ at @w = 'fst' '<$>' wv@ and the product of the hessian @H@ at @w@ with a vector @v = snd '<$>' wv@ using \"Pearlmutter's method\". The outputs are returned wrapped in the same functor.
 --
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
 --

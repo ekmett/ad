@@ -161,7 +161,7 @@ import Numeric.AD.Rank1.Sparse
 
 import Numeric.AD.Rank1.Newton
 
--- | @'hessianProduct' f wv@ computes the product of the hessian @H@ of a non-scalar-to-scalar function @f@ at @w = 'fst' <$> wv@ with a vector @v = snd <$> wv@ using \"Pearlmutter\'s method\" from <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.29.6143>, which states:
+-- | @'hessianProduct' f wv@ computes the product of the hessian @H@ of a non-scalar-to-scalar function @f@ at @w = 'fst' '<$>' wv@ with a vector @v = snd '<$>' wv@ using \"Pearlmutter\'s method\" from <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.29.6143>, which states:
 --
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
 --
@@ -170,7 +170,7 @@ import Numeric.AD.Rank1.Newton
 hessianProduct :: (Traversable f, Num a) => (f (On (Kahn (Forward a))) -> On (Kahn (Forward a))) -> f (a, a) -> f a
 hessianProduct f = duF (grad (off . f . fmap On))
 
--- | @'hessianProduct'' f wv@ computes both the gradient of a non-scalar-to-scalar @f@ at @w = 'fst' <$> wv@ and the product of the hessian @H@ at @w@ with a vector @v = snd <$> wv@ using \"Pearlmutter's method\". The outputs are returned wrapped in the same functor.
+-- | @'hessianProduct'' f wv@ computes both the gradient of a non-scalar-to-scalar @f@ at @w = 'fst' '<$>' wv@ and the product of the hessian @H@ at @w@ with a vector @v = snd '<$>' wv@ using \"Pearlmutter's method\". The outputs are returned wrapped in the same functor.
 --
 -- > H v = (d/dr) grad_w (w + r v) | r = 0
 --

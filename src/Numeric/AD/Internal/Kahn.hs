@@ -231,9 +231,9 @@ partials tape = [ let v = sensitivities ! ix in seq v (ident, v) | (ix, Var _ id
   sbounds ((a,_):as) = foldl' (\(lo,hi) (b,_) -> let lo' = min lo b; hi' = max hi b in lo' `seq` hi' `seq` (lo', hi')) (a,a) as
   sbounds _ = undefined -- the graph can't be empty, it contains the output node!
 
-  successors :: Tape a t -> [t]
+  successors :: Tape a Int -> [Int]
   successors (Unary _ _ b) = [b]
-  successors (Binary _ _ _ b c) = [b,c]
+  successors (Binary _ _ _ b c) = if b == c then [b] else [b,c]
   successors _ = []
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.

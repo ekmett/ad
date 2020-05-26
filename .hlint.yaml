@@ -1,0 +1,10 @@
+- arguments: [--cpp-define=HLINT, --cpp-ansi, --cpp-include=include]
+
+- fixity: "infixr 8 **!, <**>"
+- fixity: "infixl 7 *!, /!, ^*, *^, ^/"
+- fixity: "infixl 6 +!, -!, <+>"
+- fixity: "infix  4 ==!"
+- fixity: "infixl 3 :-"
+
+# this doesn't work well with Rank2Types
+- ignore: {name: Eta reduce}

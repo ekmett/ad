@@ -1,5 +1,5 @@
 name:          ad
-version:       4.3.6
+version:       4.4
 license:       BSD3
 license-File:  LICENSE
 copyright:     (c) Edward Kmett 2010-2015,
@@ -20,10 +20,12 @@ tested-with:   GHC == 7.4.2
              , GHC == 8.2.2
              , GHC == 8.4.4
              , GHC == 8.6.5
-             , GHC == 8.8.1
+             , GHC == 8.8.3
+             , GHC == 8.10.1
 synopsis:      Automatic Differentiation
 extra-source-files:
   .gitignore
+  .hlint.yaml
   .travis.yml
   .vim.custom
   CHANGELOG.markdown

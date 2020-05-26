@@ -1,3 +1,12 @@
+4.4 [2020.02.03]
+----------------
+* Generalize the type of `stochasticGradientDescent`:
+
+  ```diff
+  -stochasticGradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => f (Scalar a) -> f (Reverse s a) -> Reverse s a) -> [f (Scalar a)] -> f a -> [f a]
+  +stochasticGradientDescent :: (Traversable f, Fractional a, Ord a) => (forall s. Reifies s Tape => e            -> f (Reverse s a) -> Reverse s a) -> [e]            -> f a -> [f a]
+  ```
+
 4.3.6 [2019.02.28]
 ------------------
 * Make the test suite pass when built against `musl` `libc`.

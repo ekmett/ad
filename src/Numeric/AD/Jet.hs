@@ -36,7 +36,7 @@ import Data.Monoid
 import Data.Typeable
 import Control.Comonad.Cofree
 
-infixl 3 :-
+infixr 3 :-
 
 -- | A 'Jet' is a tower of all (higher order) partial derivatives of a function
 --

@@ -66,8 +66,8 @@ import Unsafe.Coerce
 #ifndef HLINT
 data Cells where
   Nil    :: Cells
-  Unary  :: {-# UNPACK #-} !Int -> a -> Cells -> Cells
-  Binary :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Int -> a -> a -> Cells -> Cells
+  Unary  :: {-# UNPACK #-} !Int -> Double -> Cells -> Cells
+  Binary :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Int -> Double -> Double -> Cells -> Cells
 #endif
 
 dropCells :: Int -> Cells -> Cells
@@ -80,13 +80,13 @@ data Head = Head {-# UNPACK #-} !Int Cells
 
 newtype Tape = Tape { getTape :: IORef Head }
 
-un :: Int -> a -> Head -> (Head, Int)
+un :: Int -> Double -> Head -> (Head, Int)
 un i di (Head r t) = h `seq` r' `seq` (h, r') where
   r' = r + 1
   h = Head r' (Unary i di t)
 {-# INLINE un #-}
 
-bin :: Int -> Int -> a -> a -> Head -> (Head, Int)
+bin :: Int -> Int -> Double -> Double -> Head -> (Head, Int)
 bin i j di dj (Head r t) = h `seq` r' `seq` (h, r') where
   r' = r + 1
   h = Head r' (Binary i j di dj t)
@@ -285,7 +285,7 @@ derivativeOf' p r = (primal r, derivativeOf p r)
 {-# INLINE derivativeOf' #-}
 
 -- | Used internally to push sensitivities down the chain.
-backPropagate :: Num a => Int -> Cells -> STArray s Int a -> ST s Int
+backPropagate :: Int -> Cells -> STArray s Int Double -> ST s Int
 backPropagate k Nil _ = return k
 backPropagate k (Unary i g xs) ss = do
   da <- readArray ss k
@@ -343,7 +343,7 @@ bind xs = (r,(0,hi)) where
   (r,hi) = runState (mapM freshVar xs) 0
   freshVar a = state $ \s -> let s' = s + 1 in s' `seq` (var a s, s')
 
-unbind :: Functor f => f (ReverseDouble s) -> Array Int a -> f a
+unbind :: Functor f => f (ReverseDouble s) -> Array Int Double -> f Double
 unbind xs ys = fmap (\v -> ys ! varId v) xs
 
 unbindWith :: (Functor f) => (Double -> b -> c) -> f (ReverseDouble s) -> Array Int b -> f c

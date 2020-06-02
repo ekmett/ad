@@ -191,7 +191,7 @@ test-suite doctests
     ad,
     base,
     directory,
-    doctest >= 0.9.0.1 && < 0.17,
+    doctest >= 0.9.0.1 && < 0.18,
     filepath
   ghc-options: -Wall -threaded
   hs-source-dirs: tests

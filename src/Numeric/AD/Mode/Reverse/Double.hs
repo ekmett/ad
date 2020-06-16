@@ -18,7 +18,7 @@
 -- Data.Reflection
 --
 -- This version is specialized to `Double` enabling the entire
--- structure
+-- structure to be unboxed.
 --
 -----------------------------------------------------------------------------
 

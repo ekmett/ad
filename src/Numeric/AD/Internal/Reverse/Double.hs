@@ -66,8 +66,8 @@ import Unsafe.Coerce
 #ifndef HLINT
 data Cells where
   Nil    :: Cells
-  Unary  :: {-# UNPACK #-} !Int -> Double -> Cells -> Cells
-  Binary :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Int -> Double -> Double -> Cells -> Cells
+  Unary  :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Double -> !Cells -> Cells
+  Binary :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Int -> {-# UNPACK #-} !Double -> {-# UNPACK #-} !Double -> !Cells -> Cells
 #endif
 
 dropCells :: Int -> Cells -> Cells
@@ -76,7 +76,7 @@ dropCells _ Nil = Nil
 dropCells n (Unary _ _ xs)      = (dropCells $! n - 1) xs
 dropCells n (Binary _ _ _ _ xs) = (dropCells $! n - 1) xs
 
-data Head = Head {-# UNPACK #-} !Int Cells
+data Head = Head {-# UNPACK #-} !Int !Cells
 
 newtype Tape = Tape { getTape :: IORef Head }
 
@@ -111,8 +111,8 @@ binarily f di dj i b j c = ReverseDouble (unsafePerformIO (modifyTape (Proxy :: 
 #ifndef HLINT
 data ReverseDouble s where
   Zero :: ReverseDouble s
-  Lift :: Double -> ReverseDouble s
-  ReverseDouble :: {-# UNPACK #-} !Int -> Double -> ReverseDouble s
+  Lift :: {-# UNPACK #-} !Double -> ReverseDouble s
+  ReverseDouble :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Double -> ReverseDouble s
   deriving (Show, Typeable)
 #endif
 

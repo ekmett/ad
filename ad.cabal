@@ -128,8 +128,7 @@ library
     nats             >= 0.1.2 && < 2,
     reflection       >= 1.4   && < 3,
     semigroups       >= 0.16  && < 1,
-    transformers     >= 0.3   && < 0.6,
-    primitive
+    transformers     >= 0.3   && < 0.6
 
   if impl(ghc < 7.8)
     build-depends: tagged >= 0.7 && < 1
@@ -202,5 +201,5 @@ benchmark blackscholes
   type: exitcode-stdio-1.0
   main-is: BlackScholes.hs
   hs-source-dirs: bench
-  build-depends: base, ad, erf, criterion, mwc-random, primitive
+  build-depends: base, ad, erf, criterion
   ghc-options: -fspec-constr -fdicts-cheap -O2

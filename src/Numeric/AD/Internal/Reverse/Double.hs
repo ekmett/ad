@@ -61,7 +61,7 @@ import System.IO.Unsafe (unsafePerformIO)
 foreign import ccall unsafe "tape_alloc" c_tape_alloc :: Int -> Int -> IO (Ptr ())
 foreign import ccall unsafe "tape_push" c_tape_push :: Ptr () -> Int -> Int -> Double -> Double -> IO Int
 foreign import ccall unsafe "tape_backPropagate" c_tape_backPropagate :: Ptr () -> Int -> Ptr Double -> IO ()
-foreign import ccall unsafe "tape_offset" c_tape_offset :: Ptr () -> IO Int
+foreign import ccall unsafe "tape_variables" c_tape_variables :: Ptr () -> IO Int
 foreign import ccall unsafe "tape_free" c_tape_free :: Ptr () -> IO ()
 
 newtype Tape = Tape { getTape :: IORef (Ptr ()) }
@@ -266,7 +266,7 @@ partials Zero        = []
 partials (Lift _)    = []
 partials (ReverseDouble k _) = unsafePerformIO $ do
     tape <- readIORef $ getTape (reflect (Proxy :: Proxy s))
-    l <- c_tape_offset tape
+    l <- c_tape_variables tape
     arr <- MA.mallocArray l
     c_tape_backPropagate tape k arr
 
@@ -289,7 +289,7 @@ partialMapOf _ = fromDistinctAscList . zip [0..] . partials
 -- | Construct a tape that starts with @n@ variables.
 reifyTape :: Int -> (forall s. Reifies s Tape => Proxy s -> r) -> r
 reifyTape vs k = unsafePerformIO $ do
-  p <- c_tape_alloc vs 500 --000
+  p <- c_tape_alloc vs (4 * 1024)
   h <- newIORef p
   let !r = reify (Tape h) k 
   c_tape_free p

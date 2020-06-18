@@ -3,29 +3,36 @@
 #include <string.h>
 #include <stdio.h>
 
-typedef struct
+typedef struct Tape
 {
   int idx;
   int offset;
   int size;
-  double* val;
-  int* lnk;
+  int variables;
+  double *val;
+  int *lnk;
+  struct Tape* prev; 
 } tape_t;
 
-int tape_offset(void *p)
+int tape_variables(void *p)
 {
   tape_t *pTape = (tape_t*)p;
-  return pTape->offset;
+  return pTape->variables;
 }
 
-void* tape_alloc(int offset, int size)
+void* tape_alloc(int variables, int size)
 {
-  tape_t *pTape = malloc( sizeof(tape_t) );
+  void* p = malloc(sizeof(tape_t) + size*2*(sizeof(double) + sizeof(int)) );
+  tape_t *pTape = (tape_t*)p;
+
   pTape->size = size;
   pTape->idx = 0;
-  pTape->offset = offset;
-  pTape->val = malloc( size*sizeof(double) );
-  pTape->lnk = malloc( size*sizeof(int) );
+  pTape->offset = variables;
+  pTape->variables = variables;
+
+  pTape->val = p + sizeof(tape_t);
+  pTape->lnk = p + sizeof(tape_t) + size*2*sizeof(double);
+  pTape->prev = 0;
 
   return pTape;
 }
@@ -34,21 +41,22 @@ int tape_push(void* p, int i_l, int i_r, double d_l, double d_r)
 {
   tape_t *pTape = (tape_t*)p;
 
-  if (pTape->idx * 2 >= pTape->size)
+  // time to allocate new block?
+  if (pTape->idx >= pTape->size)
   {
     int newSize = pTape->size * 2;
 
-    double *val2 = malloc( newSize*sizeof(double) );
-    memcpy(val2, pTape->val, pTape->size*sizeof(double));
-    free(pTape->val);
-    pTape->val = val2;
+    p = malloc( sizeof(tape_t) + newSize*2*(sizeof(double) + sizeof(int)) );
+    
+    tape_t *pNew = (tape_t*)p;
+    *pNew = *pTape;
 
-    int *lnk2 = malloc( newSize*sizeof(int) );
-    memcpy(lnk2, pTape->lnk, pTape->size*sizeof(int));
-    free(pTape->lnk);
-    pTape->lnk = lnk2;
-
+    pTape->idx = 0;
+    pTape->val = p + sizeof(tape_t);
+    pTape->lnk = p + sizeof(tape_t) + newSize*2*sizeof(double);
+    pTape->offset = pNew->offset + pNew->size;
     pTape->size = newSize;
+    pTape->prev = pNew;
   }
 
   int i = pTape->idx++;
@@ -66,27 +74,41 @@ void tape_backPropagate(void* p, int start, double* out)
 {
   tape_t *pTape = (tape_t*)p;
 
+  int variables = pTape->variables;
+
   double* buffer = calloc( pTape->offset + pTape->idx, sizeof(double) );
   buffer[start] = 1.0;
-  int idx = 1 + start - pTape->offset;
+  
+  int idx = 1 + start;
 
-  while (--idx >= 0)
+  while (pTape)
   {
-    double v = buffer[idx + pTape->offset];
-    if (v == 0.0) continue;
+    idx -= pTape->offset;
 
-    int i = pTape->lnk[idx*2];
-    double x = pTape->val[idx*2];
-    if (x != 0.0)
-      buffer[i] += v*x;
+    while (--idx >= 0)
+    {
+      double v = buffer[idx + pTape->offset];
+      if (v == 0.0) continue;
 
-    int j = pTape->lnk[idx*2 + 1]; 
-    double y = pTape->val[idx*2 + 1];
-    if (x != 0.0)
-      buffer[j] += v*y;
+      int i = pTape->lnk[idx*2];
+      double x = pTape->val[idx*2];
+      if (x != 0.0)
+      {
+        buffer[i] += v*x;
+      }
+
+      int j = pTape->lnk[idx*2 + 1]; 
+      double y = pTape->val[idx*2 + 1];
+      if (y != 0.0)
+      {
+        buffer[j] += v*y;
+      }
+    }
+    idx += pTape->offset;
+    pTape = pTape->prev;
   }
   
-  memcpy(out, buffer, pTape->offset * sizeof(double) );
+  memcpy(out, buffer, variables * sizeof(double) );
   free(buffer);
 }
 
@@ -94,8 +116,10 @@ void tape_free(void* p)
 {
   tape_t *pTape = (tape_t*)p;
 
-  free(pTape->val);
-  free(pTape->lnk);
-
-  free(pTape);
+  while (pTape)
+  {
+    p = pTape;
+    pTape = pTape->prev;
+    free(p);
+  }
 }

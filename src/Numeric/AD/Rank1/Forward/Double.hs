@@ -139,14 +139,14 @@ jacobianWith' g f as = transposeWith row t p where
 
 -- | Compute the gradient of a function using forward mode AD.
 --
--- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Wengert.grad' for @n@ inputs, in exchange for better space utilization.
+-- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Reverse.grad' for @n@ inputs, in exchange for better space utilization.
 grad :: Traversable f => (f ForwardDouble -> ForwardDouble) -> f Double -> f Double
 grad f = bind (tangent . f)
 {-# INLINE grad #-}
 
 -- | Compute the gradient and answer to a function using forward mode AD.
 --
--- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Wengert.grad'' for @n@ inputs, in exchange for better space utilization.
+-- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Reverse.grad'' for @n@ inputs, in exchange for better space utilization.
 grad' :: Traversable f => (f ForwardDouble -> ForwardDouble) -> f Double -> (Double, f Double)
 grad' f as = (primal b, tangent <$> bs)
     where
@@ -155,7 +155,7 @@ grad' f as = (primal b, tangent <$> bs)
 
 -- | Compute the gradient of a function using forward mode AD and combine the result with the input using a user-specified function.
 --
--- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Wengert.gradWith' for @n@ inputs, in exchange for better space utilization.
+-- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Reverse.gradWith' for @n@ inputs, in exchange for better space utilization.
 gradWith :: Traversable f => (Double -> Double -> b) -> (f ForwardDouble -> ForwardDouble) -> f Double -> f b
 gradWith g f = bindWith g (tangent . f)
 {-# INLINE gradWith #-}
@@ -163,7 +163,7 @@ gradWith g f = bindWith g (tangent . f)
 -- | Compute the gradient of a function using forward mode AD and the answer, and combine the result with the input using a
 -- user-specified function.
 --
--- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Wengert.gradWith'' for @n@ inputs, in exchange for better space utilization.
+-- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Reverse.gradWith'' for @n@ inputs, in exchange for better space utilization.
 --
 -- >>> gradWith' (,) sum [0..4]
 -- (10.0,[(0.0,1.0),(1.0,1.0),(2.0,1.0),(3.0,1.0),(4.0,1.0)])

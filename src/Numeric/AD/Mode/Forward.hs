@@ -150,21 +150,21 @@ jacobianWith' g f = Rank1.jacobianWith' g (fmap runAD.f.fmap AD)
 
 -- | Compute the gradient of a function using forward mode AD.
 --
--- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Wengert.grad' for @n@ inputs, in exchange for better space utilization.
+-- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Reverse.grad' for @n@ inputs, in exchange for better space utilization.
 grad :: (Traversable f, Num a) => (forall s. f (AD s (Forward a)) -> AD s (Forward a)) -> f a -> f a
 grad f = Rank1.grad (runAD.f.fmap AD)
 {-# INLINE grad #-}
 
 -- | Compute the gradient and answer to a function using forward mode AD.
 --
--- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Wengert.grad'' for @n@ inputs, in exchange for better space utilization.
+-- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Reverse.grad'' for @n@ inputs, in exchange for better space utilization.
 grad' :: (Traversable f, Num a) => (forall s. f (AD s (Forward a)) -> AD s (Forward a)) -> f a -> (a, f a)
 grad' f = Rank1.grad' (runAD.f.fmap AD)
 {-# INLINE grad' #-}
 
 -- | Compute the gradient of a function using forward mode AD and combine the result with the input using a user-specified function.
 --
--- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Wengert.gradWith' for @n@ inputs, in exchange for better space utilization.
+-- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Reverse.gradWith' for @n@ inputs, in exchange for better space utilization.
 gradWith :: (Traversable f, Num a) => (a -> a -> b) -> (forall s. f (AD s (Forward a)) -> AD s (Forward a)) -> f a -> f b
 gradWith g f = Rank1.gradWith g (runAD.f.fmap AD)
 {-# INLINE gradWith #-}
@@ -172,7 +172,7 @@ gradWith g f = Rank1.gradWith g (runAD.f.fmap AD)
 -- | Compute the gradient of a function using forward mode AD and the answer, and combine the result with the input using a
 -- user-specified function.
 --
--- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Wengert.gradWith'' for @n@ inputs, in exchange for better space utilization.
+-- Note, this performs /O(n)/ worse than 'Numeric.AD.Mode.Reverse.gradWith'' for @n@ inputs, in exchange for better space utilization.
 --
 -- >>> gradWith' (,) sum [0..4]
 -- (10,[(0,1),(1,1),(2,1),(3,1),(4,1)])

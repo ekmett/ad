@@ -1,3 +1,12 @@
+next [????.??.??]
+-----------------
+* Change the fixity of `:-` in `Numeric.AD.Jet` to be right-associative.
+* Fix backpropagation error in Kahn mode.
+* Fix bugs in the `Erf` instance for `ForwardDouble`.
+* Add `Numeric.AD.Mode.Reverse.Double`, a variant of `Numeric.AD.Mode.Reverse`
+  that is specialized to `Double`.
+* Re-export `Jet(..)`, `headJet`, `tailJet` and `jet` from `Numeric.AD`.
+
 4.4 [2020.02.03]
 ----------------
 * Generalize the type of `stochasticGradientDescent`:

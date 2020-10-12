@@ -122,9 +122,7 @@ library
     base             >= 4.3   && < 5,
     comonad          >= 4     && < 6,
     containers       >= 0.2   && < 0.7,
-    -- Using data-reify-0.6.2 causes the doctests to fail. See #89.
-    -- Until we figure out why, avoid picking build plans that include it.
-    data-reify       >= 0.6   && < 0.6.2,
+    data-reify       >= 0.6   && < 0.7,
     erf              >= 2.0   && < 2.1,
     free             >= 4.6.1 && < 6,
     nats             >= 0.1.2 && < 2,

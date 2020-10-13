@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+4.4.1 [2020.10.13]
+------------------
 * Change the fixity of `:-` in `Numeric.AD.Jet` to be right-associative.
   Previously, it was `infixl`, which made things like `x :- y :- z` nearly
   unusable.

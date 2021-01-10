@@ -10,7 +10,7 @@ stability:     Experimental
 category:      Math
 homepage:      http://github.com/ekmett/ad
 bug-reports:   http://github.com/ekmett/ad/issues
-build-type:    Custom
+build-type:    Simple
 cabal-version: >= 1.10
 tested-with:   GHC == 7.4.2
              , GHC == 7.6.3
@@ -29,7 +29,6 @@ extra-source-files:
   .vim.custom
   CHANGELOG.markdown
   README.markdown
-  Warning.hs
   include/instances.h
 description:
     Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.
@@ -88,12 +87,6 @@ flag herbie
   default: False
   manual: True
 
-custom-setup
-  setup-depends:
-    base          >= 4.3 && <5,
-    Cabal         >= 1.10,
-    cabal-doctest >= 1 && <1.1
-
 library
   hs-source-dirs: src
   include-dirs: include
@@ -139,6 +132,7 @@ library
     Numeric.AD
     Numeric.AD.Halley
     Numeric.AD.Internal.Dense
+    Numeric.AD.Internal.Doctest
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Forward.Double
     Numeric.AD.Internal.Identity
@@ -172,7 +166,6 @@ library
     Numeric.AD.Rank1.Tower
 
   other-modules:
-    Numeric.AD.Internal.Doctest
     Numeric.AD.Internal.Combinators
 
   ghc-options: -Wall
@@ -180,20 +173,6 @@ library
     ghc-options: -Wno-star-is-type
 
   ghc-options: -fspec-constr -fdicts-cheap -O2
-
--- Verify the results of the examples
-test-suite doctests
-  default-language: Haskell2010
-  type:    exitcode-stdio-1.0
-  main-is: doctests.hs
-  build-depends:
-    ad,
-    base,
-    directory,
-    doctest >= 0.9.0.1 && < 0.18,
-    filepath
-  ghc-options: -Wall -threaded
-  hs-source-dirs: tests
 
 benchmark blackscholes
   default-language: Haskell2010

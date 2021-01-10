@@ -200,7 +200,7 @@ diffF' f a = derivative' <$> f (var a 0)
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
 -- [[0,1],[1,0]]
-hessian :: (Traversable f, Num a) => (f (On (Kahn (Kahn a))) -> (On (Kahn (Kahn a)))) -> f a -> f (f a)
+hessian :: (Traversable f, Num a) => (f (On (Kahn (Kahn a))) -> On (Kahn (Kahn a))) -> f a -> f (f a)
 hessian f = jacobian (grad (off . f . fmap On))
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the 'Kahn'-mode Jacobian of the 'Kahn'-mode Jacobian of the function.

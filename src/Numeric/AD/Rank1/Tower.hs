@@ -63,7 +63,7 @@ diffsF f a = getADTower <$> apply f a
 
 -- | Compute the zero-padded derivatives of a function @(a -> f a)@
 diffs0F :: (Functor f, Num a) => (Tower a -> f (Tower a)) -> a -> f [a]
-diffs0F f a = (zeroPad . getADTower) <$> apply f a
+diffs0F f a = zeroPad . getADTower <$> apply f a
 {-# INLINE diffs0F #-}
 
 -- | @taylor f x@ compute the Taylor series of @f@ around @x@.

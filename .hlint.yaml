@@ -8,3 +8,4 @@
 
 # this doesn't work well with Rank2Types
 - ignore: {name: Eta reduce}
+- ignore: {name: Unused LANGUAGE pragma}

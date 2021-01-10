@@ -97,7 +97,7 @@ instance BODY1(RealFrac a) => RealFrac (HEAD) where
 instance BODY1(Erf a) => Erf (HEAD) where
   erf = lift1 erf $ \x -> (2 / sqrt pi) * exp (negate x * x)
   erfc = lift1 erfc $ \x -> ((-2) / sqrt pi) * exp (negate x * x)
-  normcdf = lift1 normcdf $ \x -> (recip $ sqrt (2 * pi)) * exp (- x * x / 2)
+  normcdf = lift1 normcdf $ \x -> recip (sqrt (2 * pi)) * exp (- x * x / 2)
 
 instance BODY1(InvErf a) => InvErf (HEAD) where
   inverf = lift1_ inverf $ \x _ -> sqrt pi / 2 * exp (x * x)

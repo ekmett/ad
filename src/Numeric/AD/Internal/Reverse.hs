@@ -77,17 +77,11 @@ import Prelude hiding (mapM)
 import System.IO.Unsafe (unsafePerformIO)
 import Unsafe.Coerce
 
-#ifdef HLINT
-{-# ANN module "HLint: ignore Reduce duplication" #-}
-#endif
-
 -- evil untyped tape
-#ifndef HLINT
 data Cells where
   Nil    :: Cells
   Unary  :: {-# UNPACK #-} !Int -> a -> Cells -> Cells
   Binary :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Int -> a -> a -> Cells -> Cells
-#endif
 
 dropCells :: Int -> Cells -> Cells
 dropCells 0 xs = xs
@@ -127,13 +121,11 @@ binarily :: forall s a. Reifies s Tape => (a -> a -> a) -> a -> a -> Int -> a ->
 binarily f di dj i b j c = Reverse (unsafePerformIO (modifyTape (Proxy :: Proxy s) (bin i j di dj))) $! f b c
 {-# INLINE binarily #-}
 
-#ifndef HLINT
 data Reverse s a where
   Zero :: Reverse s a
   Lift :: a -> Reverse s a
   Reverse :: {-# UNPACK #-} !Int -> a -> Reverse s a
   deriving (Show, Typeable)
-#endif
 
 instance (Reifies s Tape, Num a) => Mode (Reverse s a) where
   type Scalar (Reverse s a) = a
@@ -167,7 +159,7 @@ primal (Reverse _ a) = a
 instance (Reifies s Tape, Num a) => Jacobian (Reverse s a) where
   type D (Reverse s a) = Id a
 
-  unary f _         (Zero)   = Lift (f 0)
+  unary f _          Zero    = Lift (f 0)
   unary f _         (Lift a) = Lift (f a)
   unary f (Id dadi) (Reverse i b) = unarily f dadi i b
 

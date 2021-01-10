@@ -52,10 +52,6 @@ import Numeric.AD.Internal.Identity
 import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 
-#ifdef HLINT
-{-# ANN module "HLint: ignore Reduce duplication" #-}
-#endif
-
 -- | 'Forward' mode AD
 data Forward a
   = Forward !a a

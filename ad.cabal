@@ -26,13 +26,10 @@ synopsis:      Automatic Differentiation
 extra-source-files:
   .gitignore
   .hlint.yaml
-  .travis.yml
   .vim.custom
   CHANGELOG.markdown
   README.markdown
   Warning.hs
-  travis/cabal-apt-install
-  travis/config
   include/instances.h
 description:
     Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.

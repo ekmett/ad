@@ -1,7 +1,7 @@
 ad
 ==
 
-[![Hackage](https://img.shields.io/hackage/v/ad.svg)](https://hackage.haskell.org/package/ad) [![Build Status](https://secure.travis-ci.org/ekmett/ad.png?branch=master)](http://travis-ci.org/ekmett/ad)
+[![Hackage](https://img.shields.io/hackage/v/ad.svg)](https://hackage.haskell.org/package/ad) [![Build Status](https://github.com/ekmett/ad/workflows/Haskell-CI/badge.svg)](https://github.com/ekmett/ad/actions?query=workflow%3AHaskell-CI)
 
 A package that provides an intuitive API for [Automatic Differentiation](http://en.wikipedia.org/wiki/Automatic_differentiation) (AD) in Haskell. Automatic differentiation provides a means to calculate the derivatives of a function while evaluating it. Unlike numerical methods based on running the program with multiple inputs or symbolic approaches, automatic differentiation typically only decreases performance by a small multiplier.
 

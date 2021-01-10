@@ -103,7 +103,6 @@ jacobianWithT :: (Traversable f, Functor g) => (Double -> Double -> b) -> (f For
 jacobianWithT g f = bindWith g' f where
   g' a ga = g a . tangent <$> ga
 {-# INLINE jacobianWithT #-}
-{-# ANN jacobianWithT "HLint: ignore Eta reduce" #-}
 
 -- | Compute the Jacobian using 'Forward' mode 'AD'. This must transpose the result, so 'jacobianT' is faster and allows more result types.
 --

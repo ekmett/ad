@@ -60,7 +60,7 @@ zeroPad xs = xs ++ repeat 0
 {-# INLINE zeroPad #-}
 
 zeroPadF :: (Functor f, Num a) => [f a] -> [f a]
-zeroPadF fxs@(fx:_) = fxs ++ repeat (const 0 <$> fx)
+zeroPadF fxs@(fx:_) = fxs ++ repeat (0 <$ fx)
 zeroPadF _ = error "zeroPadF :: empty list"
 {-# INLINE zeroPadF #-}
 

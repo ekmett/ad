@@ -201,7 +201,7 @@ diffF' f a = reifyTape 1 $ \p -> derivativeOf' p <$> f (var a 0)
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
 -- [[0.0,1.0],[1.0,0.0]]
-hessian :: (Traversable f) => (forall s s'. (Reifies s R.Tape, Reifies s' Tape) => f (On (R.Reverse s (ReverseDouble s'))) -> (On (R.Reverse s (ReverseDouble s')))) -> f Double -> f (f Double)
+hessian :: (Traversable f) => (forall s s'. (Reifies s R.Tape, Reifies s' Tape) => f (On (R.Reverse s (ReverseDouble s'))) -> On (R.Reverse s (ReverseDouble s'))) -> f Double -> f (f Double)
 hessian f = jacobian (M.grad (off . f . fmap On))
 {-# INLINE hessian #-}
 

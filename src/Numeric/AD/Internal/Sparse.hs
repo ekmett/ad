@@ -97,7 +97,7 @@ skeleton = snd . mapAccumL (\ !n _ -> (n + 1, n)) 0
 {-# INLINE skeleton #-}
 
 d :: (Traversable f, Num a) => f b -> Sparse a -> f a
-d fs (Zero) = 0 <$ fs
+d fs Zero = 0 <$ fs
 d fs (Sparse _ da) = snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs
 {-# INLINE d #-}
 
@@ -108,7 +108,7 @@ d' fs (Sparse a da) = (a, snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lo
 
 ds :: (Traversable f, Num a) => f b -> Sparse a -> Cofree f a
 ds fs Zero = r where r = 0 :< (r <$ fs)
-ds fs (as@(Sparse a _)) = a :< (go emptyMonomial <$> fns) where
+ds fs as@(Sparse a _) = a :< (go emptyMonomial <$> fns) where
   fns = skeleton fs
   -- go :: Monomial -> Int -> Cofree f a
   go ix i = partial (indices ix') as :< (go ix' <$> fns) where
@@ -176,7 +176,7 @@ instance Num a => Jacobian (Sparse a) where
 
   lift1_ f _  Zero = auto (f 0)
   lift1_ f df b@(Sparse pb bs) = a where
-    a = Sparse (f pb) $ IntMap.map ((df a b) *) bs
+    a = Sparse (f pb) $ IntMap.map (df a b *) bs
 
   binary f _    _    Zero           Zero           = auto (f 0 0)
   binary f _    dadc Zero           (Sparse pc dc) = Sparse (f 0  pc) $ IntMap.map (dadc *) dc

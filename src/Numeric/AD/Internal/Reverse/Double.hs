@@ -58,17 +58,11 @@ import Prelude hiding (mapM)
 import System.IO.Unsafe (unsafePerformIO)
 import Unsafe.Coerce
 
-#ifdef HLINT
-{-# ANN module "HLint: ignore Reduce duplication" #-}
-#endif
-
 -- evil untyped tape
-#ifndef HLINT
 data Cells where
   Nil    :: Cells
   Unary  :: {-# UNPACK #-} !Int -> Double -> Cells -> Cells
   Binary :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Int -> Double -> Double -> Cells -> Cells
-#endif
 
 dropCells :: Int -> Cells -> Cells
 dropCells 0 xs = xs
@@ -108,13 +102,11 @@ binarily :: forall s. Reifies s Tape => (Double -> Double -> Double) -> Double -
 binarily f di dj i b j c = ReverseDouble (unsafePerformIO (modifyTape (Proxy :: Proxy s) (bin i j di dj))) $! f b c
 {-# INLINE binarily #-}
 
-#ifndef HLINT
 data ReverseDouble s where
   Zero :: ReverseDouble s
   Lift :: Double -> ReverseDouble s
   ReverseDouble :: {-# UNPACK #-} !Int -> Double -> ReverseDouble s
   deriving (Show, Typeable)
-#endif
 
 instance (Reifies s Tape) => Mode (ReverseDouble s) where
   type Scalar (ReverseDouble s) = Double
@@ -148,7 +140,7 @@ primal (ReverseDouble _ a) = a
 instance (Reifies s Tape) => Jacobian (ReverseDouble s) where
   type D (ReverseDouble s) = Id Double
 
-  unary f _         (Zero)   = Lift (f 0)
+  unary f _          Zero    = Lift (f 0)
   unary f _         (Lift a) = Lift (f a)
   unary f (Id dadi) (ReverseDouble i b) = unarily f dadi i b
 
@@ -267,7 +259,7 @@ instance (Reifies s Tape) => RealFrac (ReverseDouble s) where
 instance (Reifies s Tape) => Erf (ReverseDouble s) where
   erf = lift1 erf $ \x -> (2 / sqrt pi) * exp (negate x * x)
   erfc = lift1 erfc $ \x -> ((-2) / sqrt pi) * exp (negate x * x)
-  normcdf = lift1 normcdf $ \x -> (recip $ sqrt (2 * pi)) * exp (- x * x / 2)
+  normcdf = lift1 normcdf $ \x -> recip (sqrt (2 * pi)) * exp (- x * x / 2)
 
 instance (Reifies s Tape) => InvErf (ReverseDouble s) where
   inverf = lift1_ inverf $ \x _ -> sqrt pi / 2 * exp (x * x)

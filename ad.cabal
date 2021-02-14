@@ -150,6 +150,7 @@ library
     Numeric.AD.Jet
     Numeric.AD.Mode
     Numeric.AD.Mode.Dense
+    Numeric.AD.Mode.Dense.Representable
     Numeric.AD.Mode.Forward
     Numeric.AD.Mode.Forward.Double
     Numeric.AD.Mode.Kahn

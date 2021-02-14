@@ -43,7 +43,6 @@ import Numeric.AD.Internal.Tower (Tower)
 import Numeric.AD.Internal.Type (AD(..))
 import Numeric.AD.Mode
 
-
 diffs :: Num a => (forall s. AD s (Tower a) -> AD s (Tower a)) -> a -> [a]
 diffs f = Rank1.diffs (runAD.f.AD)
 {-# INLINE diffs #-}

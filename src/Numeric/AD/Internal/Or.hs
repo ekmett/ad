@@ -3,9 +3,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
-#if __GLASGOW_HASKELL__ >= 707
 {-# LANGUAGE DeriveDataTypeable #-}
-#endif
 {-# OPTIONS_HADDOCK not-home #-}
 
 -----------------------------------------------------------------------------
@@ -28,13 +26,8 @@ module Numeric.AD.Internal.Or
   , binary
   ) where
 
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative
-#endif
 import Data.Number.Erf
-#if __GLASGOW_HASKELL__ >= 707
 import Data.Typeable
-#endif
 import Numeric.AD.Mode
 
 runL :: Or F a b -> a

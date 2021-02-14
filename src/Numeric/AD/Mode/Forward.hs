@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- |
@@ -44,9 +43,6 @@ module Numeric.AD.Mode.Forward
   , duF'
   ) where
 
-#if __GLASGOW_HASKELL__ < 710
-import Data.Traversable (Traversable)
-#endif
 import Numeric.AD.Internal.Forward
 import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Type

@@ -64,11 +64,7 @@ import Data.IntMap (IntMap, fromDistinctAscList, findWithDefault)
 import Data.Number.Erf
 import Data.Proxy
 import Data.Reflection
-#if __GLASGOW_HASKELL__ < 710
-import Data.Traversable (Traversable, mapM)
-#else
 import Data.Traversable (mapM)
-#endif
 import Data.Typeable
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity

@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- |
@@ -27,9 +26,6 @@ module Numeric.AD.Mode.Dense
   , jacobianWith'
   ) where
 
-#if __GLASGOW_HASKELL__ < 710
-import Data.Traversable (Traversable)
-#endif
 import Numeric.AD.Internal.Dense (Dense)
 import qualified Numeric.AD.Rank1.Dense as Rank1
 import Numeric.AD.Internal.Type

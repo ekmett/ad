@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -25,9 +24,6 @@ module Numeric.AD.Internal.On
 import Data.Number.Erf
 import Data.Data
 import Numeric.AD.Mode
-
-#ifdef HLINT
-#endif
 
 ------------------------------------------------------------------------------
 -- On

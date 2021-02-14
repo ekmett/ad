@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -44,10 +43,6 @@ module Numeric.AD.Mode.Reverse
   , diffF'
   ) where
 
-#if __GLASGOW_HASKELL__ < 710
-import Data.Functor ((<$>))
-import Data.Traversable (Traversable)
-#endif
 import Data.Typeable
 import Data.Functor.Compose
 import Data.Reflection (Reifies)

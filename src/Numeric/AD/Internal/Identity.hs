@@ -25,9 +25,6 @@ module Numeric.AD.Internal.Identity
   ) where
 
 import Data.Data (Data)
-#if !(MIN_VERSION_base(4,8,0))
-import Data.Monoid (Monoid(..))
-#endif
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Semigroup (Semigroup(..))
 #endif

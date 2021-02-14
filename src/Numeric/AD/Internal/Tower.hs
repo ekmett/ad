@@ -35,9 +35,6 @@ module Numeric.AD.Internal.Tower
   ) where
 
 import Prelude hiding (all, sum)
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative hiding ((<**>))
-#endif
 import Control.Monad (join)
 import Data.Foldable
 import Data.Data (Data)

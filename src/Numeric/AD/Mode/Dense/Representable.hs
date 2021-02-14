@@ -36,12 +36,6 @@ import Numeric.AD.Mode
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with dense-mode AD in a single pass.
 --
---
--- >>> grad (\[x,y,z] -> x*y+z) [1,2,3]
--- [2,1,1]
---
--- >>> grad (\[x,y] -> x**y) [0,2]
--- [0.0,NaN]
 grad :: (Representable f, Eq (Rep f), Num a) => (forall s. f (AD s (Repr f a)) -> AD s (Repr f a)) -> f a -> f a
 grad f = Rank1.grad (runAD.f.fmap AD)
 {-# INLINE grad #-}

@@ -36,6 +36,7 @@ module Numeric.AD.Internal.Reverse
   , Head(..)
   , Cells(..)
   , reifyTape
+  , reifyTypeableTape
   , partials
   , partialArrayOf
   , partialMapOf
@@ -255,6 +256,13 @@ reifyTape vs k = unsafePerformIO $ do
   h <- newIORef (Head vs Nil)
   return (reify (Tape h) k)
 {-# NOINLINE reifyTape #-}
+
+-- | Construct a tape that starts with @n@ variables.
+reifyTypeableTape :: Int -> (forall s. (Typeable s, Reifies s Tape) => Proxy s -> r) -> r
+reifyTypeableTape vs k = unsafePerformIO $ do
+  h <- newIORef (Head vs Nil)
+  return (reifyTypeable (Tape h) k)
+{-# NOINLINE reifyTypeableTape #-}
 
 var :: a -> Int -> Reverse s a
 var a v = Reverse v a

@@ -20,6 +20,7 @@ module Numeric.AD.Jet
   , headJet
   , tailJet
   , jet
+  , unjet
   ) where
 
 #ifndef MIN_VERSION_base
@@ -33,6 +34,7 @@ import Data.Traversable
 import Data.Monoid
 #endif
 
+import Data.Functor.Rep
 import Data.Typeable
 import Control.Comonad.Cofree
 
@@ -85,6 +87,11 @@ jet :: Functor f => Cofree f a -> Jet f a
 jet (a :< as) = a :- dist (jet <$> as) where
   dist :: Functor f => f (Jet f a) -> Jet f (f a)
   dist x = (headJet <$> x) :- dist (tailJet <$> x)
+
+unjet :: Representable f => Jet f a -> Cofree f a
+unjet (a :- as) = a :< (unjet <$> undist as) where
+  undist :: Representable f => Jet f (f a) -> f (Jet f a)
+  undist (fa :- fas) = tabulate $ \i -> index fa i :- index (undist fas) i
 
 #if __GLASGOW_HASKELL__ >= 707
 deriving instance Typeable Jet

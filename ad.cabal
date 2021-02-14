@@ -1,5 +1,5 @@
 name:          ad
-version:       4.4.1
+version:       4.5
 license:       BSD3
 license-File:  LICENSE
 copyright:     (c) Edward Kmett 2010-2015,
@@ -108,6 +108,7 @@ library
     UndecidableInstances
 
   build-depends:
+    adjunctions      >= 4.4   && < 5,
     array            >= 0.2   && < 0.6,
     base             >= 4.3   && < 5,
     comonad          >= 4     && < 6,
@@ -132,6 +133,7 @@ library
     Numeric.AD
     Numeric.AD.Halley
     Numeric.AD.Internal.Dense
+    Numeric.AD.Internal.Dense.Representable
     Numeric.AD.Internal.Doctest
     Numeric.AD.Internal.Forward
     Numeric.AD.Internal.Forward.Double

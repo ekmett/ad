@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- |
--- Copyright   :  (c) Edward Kmett 2015
+-- Copyright   :  (c) Edward Kmett 2015-2021
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental

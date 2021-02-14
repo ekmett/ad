@@ -1,3 +1,13 @@
+-----------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Edward Kmett 2010-2021
+-- License     : BSD3
+-- Maintainer  : ekmett@gmail.com
+-- Stability   : experimental
+-- Portability : GHC only
+--
+-----------------------------------------------------------------------------
+
 module Numeric.AD.Rank1.Forward.Double
   ( ForwardDouble
   -- * Gradient

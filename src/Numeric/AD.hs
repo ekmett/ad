@@ -4,7 +4,7 @@
 {-# LANGUAGE PatternGuards #-}
 -----------------------------------------------------------------------------
 -- |
--- Copyright   :  (c) Edward Kmett 2010-2015
+-- Copyright   :  (c) Edward Kmett 2010-2021
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental

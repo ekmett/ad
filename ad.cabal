@@ -179,6 +179,7 @@ library
     ghc-options: -Wno-star-is-type
 
   ghc-options: -fspec-constr -fdicts-cheap -O2
+  x-docspec-extra-packages: distributive
 
 benchmark blackscholes
   default-language: Haskell2010

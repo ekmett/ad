@@ -34,7 +34,18 @@ import qualified Numeric.AD.Rank1.Dense.Representable as Rank1
 import Numeric.AD.Internal.Type
 import Numeric.AD.Mode
 
+-- $setup
+-- >>> :set -XDeriveGeneric -XDeriveFunctor
+-- >>> import GHC.Generics (Generic1)
+-- >>> import Data.Distributive (Distributive (..))
+-- >>> import Data.Functor.Rep (Representable, distributeRep)
+-- >>> data V3 a = V3 a a a deriving (Generic1, Functor, Show)
+-- >>> instance Representable V3; instance Distributive V3 where distribute = distributeRep
+
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with dense-mode AD in a single pass.
+--
+-- >>> grad (\(V3 x y z) -> x*y+z) (V3 1 2 3)
+-- V3 2 1 1
 --
 grad :: (Representable f, Eq (Rep f), Num a) => (forall s. f (AD s (Repr f a)) -> AD s (Repr f a)) -> f a -> f a
 grad f = Rank1.grad (runAD.f.fmap AD)

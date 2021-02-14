@@ -158,6 +158,7 @@ library
     Numeric.AD.Mode.Tower
     Numeric.AD.Newton
     Numeric.AD.Newton.Double
+    Numeric.AD.Rank1.Dense
     Numeric.AD.Rank1.Forward
     Numeric.AD.Rank1.Forward.Double
     Numeric.AD.Rank1.Halley

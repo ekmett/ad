@@ -171,7 +171,7 @@ instance (Representable f, Num a) => Jacobian (Repr f a) where
 mul :: (Representable f, Num a) => Repr f a -> Repr f a -> Repr f a
 mul = lift2 (*) (\x y -> (y, x))
 
-#define BODY1(x)   (Representable f, x)
-#define BODY2(x,y) (Representable f, x, y)
+#define BODY1(x)   (Representable f, x) =>
+#define BODY2(x,y) (Representable f, x, y) =>
 #define HEAD Repr f a
 #include "instances.h"

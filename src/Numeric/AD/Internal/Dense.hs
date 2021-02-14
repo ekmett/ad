@@ -181,7 +181,7 @@ instance (Traversable f, Num a) => Jacobian (Dense f a) where
 mul :: (Traversable f, Num a) => Dense f a -> Dense f a -> Dense f a
 mul = lift2 (*) (\x y -> (y, x))
 
-#define BODY1(x)   (Traversable f, x)
-#define BODY2(x,y) (Traversable f, x, y)
+#define BODY1(x)   (Traversable f, x) =>
+#define BODY2(x,y) (Traversable f, x, y) =>
 #define HEAD Dense f a
 #include "instances.h"

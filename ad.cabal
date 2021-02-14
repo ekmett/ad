@@ -144,6 +144,7 @@ library
     Numeric.AD.Internal.Reverse.Double
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Tower
+    Numeric.AD.Internal.Tower.Double
     Numeric.AD.Internal.Type
     Numeric.AD.Jacobian
     Numeric.AD.Jet

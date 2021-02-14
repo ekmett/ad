@@ -291,7 +291,7 @@ reifyTape :: Int -> (forall s. Reifies s Tape => Proxy s -> r) -> r
 reifyTape vs k = unsafePerformIO $ do
   p <- c_tape_alloc vs (4 * 1024)
   h <- newIORef p
-  let !r = reify (Tape h) k 
+  let !r = reify (Tape h) k
   c_tape_free p
   return r
 {-# NOINLINE reifyTape #-}

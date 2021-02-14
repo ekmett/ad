@@ -111,12 +111,6 @@ instance (Reifies s Tape) => Mode (ReverseDouble s) where
 (<+>) :: (Reifies s Tape) => ReverseDouble s -> ReverseDouble s -> ReverseDouble s
 (<+>)  = binary (+) 1 1
 
-(<**>) :: (Reifies s Tape) => ReverseDouble s -> ReverseDouble s -> ReverseDouble s
-Zero <**> y      = auto (0 ** primal y)
-_    <**> Zero   = auto 1
-x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
-x    <**> y      = lift2_ (**) (\z xi yi -> (yi * xi ** (yi - 1), z * log xi)) x y
-
 primal :: ReverseDouble s -> Double
 primal Zero = 0
 primal (Lift a) = a
@@ -156,100 +150,14 @@ instance (Reifies s Tape) => Jacobian (ReverseDouble s) where
     a = f pb pc
     (dadb, dadc) = df (Id a) (Id pb) (Id pc)
 
+mul :: Reifies s Tape => ReverseDouble s -> ReverseDouble s -> ReverseDouble s
+mul = lift2 (*) (\x y -> (y, x))
 
-instance (Reifies s Tape) => Eq (ReverseDouble s) where
-  a == b = primal a == primal b
-
-instance (Reifies s Tape) => Ord (ReverseDouble s) where
-  compare a b = compare (primal a) (primal b)
-
-instance (Reifies s Tape) => Num (ReverseDouble s) where
-  fromInteger 0  = zero
-  fromInteger n = auto (fromInteger n)
-  (+)          = (<+>) -- binary (+) 1 1
-  (-)          = binary (-) (auto 1) (auto (-1)) -- TODO: <-> ? as it is, this might be pretty bad for Tower
-  (*)          = lift2 (*) (\x y -> (y, x))
-  negate       = lift1 negate (const (auto (-1)))
-  abs          = lift1 abs signum
-  signum a     = lift1 signum (const zero) a
-
-instance (Reifies s Tape) => Fractional (ReverseDouble s) where
-  fromRational 0 = zero
-  fromRational r = auto (fromRational r)
-  x / y        = x * recip y
-  recip        = lift1_ recip (const . negate . join (*))
-
-instance (Reifies s Tape) => Floating (ReverseDouble s) where
-  pi       = auto pi
-  exp      = lift1_ exp const
-  log      = lift1 log recip
-  logBase x y = log y / log x
-  sqrt     = lift1_ sqrt (\z _ -> recip (auto 2 * z))
-  (**)     = (<**>)
-  --x ** y
-  --   | isKnownZero y     = 1
-  --   | isKnownConstant y, y' <- primal y = lift1 (** y') ((y'*) . (**(y'-1))) x
-  --   | otherwise         = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log1 xi)) x y
-  sin      = lift1 sin cos
-  cos      = lift1 cos $ negate . sin
-  tan      = lift1 tan $ recip . join (*) . cos
-  asin     = lift1 asin $ \x -> recip (sqrt (auto 1 - join (*) x))
-  acos     = lift1 acos $ \x -> negate (recip (sqrt (1 - join (*) x)))
-  atan     = lift1 atan $ \x -> recip (1 + join (*) x)
-  sinh     = lift1 sinh cosh
-  cosh     = lift1 cosh sinh
-  tanh     = lift1 tanh $ recip . join (*) . cosh
-  asinh    = lift1 asinh $ \x -> recip (sqrt (1 + join (*) x))
-  acosh    = lift1 acosh $ \x -> recip (sqrt (join (*) x - 1))
-  atanh    = lift1 atanh $ \x -> recip (1 - join (*) x)
-
-instance (Reifies s Tape) => Enum (ReverseDouble s) where
-  succ             = lift1 succ (const 1)
-  pred             = lift1 pred (const 1)
-  toEnum           = auto . toEnum
-  fromEnum a       = fromEnum (primal a)
-  enumFrom a       = withPrimal a <$> enumFrom (primal a)
-  enumFromTo a b   = withPrimal a <$> enumFromTo (primal a) (primal b)
-  enumFromThen a b = zipWith (fromBy a delta) [0..] $ enumFromThen (primal a) (primal b) where delta = b - a
-  enumFromThenTo a b c = zipWith (fromBy a delta) [0..] $ enumFromThenTo (primal a) (primal b) (primal c) where delta = b - a
-
-instance (Reifies s Tape) => Real (ReverseDouble s) where
-  toRational      = toRational . primal
-
-instance (Reifies s Tape) => RealFloat (ReverseDouble s) where
-  floatRadix      = floatRadix . primal
-  floatDigits     = floatDigits . primal
-  floatRange      = floatRange . primal
-  decodeFloat     = decodeFloat . primal
-  encodeFloat m e = auto (encodeFloat m e)
-  isNaN           = isNaN . primal
-  isInfinite      = isInfinite . primal
-  isDenormalized  = isDenormalized . primal
-  isNegativeZero  = isNegativeZero . primal
-  isIEEE          = isIEEE . primal
-  exponent = exponent
-  scaleFloat n = unary (scaleFloat n) (scaleFloat n 1)
-  significand x =  unary significand (scaleFloat (- floatDigits x) 1) x
-  atan2 = lift2 atan2 $ \vx vy -> let r = recip (join (*) vx + join (*) vy) in (vy * r, negate vx * r)
-
-instance (Reifies s Tape) => RealFrac (ReverseDouble s) where
-  properFraction a = (w, a `withPrimal` pb) where
-    pa = primal a
-    (w, pb) = properFraction pa
-  truncate = truncate . primal
-  round    = round . primal
-  ceiling  = ceiling . primal
-  floor    = floor . primal
-
-instance (Reifies s Tape) => Erf (ReverseDouble s) where
-  erf = lift1 erf $ \x -> (2 / sqrt pi) * exp (negate x * x)
-  erfc = lift1 erfc $ \x -> ((-2) / sqrt pi) * exp (negate x * x)
-  normcdf = lift1 normcdf $ \x -> recip (sqrt (2 * pi)) * exp (- x * x / 2)
-
-instance (Reifies s Tape) => InvErf (ReverseDouble s) where
-  inverf = lift1_ inverf $ \x _ -> sqrt pi / 2 * exp (x * x)
-  inverfc = lift1_ inverfc $ \x _ -> negate (sqrt pi / 2) * exp (x * x)
-  invnormcdf = lift1_ invnormcdf $ \x _ -> sqrt (2 * pi) * exp (x * x / 2)
+#define BODY1(x) Reifies s Tape =>
+#define BODY2(x,y) Reifies s Tape =>
+#define HEAD ReverseDouble s
+#define NO_Bounded
+#include "instances.h"
 
 -- | Helper that extracts the derivative of a chain when the chain was constructed with 1 variable.
 derivativeOf :: (Reifies s Tape) => Proxy s -> ReverseDouble s -> Double

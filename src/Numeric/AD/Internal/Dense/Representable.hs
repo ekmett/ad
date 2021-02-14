@@ -33,9 +33,6 @@ module Numeric.AD.Internal.Dense.Representable
   ) where
 
 import Control.Monad (join)
-#if __GLASGOW_HASKELL__ < 710
-import Data.Functor
-#endif
 import Data.Functor.Rep
 import Data.Typeable ()
 import Data.Data ()

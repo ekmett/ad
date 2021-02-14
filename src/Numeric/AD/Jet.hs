@@ -102,10 +102,6 @@ instance Typeable1 f => Typeable1 (Jet f) where
     asArgsType = const
 
 jetTyCon :: TyCon
-#if MIN_VERSION_base(4,4,0)
 jetTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Jet" "Jet"
-#else
-jetTyCon = mkTyCon "Numeric.AD.Internal.Jet.Jet"
-#endif
 {-# NOINLINE jetTyCon #-}
 #endif

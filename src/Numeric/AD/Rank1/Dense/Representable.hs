@@ -27,6 +27,9 @@ module Numeric.AD.Rank1.Dense.Representable
   , jacobianWith'
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
+import Data.Functor
+#endif
 import Data.Functor.Rep
 import Numeric.AD.Internal.Dense.Representable
 import Numeric.AD.Mode

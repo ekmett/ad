@@ -28,6 +28,7 @@ module Numeric.AD.Rank1.Dense
 
 #if __GLASGOW_HASKELL__ < 710
 import Data.Traversable
+import Data.Functor
 #endif
 import Numeric.AD.Internal.Dense
 import Numeric.AD.Internal.Combinators

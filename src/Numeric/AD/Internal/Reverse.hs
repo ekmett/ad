@@ -134,6 +134,10 @@ instance (Reifies s Tape, Num a) => Mode (Reverse s a) where
   isKnownZero Zero = True
   isKnownZero _    = False
 
+  asKnownConstant Zero = Just 0
+  asKnownConstant (Lift n) = Just n
+  asKnownConstant _ = Nothing
+
   isKnownConstant Reverse{} = False
   isKnownConstant _ = True
 

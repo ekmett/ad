@@ -97,6 +97,13 @@ primal (Dense a _) = a
 
 instance (Num a, Traversable f) => Mode (Dense f a) where
   type Scalar (Dense f a) = a
+  asKnownConstant (Lift a) = Just a
+  asKnownConstant Zero = Just 0
+  asKnownConstant _ = Nothing
+  isKnownConstant Dense{} = False
+  isKnownConstant _ = True
+  isKnownZero Zero = True
+  isKnownZero _ = False
   auto = Lift
   zero = Zero
   _ *^ Zero       = Zero

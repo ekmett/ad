@@ -82,6 +82,13 @@ primal (Repr a _) = a
 
 instance (Representable f, Num a) => Mode (Repr f a) where
   type Scalar (Repr f a) = a
+  asKnownConstant (Lift a) = Just a
+  asKnownConstant Zero = Just 0
+  asKnownConstant _ = Nothing
+  isKnownConstant Repr{} = False
+  isKnownConstant _ = True
+  isKnownZero Zero = True
+  isKnownZero _ = False
   auto = Lift
   zero = Zero
   _ *^ Zero      = Zero

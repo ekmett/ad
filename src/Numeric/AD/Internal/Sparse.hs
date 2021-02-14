@@ -48,7 +48,7 @@ import Prelude hiding (lookup)
 import Control.Applicative hiding ((<**>))
 #endif
 import Control.Comonad.Cofree
-import Control.Monad (join)
+import Control.Monad (join, guard)
 import Data.Data
 import Data.IntMap (IntMap, unionWith, findWithDefault, toAscList, singleton, insertWith, lookup)
 import qualified Data.IntMap as IntMap
@@ -150,6 +150,12 @@ instance Num a => Mode (Sparse a) where
   type Scalar (Sparse a) = a
   auto a = Sparse a IntMap.empty
   zero = Zero
+  isKnownZero Zero = True
+  isKnownZero _ = False
+  isKnownConstant Zero = True
+  isKnownConstant (Sparse _ m) = null m
+  asKnownConstant Zero = Just 0
+  asKnownConstant (Sparse a m) = a <$ guard (null m)
   Zero        ^* _ = Zero
   Sparse a as ^* b = Sparse (a * b) $ fmap (^* b) as
   _ *^ Zero        = Zero

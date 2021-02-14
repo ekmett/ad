@@ -44,5 +44,8 @@ newtype On t = On { off :: t } deriving
 instance (Mode t, Mode (Scalar t)) => Mode (On t) where
   type Scalar (On t) = Scalar (Scalar t)
   auto = On . auto . auto
+  isKnownZero (On n) = isKnownZero n
+  asKnownConstant (On n) = asKnownConstant n >>= asKnownConstant
+  isKnownConstant (On n) = maybe False isKnownConstant (asKnownConstant n)
   a *^ On b = On (auto a *^ b)
   On a ^* b = On (a ^* auto b)

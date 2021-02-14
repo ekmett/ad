@@ -99,12 +99,17 @@ instance Num a => Mode (Kahn a) where
   isKnownZero (Kahn Zero) = True
   isKnownZero _    = False
 
+  asKnownConstant (Kahn Zero) = Just 0
+  asKnownConstant (Kahn (Lift n)) = Just n
+  asKnownConstant _ = Nothing
+
   isKnownConstant (Kahn Zero) = True
   isKnownConstant (Kahn (Lift _)) = True
   isKnownConstant _ = False
 
   auto a = Kahn (Lift a)
   zero   = Kahn Zero
+
   a *^ b = lift1 (a *) (\_ -> auto a) b
   a ^* b = lift1 (* b) (\_ -> auto b) a
   a ^/ b = lift1 (/ b) (\_ -> auto (recip b)) a

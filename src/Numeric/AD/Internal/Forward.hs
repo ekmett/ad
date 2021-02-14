@@ -93,6 +93,10 @@ instance Num a => Mode (Forward a) where
   isKnownZero Zero = True
   isKnownZero _    = False
 
+  asKnownConstant Zero = Just 0
+  asKnownConstant (Lift a) = Just a
+  asKnownConstant _ = Nothing
+
   isKnownConstant Forward{} = False
   isKnownConstant _ = True
 

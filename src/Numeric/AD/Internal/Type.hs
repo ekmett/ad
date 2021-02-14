@@ -24,6 +24,7 @@ newtype AD s a = AD { runAD :: a }
 instance Mode a => Mode (AD s a) where
   type Scalar (AD s a) = Scalar a
   isKnownConstant = isKnownConstant . runAD
+  asKnownConstant = asKnownConstant . runAD
   isKnownZero = isKnownZero . runAD
   zero = AD zero
   auto = AD . auto

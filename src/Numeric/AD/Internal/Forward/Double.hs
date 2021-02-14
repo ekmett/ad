@@ -74,6 +74,9 @@ instance Mode ForwardDouble where
   isKnownZero (ForwardDouble 0 0) = True
   isKnownZero _ = False
 
+  asKnownConstant (ForwardDouble x 0) = Just x
+  asKnownConstant _ = Nothing
+ 
   isKnownConstant (ForwardDouble _ 0) = True
   isKnownConstant _ = False
 

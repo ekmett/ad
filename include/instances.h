@@ -38,11 +38,12 @@ instance BODY1(Floating a) => Floating (HEAD) where
   log      = lift1 log recip
   logBase x y = log y / log x
   sqrt     = lift1_ sqrt (\z _ -> recip (auto 2 * z))
-  (**)     = (<**>)
-  --x ** y
-  --   | isKnownZero y     = 1
-  --   | isKnownConstant y, y' <- primal y = lift1 (** y') ((y'*) . (**(y'-1))) x
-  --   | otherwise         = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log1 xi)) x y
+
+  KnownZero ** y = auto (0 ** primal y)
+  _ ** KnownZero = 1
+  x ** Auto y    = lift1 (**y) (\z -> y *^ z ** auto (y-1)) x
+  x ** y         = lift2_ (**) (\z xi yi -> (yi * xi ** (yi - 1), z * log xi)) x y
+
   sin      = lift1 sin cos
   cos      = lift1 cos $ negate . sin
   tan      = lift1 tan $ recip . join (*) . cos

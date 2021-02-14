@@ -139,13 +139,6 @@ primal :: Num a => Sparse a -> a
 primal (Sparse a _) = a
 primal Zero = 0
 
-(<**>) :: Floating a => Sparse a -> Sparse a -> Sparse a
-Zero <**> y    = auto (0 ** primal y)
-_    <**> Zero = auto 1
-x    <**> y@(Sparse b bs)
-  | IntMap.null bs = lift1 (**b) (\z -> b *^ z <**> Sparse (b-1) IntMap.empty) x
-  | otherwise      = lift2_ (**) (\z xi yi -> (yi * xi ** (yi - 1), z * log xi)) x y
-
 instance Num a => Mode (Sparse a) where
   type Scalar (Sparse a) = a
   auto a = Sparse a IntMap.empty

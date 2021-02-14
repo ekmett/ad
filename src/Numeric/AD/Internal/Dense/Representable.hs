@@ -109,12 +109,6 @@ Lift a    <+> Repr b db = Repr (a + b) db
 Repr a da <+> Lift b    = Repr (a + b) da
 Repr a da <+> Repr b db = Repr (a + b) $ liftR2 (+) da db
 
-(<**>) :: (Representable f, Floating a) => Repr f a -> Repr f a -> Repr f a
-Zero <**> y      = auto (0 ** primal y)
-_    <**> Zero   = auto 1
-x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
-x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
-
 instance (Representable f, Num a) => Jacobian (Repr f a) where
   type D (Repr f a) = Id a
   unary f _         Zero        = Lift (f 0)

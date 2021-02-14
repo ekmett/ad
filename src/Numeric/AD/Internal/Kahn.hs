@@ -117,12 +117,6 @@ instance Num a => Mode (Kahn a) where
 (<+>) :: Num a => Kahn a -> Kahn a -> Kahn a
 (<+>)  = binary (+) 1 1
 
-(<**>) :: Floating a => Kahn a -> Kahn a -> Kahn a
-Kahn Zero <**> y             = auto (0 ** primal y)
-_         <**> Kahn Zero     = auto 1
-x         <**> Kahn (Lift y) = lift1 (**y) (\z -> y *^ z ** Id (y-1)) x
-x         <**> y             = lift2_ (**) (\z xi yi -> (yi * xi ** (yi - 1), z * log xi)) x y
-
 primal :: Num a => Kahn a -> a
 primal (Kahn Zero) = 0
 primal (Kahn (Lift a)) = a

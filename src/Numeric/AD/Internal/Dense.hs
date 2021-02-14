@@ -124,12 +124,6 @@ Lift a     <+> Dense b db = Dense (a + b) db
 Dense a da <+> Lift b     = Dense (a + b) da
 Dense a da <+> Dense b db = Dense (a + b) $ zipWithT (+) da db
 
-(<**>) :: (Traversable f, Floating a) => Dense f a -> Dense f a -> Dense f a
-Zero <**> y      = auto (0 ** primal y)
-_    <**> Zero   = auto 1
-x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
-x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
-
 instance (Traversable f, Num a) => Jacobian (Dense f a) where
   type D (Dense f a) = Id a
   unary f _         Zero        = Lift (f 0)

@@ -120,12 +120,6 @@ Forward a da <+> Lift b       = Forward (a + b) da
 Lift a       <+> Forward b db = Forward (a + b) db
 Lift a       <+> Lift b       = Lift (a + b)
 
-(<**>) :: Floating a => Forward a -> Forward a -> Forward a
-Zero <**> y      = auto (0 ** primal y)
-_    <**> Zero   = auto 1
-x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
-x    <**> y      = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
-
 instance Num a => Jacobian (Forward a) where
   type D (Forward a) = Id a
 

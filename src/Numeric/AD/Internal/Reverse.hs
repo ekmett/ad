@@ -150,12 +150,6 @@ instance (Reifies s Tape, Num a) => Mode (Reverse s a) where
 (<+>) :: (Reifies s Tape, Num a) => Reverse s a -> Reverse s a -> Reverse s a
 (<+>)  = binary (+) 1 1
 
-(<**>) :: (Reifies s Tape, Floating a) => Reverse s a -> Reverse s a -> Reverse s a
-Zero <**> y      = auto (0 ** primal y)
-_    <**> Zero   = auto 1
-x    <**> Lift y = lift1 (**y) (\z -> y *^ z ** Id (y - 1)) x
-x    <**> y      = lift2_ (**) (\z xi yi -> (yi * xi ** (yi - 1), z * log xi)) x y
-
 primal :: Num a => Reverse s a -> a
 primal Zero = 0
 primal (Lift a) = a

@@ -165,12 +165,6 @@ instance Num a => Jacobian (Tower a) where
     a = bundle a0 da
     (dadb, dadc) = df a b c
 
-(<**>) :: Floating a => Tower a -> Tower a -> Tower a
-Tower [] <**> y         = auto (0 ** primal y)
-_        <**> Tower []  = auto 1
-x        <**> Tower [y] = lift1 (**y) (\z -> y *^ z <**> Tower [y-1]) x
-x        <**> y         = lift2_ (**) (\z xi yi -> (yi * z / xi, z * log xi)) x y
-
 -- mul xs ys = [ sum [xs!!j * ys!!(k-j)*bin k j | j <- [0..k]] | k <- [0..] ]
 -- adapted for efficiency and to handle finite lists xs, ys
 mul:: Num a => Tower a -> Tower a -> Tower a

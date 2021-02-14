@@ -144,6 +144,7 @@ library
     Numeric.AD.Internal.On
     Numeric.AD.Internal.Or
     Numeric.AD.Internal.Reverse
+    Numeric.AD.Internal.Reverse.Double
     Numeric.AD.Internal.Sparse
     Numeric.AD.Internal.Tower
     Numeric.AD.Internal.Type
@@ -156,6 +157,7 @@ library
     Numeric.AD.Mode.Forward.Double
     Numeric.AD.Mode.Kahn
     Numeric.AD.Mode.Reverse
+    Numeric.AD.Mode.Reverse.Double
     Numeric.AD.Mode.Sparse
     Numeric.AD.Mode.Tower
     Numeric.AD.Newton
@@ -172,13 +174,11 @@ library
     Numeric.AD.Rank1.Tower
 
   if flag(ffi)
-    cpp-options: -DUSE_FFI=1
     other-extensions: ForeignFunctionInterface
     c-sources: cbits/tape.c
-    -- TODO: revert to the old Reverse.Double code if missing
-    exposed-modules:
-      Numeric.AD.Internal.Reverse.Double
-      Numeric.AD.Mode.Reverse.Double
+    hs-source-dirs: ffi
+  else
+    hs-source-dirs: no-ffi
 
   other-modules:
     Numeric.AD.Internal.Combinators

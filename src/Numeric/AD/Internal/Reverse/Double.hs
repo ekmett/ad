@@ -58,11 +58,17 @@ import Prelude hiding (mapM)
 import System.IO.Unsafe (unsafePerformIO)
 import Unsafe.Coerce
 
+#ifdef HLINT
+{-# ANN module "HLint: ignore Reduce duplication" #-}
+#endif
+
 -- evil untyped tape
+#ifndef HLINT
 data Cells where
   Nil    :: Cells
-  Unary  :: {-# UNPACK #-} !Int -> Double -> Cells -> Cells
-  Binary :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Int -> Double -> Double -> Cells -> Cells
+  Unary  :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Double -> !Cells -> Cells
+  Binary :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Int -> {-# UNPACK #-} !Double -> {-# UNPACK #-} !Double -> !Cells -> Cells
+#endif
 
 dropCells :: Int -> Cells -> Cells
 dropCells 0 xs = xs
@@ -70,7 +76,7 @@ dropCells _ Nil = Nil
 dropCells n (Unary _ _ xs)      = (dropCells $! n - 1) xs
 dropCells n (Binary _ _ _ _ xs) = (dropCells $! n - 1) xs
 
-data Head = Head {-# UNPACK #-} !Int Cells
+data Head = Head {-# UNPACK #-} !Int !Cells
 
 newtype Tape = Tape { getTape :: IORef Head }
 
@@ -102,11 +108,13 @@ binarily :: forall s. Reifies s Tape => (Double -> Double -> Double) -> Double -
 binarily f di dj i b j c = ReverseDouble (unsafePerformIO (modifyTape (Proxy :: Proxy s) (bin i j di dj))) $! f b c
 {-# INLINE binarily #-}
 
+#ifndef HLINT
 data ReverseDouble s where
   Zero :: ReverseDouble s
-  Lift :: Double -> ReverseDouble s
-  ReverseDouble :: {-# UNPACK #-} !Int -> Double -> ReverseDouble s
+  Lift :: {-# UNPACK #-} !Double -> ReverseDouble s
+  ReverseDouble :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Double -> ReverseDouble s
   deriving (Show, Typeable)
+#endif
 
 instance (Reifies s Tape) => Mode (ReverseDouble s) where
   type Scalar (ReverseDouble s) = Double

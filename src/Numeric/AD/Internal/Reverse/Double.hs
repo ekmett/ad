@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -14,8 +15,8 @@
 module Numeric.AD.Internal.Reverse.Double
   ( ReverseDouble(..)
   , Tape(..)
-  , Head(..)
-  , Cells(..)
+--  , Head(..)
+--  , Cells(..)
   , reifyTape
   , partials
   , partialArrayOf
@@ -32,13 +33,13 @@ module Numeric.AD.Internal.Reverse.Double
   , primal
   ) where
 
+import Foreign.Ptr
+import qualified Foreign.Marshal.Array as MA
+import qualified Foreign.Marshal.Alloc as MA
 import Data.Functor
 import Control.Monad hiding (mapM)
-import Control.Monad.ST
 import Control.Monad.Trans.State
-import Data.Array.ST
 import Data.Array
-import Data.Array.Unsafe as Unsafe
 import Data.IORef
 import Data.IntMap (IntMap, fromDistinctAscList, findWithDefault)
 import Data.Number.Erf
@@ -56,56 +57,31 @@ import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 import Prelude hiding (mapM)
 import System.IO.Unsafe (unsafePerformIO)
-import Unsafe.Coerce
 
-#ifdef HLINT
-{-# ANN module "HLint: ignore Reduce duplication" #-}
-#endif
+foreign import ccall unsafe "tape_alloc" c_tape_alloc :: Int -> Int -> IO (Ptr ())
+foreign import ccall unsafe "tape_push" c_tape_push :: Ptr () -> Int -> Int -> Double -> Double -> IO Int
+foreign import ccall unsafe "tape_backPropagate" c_tape_backPropagate :: Ptr () -> Int -> Ptr Double -> IO ()
+foreign import ccall unsafe "tape_variables" c_tape_variables :: Ptr () -> IO Int
+foreign import ccall unsafe "tape_free" c_tape_free :: Ptr () -> IO ()
 
--- evil untyped tape
-#ifndef HLINT
-data Cells where
-  Nil    :: Cells
-  Unary  :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Double -> !Cells -> Cells
-  Binary :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Int -> {-# UNPACK #-} !Double -> {-# UNPACK #-} !Double -> !Cells -> Cells
-#endif
+newtype Tape = Tape { getTape :: IORef (Ptr ()) }
 
-dropCells :: Int -> Cells -> Cells
-dropCells 0 xs = xs
-dropCells _ Nil = Nil
-dropCells n (Unary _ _ xs)      = (dropCells $! n - 1) xs
-dropCells n (Binary _ _ _ _ xs) = (dropCells $! n - 1) xs
-
-data Head = Head {-# UNPACK #-} !Int !Cells
-
-newtype Tape = Tape { getTape :: IORef Head }
-
-un :: Int -> Double -> Head -> (Head, Int)
-un i di (Head r t) = h `seq` r' `seq` (h, r') where
-  r' = r + 1
-  h = Head r' (Unary i di t)
-{-# INLINE un #-}
-
-bin :: Int -> Int -> Double -> Double -> Head -> (Head, Int)
-bin i j di dj (Head r t) = h `seq` r' `seq` (h, r') where
-  r' = r + 1
-  h = Head r' (Binary i j di dj t)
-{-# INLINE bin #-}
-
-modifyTape :: Reifies s Tape => p s -> (Head -> (Head, r)) -> IO r
-modifyTape p = atomicModifyIORef (getTape (reflect p))
-{-# INLINE modifyTape #-}
+pushTape :: Reifies s Tape => p s -> Int -> Int -> Double -> Double -> IO Int
+pushTape p i1 i2 d1 d2 = do
+  tape <- readIORef $ getTape (reflect p)
+  c_tape_push tape i1 i2 d1 d2
+{-# INLINE pushTape #-}
 
 -- | This is used to create a new entry on the chain given a unary function, its derivative with respect to its input,
 -- the variable ID of its input, and the value of its input. Used by 'unary' and 'binary' internally.
 unarily :: forall s. Reifies s Tape => (Double -> Double) -> Double -> Int -> Double -> ReverseDouble s
-unarily f di i b = ReverseDouble (unsafePerformIO (modifyTape (Proxy :: Proxy s) (un i di))) $! f b
+unarily f di i b = ReverseDouble (unsafePerformIO (pushTape (Proxy :: Proxy s) i 0 di 0.0)) $! f b
 {-# INLINE unarily #-}
 
 -- | This is used to create a new entry on the chain given a binary function, its derivatives with respect to its inputs,
 -- their variable IDs and values. Used by 'binary' internally.
 binarily :: forall s. Reifies s Tape => (Double -> Double -> Double) -> Double -> Double -> Int -> Double -> Int -> Double -> ReverseDouble s
-binarily f di dj i b j c = ReverseDouble (unsafePerformIO (modifyTape (Proxy :: Proxy s) (bin i j di dj))) $! f b c
+binarily f di dj i b j c = ReverseDouble (unsafePerformIO (pushTape (Proxy :: Proxy s) i j di dj)) $! f b c
 {-# INLINE binarily #-}
 
 #ifndef HLINT
@@ -284,35 +260,21 @@ derivativeOf' :: (Reifies s Tape) => Proxy s -> ReverseDouble s -> (Double, Doub
 derivativeOf' p r = (primal r, derivativeOf p r)
 {-# INLINE derivativeOf' #-}
 
--- | Used internally to push sensitivities down the chain.
-backPropagate :: Int -> Cells -> STArray s Int Double -> ST s Int
-backPropagate k Nil _ = return k
-backPropagate k (Unary i g xs) ss = do
-  da <- readArray ss k
-  db <- readArray ss i
-  writeArray ss i $! db + unsafeCoerce g*da
-  (backPropagate $! k - 1) xs ss
-backPropagate k (Binary i j g h xs) ss = do
-  da <- readArray ss k
-  db <- readArray ss i
-  writeArray ss i $! db + unsafeCoerce g*da
-  dc <- readArray ss j
-  writeArray ss j $! dc + unsafeCoerce h*da
-  (backPropagate $! k - 1) xs ss
-
 -- | Extract the partials from the current chain for a given AD variable.
 partials :: forall s. (Reifies s Tape) => ReverseDouble s -> [Double]
 partials Zero        = []
 partials (Lift _)    = []
-partials (ReverseDouble k _) = map (sensitivities !) [0..vs] where
-  Head n t = unsafePerformIO $ readIORef (getTape (reflect (Proxy :: Proxy s)))
-  tk = dropCells (n - k) t
-  (vs,sensitivities) = runST $ do
-    ss <- newArray (0, k) 0
-    writeArray ss k 1
-    v <- backPropagate k tk ss
-    as <- Unsafe.unsafeFreeze ss
-    return (v, as)
+partials (ReverseDouble k _) = unsafePerformIO $ do
+    tape <- readIORef $ getTape (reflect (Proxy :: Proxy s))
+    l <- c_tape_variables tape
+    arr <- MA.mallocArray l
+    c_tape_backPropagate tape k arr
+
+    ps <- MA.peekArray l arr
+    MA.free arr
+
+    return ps
+{-# INLINE partials #-}
 
 -- | Return an 'Array' of 'partials' given bounds for the variable IDs.
 partialArrayOf :: (Reifies s Tape) => Proxy s -> (Int, Int) -> ReverseDouble s -> Array Int Double
@@ -327,8 +289,11 @@ partialMapOf _ = fromDistinctAscList . zip [0..] . partials
 -- | Construct a tape that starts with @n@ variables.
 reifyTape :: Int -> (forall s. Reifies s Tape => Proxy s -> r) -> r
 reifyTape vs k = unsafePerformIO $ do
-  h <- newIORef (Head vs Nil)
-  return (reify (Tape h) k)
+  p <- c_tape_alloc vs (4 * 1024)
+  h <- newIORef p
+  let !r = reify (Tape h) k 
+  c_tape_free p
+  return r
 {-# NOINLINE reifyTape #-}
 
 var :: Double -> Int -> ReverseDouble s

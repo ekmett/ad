@@ -66,6 +66,7 @@ foreign import ccall unsafe "tape_variables" c_tape_variables :: Ptr () -> IO In
 foreign import ccall unsafe "tape_free" c_tape_free :: Ptr () -> IO ()
 
 newtype Tape = Tape { getTape :: IORef (Ptr ()) }
+  deriving Typeable
 
 pushTape :: Reifies s Tape => p s -> Int -> Int -> Double -> Double -> IO Int
 pushTape p i1 i2 d1 d2 = do

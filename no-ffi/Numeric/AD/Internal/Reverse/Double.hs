@@ -80,6 +80,7 @@ dropCells n (Binary _ _ _ _ xs) = (dropCells $! n - 1) xs
 data Head = Head {-# UNPACK #-} !Int !Cells
 
 newtype Tape = Tape { getTape :: IORef Head }
+  deriving Typeable
 
 un :: Int -> Double -> Head -> (Head, Int)
 un i di (Head r t) = h `seq` r' `seq` (h, r') where

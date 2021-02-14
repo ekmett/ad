@@ -4,8 +4,9 @@ next [yyyy.mm.dd]
   To achieve this, the `doctests` test suite has been removed in favor of using
   [`cabal-docspec`](https://github.com/phadej/cabal-extras/tree/master/cabal-docspec)
   to run the doctests.
-* Add `Numeric.AD.Internal.Dense.Representable`, a variant of `Numeric.AD.Internal.Dense`
-  that exploits `Representable` functors rather than `Traversable` functors.
+* Exposed `Dense` mode AD again.
+* Add a `Dense.Representable` mode, which is a variant of `Dense` that exploits
+  `Representable` functors rather than `Traversable` functors.
 * `Representable` can now also be useful as it can allow us to `unjet` to convert 
   a value of type `Jet f a` safely back into `Cofree f a`.
 

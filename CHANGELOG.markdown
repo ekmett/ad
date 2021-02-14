@@ -9,7 +9,8 @@ next [yyyy.mm.dd]
   `Representable` functors rather than `Traversable` functors.
 * `Representable` can now also be useful as it can allow us to `unjet` to convert 
   a value of type `Jet f a` safely back into `Cofree f a`.
-* Improved `Reverse.Double` mode performance by increasing strictness.
+* Improved `Reverse.Double` mode performance by increasing strictness and using an FFI-based
+  tape.
 
 
 4.4.1 [2020.10.13]

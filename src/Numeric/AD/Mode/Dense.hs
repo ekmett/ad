@@ -42,7 +42,7 @@ import Numeric.AD.Mode
 -- [2,1,1]
 --
 -- >>> grad (\[x,y] -> x**y) [0,2]
--- [0.0,NaN]
+-- [NaN,NaN]
 grad :: (Traversable f, Num a) => (forall s. f (AD s (Dense f a)) -> AD s (Dense f a)) -> f a -> f a
 grad f = Rank1.grad (runAD.f.fmap AD)
 {-# INLINE grad #-}

@@ -4,3 +4,9 @@ hlint:                  True
 irc-channels:           irc.freenode.org#haskell-lens
 irc-if-in-origin-repo:  True
 docspec:                True
+
+raw-project
+  package ad
+     -- Workaround for https://github.com/ekmett/ad/runs/1898061552#step:21:77
+     -- See the discussion in https://github.com/ekmett/ad/pull/93#issuecomment-778786134
+     flags: -ffi

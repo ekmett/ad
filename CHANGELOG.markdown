@@ -9,9 +9,10 @@ next [yyyy.mm.dd]
   `Representable` functors rather than `Traversable` functors.
 * `Representable` can now also be useful as it can allow us to `unjet` to convert 
   a value of type `Jet f a` safely back into `Cofree f a`.
-* Improved `Reverse.Double` mode performance by increasing strictness and using an FFI-based
-  tape.
-
+* Improved `Reverse.Double` mode performance by increasing strictness and using an FFI-based tape.
+* Reverse mode AD now uses `reifyTypeable` internally. This means the region parameter/infinitesimals
+  that mark each tape are `Typeable`, allowing you to do things like define instances of `Exception`
+  that name the region parameter and perform similar shenanigans.
 
 4.4.1 [2020.10.13]
 ------------------

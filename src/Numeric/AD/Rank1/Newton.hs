@@ -1,11 +1,10 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- |
--- Copyright   :  (c) Edward Kmett 2010-2015
+-- Copyright   :  (c) Edward Kmett 2010-2021
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
@@ -31,9 +30,6 @@ module Numeric.AD.Rank1.Newton
 
 import Prelude hiding (all, mapM)
 import Data.Foldable (all)
-#if __GLASGOW_HASKELL__ < 710
-import Data.Traversable
-#endif
 import Numeric.AD.Mode
 import Numeric.AD.Rank1.Forward (Forward, diff, diff')
 import Numeric.AD.Rank1.Kahn as Kahn (Kahn, gradWith')

@@ -33,7 +33,11 @@ import Data.Typeable (Typeable)
 import Numeric.AD.Mode
 
 newtype Id a = Id { runId :: a } deriving
-  (Eq, Ord, Show, Enum, Bounded, Num, Real, Fractional, Floating, RealFrac, RealFloat, Semigroup, Monoid, Data, Typeable, Erf, InvErf)
+  ( Eq, Ord, Show, Enum, Bounded
+  , Num, Real, Fractional, Floating
+  , RealFrac, RealFloat, Semigroup
+  , Monoid, Data, Typeable, Erf, InvErf
+  )
 
 probe :: a -> Id a
 probe = Id

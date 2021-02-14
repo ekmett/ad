@@ -1,11 +1,7 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
-#if __GLASGOW_HASKELL__ >= 707
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE StandaloneDeriving #-}
-#endif
 -----------------------------------------------------------------------------
 -- |
 -- Copyright   :  (c) Edward Kmett 2010-2015
@@ -23,17 +19,6 @@ module Numeric.AD.Jet
   , unjet
   ) where
 
-#ifndef MIN_VERSION_base
-#define MIN_VERSION_base(x,y,z) 1
-#endif
-
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative
-import Data.Foldable
-import Data.Traversable
-import Data.Monoid
-#endif
-
 import Data.Functor.Rep
 import Data.Typeable
 import Control.Comonad.Cofree
@@ -46,6 +31,7 @@ infixr 3 :-
 --
 -- > a :- f a :- f (f a) :- f (f (f a)) :- ...
 data Jet f a = a :- Jet f (f a)
+  deriving Typeable
 
 -- | Used to sidestep the need for UndecidableInstances.
 newtype Showable = Showable (Int -> String -> String)
@@ -93,15 +79,3 @@ unjet (a :- as) = a :< (unjet <$> undist as) where
   undist :: Representable f => Jet f (f a) -> f (Jet f a)
   undist (fa :- fas) = tabulate $ \i -> index fa i :- index (undist fas) i
 
-#if __GLASGOW_HASKELL__ >= 707
-deriving instance Typeable Jet
-#else
-instance Typeable1 f => Typeable1 (Jet f) where
-  typeOf1 tfa = mkTyConApp jetTyCon [typeOf1 (undefined `asArgsType` tfa)] where
-    asArgsType :: f a -> t f a -> f a
-    asArgsType = const
-
-jetTyCon :: TyCon
-jetTyCon = mkTyCon3 "ad" "Numeric.AD.Internal.Jet" "Jet"
-{-# NOINLINE jetTyCon #-}
-#endif

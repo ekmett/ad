@@ -195,7 +195,6 @@ instance Num a => Jacobian (Sparse a) where
     a = Sparse (f pb pc) da
     da = unionWith (<+>) (IntMap.map (dadb *) db) (IntMap.map (dadc *) dc)
 
-
 #define HEAD Sparse a
 #include "instances.h"
 

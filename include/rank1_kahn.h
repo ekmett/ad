@@ -60,7 +60,7 @@ IMPORTS
 
 -- | The 'grad' function calculates the gradient of a non-scalar-to-scalar function with kahn-mode AD in a single pass.
 --
--- >>> grad (\[x,y,z] -> x*y+z) [1,2,3]
+-- >>> grad (\[x,y,z] -> x*y+z) [1.0,2.0,3.0]
 -- [2.0,1.0,1.0]
 grad
   :: BASE1_1(Traversable f, Num a)
@@ -73,8 +73,8 @@ grad f as = unbind vs (partialArray bds $ f vs) where
 
 -- | The 'grad'' function calculates the result and gradient of a non-scalar-to-scalar function with kahn-mode AD in a single pass.
 --
--- >>> grad' (\[x,y,z] -> 4*x*exp y+cos z) [1,2,3]
--- (28.566231899122155,[29.5562243957226,29.5562243957226,-0.1411200080598672])
+-- >>> grad' (\[x,y,z] -> x*y+z) [1.0,2.0,3.0]
+-- (5.0,[2.0,1.0,1.0])
 grad'
   :: BASE1_1(Traversable f, Num a)
   => (f AD_TYPE -> AD_TYPE)
@@ -92,8 +92,6 @@ grad' f as = (primal r, unbind vs $ partialArray bds r) where
 -- 'grad' = 'gradWith' (\_ dx -> dx)
 -- 'id' = 'gradWith' const
 -- @
---
---
 gradWith
   :: BASE1_1(Traversable f, Num a)
   => (SCALAR_TYPE -> SCALAR_TYPE -> b)
@@ -123,11 +121,8 @@ gradWith' g f as
 
 -- | The 'jacobian' function calculates the jacobian of a non-scalar-to-non-scalar function with kahn AD lazily in @m@ passes for @m@ outputs.
 --
--- >>> jacobian (\[x,y] -> [y,x,x*y]) [2,1]
+-- >>> jacobian (\[x,y] -> [y,x,x*y]) [2.0,1.0]
 -- [[0.0,1.0],[1.0,0.0],[1.0,2.0]]
---
--- >>> jacobian (\[x,y] -> [exp y,cos x,x+y]) [1,2]
--- [[0.0,7.38905609893065],[-0.8414709848078965,0.0],[1.0,1.0]]
 jacobian
   :: BASE2_1(Traversable f, Functor g, Num a)
   => (f AD_TYPE -> g AD_TYPE)
@@ -141,8 +136,8 @@ jacobian f as = unbind vs . partialArray bds <$> f vs where
 -- where @m@ is the output dimensionality. Applying @fmap snd@ to the result will recover the result of 'jacobian'
 -- | An alias for 'gradF''
 --
--- ghci> jacobian' (\[x,y] -> [y,x,x*y]) [2,1]
--- [(1,[0,1]),(2,[1,0]),(2,[1,2])]
+-- ghci> jacobian' (\[x,y] -> [y,x,x*y]) [2.0,1.0]
+-- [(1.0,[0.0,1.0]),(2.0,[1.0,0.0]),(2.0,[1.0,2.0])]
 jacobian'
   :: BASE2_1(Traversable f, Functor g, Num a)
   => (f AD_TYPE -> g AD_TYPE)
@@ -245,7 +240,7 @@ diffF' f a = derivative' <$> f (var a 0)
 --
 -- However, since the @'grad' f :: f a -> f a@ is square this is not as fast as using the forward-mode 'jacobian' of a reverse mode gradient provided by 'Numeric.AD.hessian'.
 --
--- >>> hessian (\[x,y] -> x*y) [1,2]
+-- >>> hessian (\[x,y] -> x*y) [1.0,2.0]
 -- [[0.0,1.0],[1.0,0.0]]
 hessian
   :: BASE1_1(Traversable f, Num a)

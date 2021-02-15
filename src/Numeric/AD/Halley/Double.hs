@@ -43,9 +43,6 @@ import qualified Numeric.AD.Rank1.Halley.Double as Rank1
 --
 -- >>> take 10 $ findZero (\x->x^2-4) 1
 -- [1.0,1.8571428571428572,1.9997967892704736,1.9999999999994755,2.0]
---
--- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
--- 0.0 :+ 1.0
 findZero :: (forall s. AD s TowerDouble -> AD s TowerDouble) -> Double -> [Double]
 findZero f = Rank1.findZero (runAD.f.AD)
 {-# INLINE findZero #-}

@@ -59,7 +59,7 @@ import qualified Numeric.AD.Rank1.Kahn.Double as Rank1
 --
 --
 -- >>> grad (\[x,y,z] -> x*y+z) [1,2,3]
--- [2,1,1]
+-- [2.0,1.0,1.0]
 --
 -- >>> grad (\[x,y] -> x**y) [0,2]
 -- [0.0,NaN]
@@ -115,7 +115,7 @@ gradWith' g f = Rank1.gradWith' g (runAD.f.fmap AD)
 -- | The 'jacobian' function calculates the jacobian of a non-scalar-to-non-scalar function with kahn AD lazily in @m@ passes for @m@ outputs.
 --
 -- >>> jacobian (\[x,y] -> [y,x,x*y]) [2,1]
--- [[0,1],[1,0],[1,2]]
+-- [[0.0,1.0],[1.0,0.0],[1.0,2.0]]
 --
 -- >>> jacobian (\[x,y] -> [exp y,cos x,x+y]) [1,2]
 -- [[0.0,7.38905609893065],[-0.8414709848078965,0.0],[1.0,1.0]]
@@ -223,7 +223,7 @@ diffF' f = Rank1.diffF' (fmap runAD.f.AD)
 -- However, since the @'grad' f :: f a -> f a@ is square this is not as fast as using the forward-mode 'jacobian' of a reverse mode gradient provided by 'Numeric.AD.hessian'.
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
--- [[0,1],[1,0]]
+-- [[0.0,1.0],[1.0,0.0]]
 hessian
   :: Traversable f
   => (forall s. f (AD s (On (Kahn KahnDouble))) -> AD s (On (Kahn KahnDouble)))
@@ -233,9 +233,6 @@ hessian f = Rank1.hessian (runAD.f.fmap AD)
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function via the 'Kahn'-mode Jacobian of the 'Kahn'-mode Jacobian of the function.
 --
 -- Less efficient than 'Numeric.AD.Mode.Mixed.hessianF'.
---
--- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2 :: RDouble]
--- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.131204383757,-2.471726672005],[-2.471726672005,1.131204383757]]]
 hessianF
   :: (Traversable f, Functor g)
   => (forall s. f (AD s (On (Kahn KahnDouble))) -> g (AD s (On (Kahn KahnDouble))))

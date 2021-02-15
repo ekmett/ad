@@ -214,7 +214,7 @@ hessianProduct' f = ForwardDouble1.duF' (Reverse.grad (off . f . fmap On))
 -- | Compute the Hessian via the Jacobian of the gradient. gradient is computed in reverse mode and then the Jacobian is computed in sparse (forward) mode.
 --
 -- >>> hessian (\[x,y] -> x*y) [1,2]
--- [[0,1],[1,0]]
+-- [[0.0,1.0],[1.0,0.0]]
 hessian
   :: Traversable f
   => ( forall s. (Reifies s Tape, Typeable s)
@@ -226,9 +226,6 @@ hessian
 hessian f = SparseDouble1.jacobian (Reverse.grad (off . f . fmap On))
 
 -- | Compute the order 3 Hessian tensor on a non-scalar-to-non-scalar function using 'Sparse'-on-'Reverse'
---
--- >>> hessianF (\[x,y] -> [x*y,x+y,exp x*cos y]) [1,2 :: RDouble]
--- [[[0.0,1.0],[1.0,0.0]],[[0.0,0.0],[0.0,0.0]],[[-1.131204383757,-2.471726672005],[-2.471726672005,1.131204383757]]]
 hessianF
   :: (Traversable f, Functor g)
   => ( forall s. (Reifies s Tape, Typeable s)

@@ -44,9 +44,6 @@ import Numeric.AD.Internal.Combinators (takeWhileDifferent)
 --
 -- >>> take 10 $ findZero (\x->x^2-4) 1
 -- [1.0,1.8571428571428572,1.9997967892704736,1.9999999999994755,2.0]
---
--- >>> last $ take 10 $ findZero ((+1).(^2)) (1 :+ 1)
--- 0.0 :+ 1.0
 findZero :: (TowerDouble -> TowerDouble) -> Double -> [Double]
 findZero f = takeWhileDifferent . findZeroNoEq f
 {-# INLINE findZero #-}

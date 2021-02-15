@@ -24,6 +24,8 @@ next [yyyy.mm.dd]
   This will allow us to improve the quality of the results, but may require you to write an small instance declaration
   if you are processing some esoteric data type of your own. If there are particularly common types, an `ad-instances`
   package is probably the right way forward for them to find a home.
+* Add `Numeric.AD.Double`, which tries to mix and match between all the different AD modes to produce optimal results
+  but uses the various `.Double` specializations to reduce the amount of boxing and indirection on the heap.
 
 4.4.1 [2020.10.13]
 ------------------

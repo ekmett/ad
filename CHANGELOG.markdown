@@ -26,6 +26,8 @@ next [yyyy.mm.dd]
   package is probably the right way forward for them to find a home.
 * Add `Numeric.AD.Double`, which tries to mix and match between all the different AD modes to produce optimal results
   but uses the various `.Double` specializations to reduce the amount of boxing and indirection on the heap.
+* Add `Numeric.AD.Halley.Double`.
+* Removed the `fooNoEq` variants from `Newton.Double`, `Double`s always have an `Eq` instance.
 
 4.4.1 [2020.10.13]
 ------------------

@@ -7,7 +7,7 @@ next [yyyy.mm.dd]
 * Expose `Dense` mode AD again.
 * Add a `Dense.Representable` mode, which is a variant of `Dense` that exploits
   `Representable` functors rather than `Traversable` functors.
-* `Representable` can now also be useful as it can allow us to `unjet` to convert 
+* `Representable` can now also be useful as it can allow us to `unjet` to convert
   a value of type `Jet f a` safely back into `Cofree f a`.
 * Improve `Reverse.Double` mode performance by increasing strictness and using an FFI-based tape.
 * Reverse mode AD uses `reifyTypeable` internally. This means the region parameter/infinitesimals
@@ -20,10 +20,12 @@ next [yyyy.mm.dd]
 * Add a `Kahn.Double` mode (internally) that holds strict doubles in the graph.
 * Switch to using pattern synonyms internally for detecting "known" zeros.
 * Drop support for versions of GHC before 8.0
-* In future releases we may require the ability to check for known zeroes for all types you process with AD.
-  This will allow us to improve the quality of the results, but may require you to write an small instance declaration
-  if you are processing some esoteric data type of your own. If there are particularly common types, an `ad-instances`
-  package is probably the right way forward for them to find a home.
+* The `.Double` modes have been modified to exploit the fact that we can definitely check a Double for equality with 0.
+  In future releases we may require a typeclass that offers the ability to check for known zeroes for all types you
+  process. This will allow us to improve the quality of the results, but may require you to either write an small instance
+  declaration if you are processing some esoteric data type of your own, or put on/off a newtype that indicates to skip
+  known zero optimizations or to use Eq. If there are particularly common types with tricky cases, a future `ad-instances`
+  package might be the right way forward for them to find a home.
 * Add `Numeric.AD.Double`, which tries to mix and match between all the different AD modes to produce optimal results
   but uses the various `.Double` specializations to reduce the amount of boxing and indirection on the heap.
 * Add `Numeric.AD.Halley.Double`.

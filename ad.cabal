@@ -161,6 +161,7 @@ library
     Numeric.AD.Mode.Reverse
     Numeric.AD.Mode.Reverse.Double
     Numeric.AD.Mode.Sparse
+    Numeric.AD.Mode.Sparse.Double
     Numeric.AD.Mode.Tower
     Numeric.AD.Mode.Tower.Double
     Numeric.AD.Newton
@@ -175,6 +176,7 @@ library
     Numeric.AD.Rank1.Newton
     Numeric.AD.Rank1.Newton.Double
     Numeric.AD.Rank1.Sparse
+    Numeric.AD.Rank1.Sparse.Double
     Numeric.AD.Rank1.Tower
     Numeric.AD.Rank1.Tower.Double
 

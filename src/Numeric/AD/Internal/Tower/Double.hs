@@ -175,6 +175,7 @@ instance Mode TowerDouble where
   auto a = Tower (a :! Nil)
 
   isKnownZero (Tower Nil) = True
+  isKnownZero (Tower (0 :! Nil)) = True
   isKnownZero _ = False
 
   asKnownConstant (Tower Nil) = Just 0

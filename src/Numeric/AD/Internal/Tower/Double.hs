@@ -7,7 +7,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE OverloadedLists #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# OPTIONS_HADDOCK not-home #-}
 
@@ -71,6 +70,7 @@ instance Semigroup List where
 
 instance Monoid List where
   mempty = Nil
+  mappend = (<>)
 
 instance IsList List where
   type Item List = Double
@@ -150,7 +150,7 @@ tangents (Tower (_ :! xs)) = Tower xs
 {-# INLINE tangents #-}
 
 truncated :: TowerDouble -> Bool
-truncated (Tower []) = True
+truncated (Tower Nil) = True
 truncated _ = False
 {-# INLINE truncated #-}
 
@@ -194,7 +194,7 @@ instance Mode TowerDouble where
   isKnownConstant (Tower (_ :! Nil)) = True
   isKnownConstant Tower {} = False
 
-  zero = Tower []
+  zero = Tower Nil
 
   a *^ Tower bs = Tower (lmap (a*) bs)
 
@@ -251,8 +251,8 @@ ltail _ = error "ltail"
 -- adapted for efficiency and to handle finite lists xs, ys
 mul:: TowerDouble -> TowerDouble -> TowerDouble
 mul (Tower Nil) _ = Tower Nil
-mul (Tower (a :! as)) (Tower bs) = Tower (convs' [1] [a] as bs)
-  where convs' _ _ _ [] = []
+mul (Tower (a :! as)) (Tower bs) = Tower (convs' (1 :! Nil) (a :! Nil) as bs)
+  where convs' _ _ _ Nil = Nil
         convs' ps ars as bs = lsumProd3 ps ars bs :!
               case as of
                  Nil -> convs'' (next' ps) ars bs
@@ -260,8 +260,8 @@ mul (Tower (a :! as)) (Tower bs) = Tower (convs' [1] [a] as bs)
         convs'' _ _ Nil = undefined -- convs'' never called with last argument empty
         convs'' _ _ (_:! Nil) = Nil
         convs'' ps ars (_:!bs) = lsumProd3 ps ars bs :! convs'' (next' ps) ars bs
-        next xs = 1 :! lzipWith (+) xs (ltail xs) <> [1] -- next row in Pascal's triangle
-        next' xs = lzipWith (+) xs (ltail xs) <> [1] -- end part of next row in Pascal's triangle
+        next xs = 1 :! lzipWith (+) xs (ltail xs) <> (1 :! Nil) -- next row in Pascal's triangle
+        next' xs = lzipWith (+) xs (ltail xs) <> (1 :! Nil) -- end part of next row in Pascal's triangle
 
 #define HEAD TowerDouble
 #define BODY1(x)

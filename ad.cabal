@@ -171,6 +171,7 @@ library
     Numeric.AD.Rank1.Newton.Double
     Numeric.AD.Rank1.Sparse
     Numeric.AD.Rank1.Tower
+    Numeric.AD.Rank1.Tower.Double
 
   if flag(ffi)
     other-extensions: ForeignFunctionInterface

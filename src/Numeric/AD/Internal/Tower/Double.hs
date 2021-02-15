@@ -89,13 +89,10 @@ newtype TowerDouble = Tower { getTower :: List }
 instance Show TowerDouble where
   showsPrec n (Tower as) = showParen (n > 10) $ showString "Tower " . showsPrec 11 as
 
-zeroes :: List
-zeroes = 0 :! zeroes
-
 -- Local combinators
 
-zeroPad :: List -> List
-zeroPad xs = xs <> zeroes
+zeroPad :: Num a => [a] -> [a]
+zeroPad xs = xs ++ repeat 0
 {-# INLINE zeroPad #-}
 
 zeroPadF :: (Functor f, Num a) => [f a] -> [f a]
@@ -161,12 +158,12 @@ apply :: (TowerDouble -> b) -> Double -> b
 apply f a = f (Tower (a :! 1 :! Nil))
 {-# INLINE apply #-}
 
-getADTower :: TowerDouble -> List
-getADTower = getTower
+getADTower :: TowerDouble -> [Double]
+getADTower = Exts.toList . getTower
 {-# INLINE getADTower #-}
 
-tower :: List -> TowerDouble
-tower = Tower
+tower :: [Double] -> TowerDouble
+tower = Tower . Exts.fromList
 
 primal :: TowerDouble -> Double
 primal (Tower (x:!_)) = x

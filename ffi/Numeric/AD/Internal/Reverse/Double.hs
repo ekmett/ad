@@ -35,6 +35,7 @@ module Numeric.AD.Internal.Reverse.Double
   ) where
 
 import Foreign.Ptr
+import Foreign.C.Types
 import qualified Foreign.Marshal.Array as MA
 import qualified Foreign.Marshal.Alloc as MA
 import Data.Functor
@@ -59,18 +60,19 @@ import Numeric.AD.Mode
 import Prelude hiding (mapM)
 import System.IO.Unsafe (unsafePerformIO)
 
-foreign import ccall unsafe "tape_alloc" c_tape_alloc :: Int -> Int -> IO (Ptr ())
-foreign import ccall unsafe "tape_push" c_tape_push :: Ptr () -> Int -> Int -> Double -> Double -> IO Int
-foreign import ccall unsafe "tape_backPropagate" c_tape_backPropagate :: Ptr () -> Int -> Ptr Double -> IO ()
-foreign import ccall unsafe "tape_variables" c_tape_variables :: Ptr () -> IO Int
-foreign import ccall unsafe "tape_free" c_tape_free :: Ptr () -> IO ()
+newtype Tape = Tape { getTape :: IORef (Ptr Tape) }
 
-newtype Tape = Tape { getTape :: IORef (Ptr ()) }
+foreign import ccall unsafe "tape_alloc" c_tape_alloc :: CInt -> CInt -> IO (Ptr Tape)
+foreign import ccall unsafe "tape_push" c_tape_push :: Ptr Tape -> CInt -> CInt -> Double -> Double -> IO Int
+foreign import ccall unsafe "tape_backPropagate" c_tape_backPropagate :: Ptr Tape -> CInt -> Ptr Double -> IO ()
+foreign import ccall unsafe "tape_variables" c_tape_variables :: Ptr Tape -> IO CInt
+foreign import ccall unsafe "tape_free" c_tape_free :: Ptr Tape -> IO ()
+
 
 pushTape :: Reifies s Tape => p s -> Int -> Int -> Double -> Double -> IO Int
 pushTape p i1 i2 d1 d2 = do
   tape <- readIORef $ getTape (reflect p)
-  c_tape_push tape i1 i2 d1 d2
+  c_tape_push tape (fromIntegral i1) (fromIntegral i2) d1 d2
 {-# INLINE pushTape #-}
 
 -- | This is used to create a new entry on the chain given a unary function, its derivative with respect to its input,
@@ -176,9 +178,9 @@ partials Zero        = []
 partials (Lift _)    = []
 partials (ReverseDouble k _) = unsafePerformIO $ do
     tape <- readIORef $ getTape (reflect (Proxy :: Proxy s))
-    l <- c_tape_variables tape
+    l <- fromIntegral <$> c_tape_variables tape
     arr <- MA.mallocArray l
-    c_tape_backPropagate tape k arr
+    c_tape_backPropagate tape (fromIntegral k) arr
 
     ps <- MA.peekArray l arr
     MA.free arr
@@ -199,7 +201,7 @@ partialMapOf _ = fromDistinctAscList . zip [0..] . partials
 -- | Construct a tape that starts with @n@ variables.
 reifyTape :: Int -> (forall s. Reifies s Tape => Proxy s -> r) -> r
 reifyTape vs k = unsafePerformIO $ do
-  p <- c_tape_alloc vs (4 * 1024)
+  p <- c_tape_alloc (fromIntegral vs) (4 * 1024)
   h <- newIORef p
   let !r = reify (Tape h) k
   c_tape_free p
@@ -209,7 +211,7 @@ reifyTape vs k = unsafePerformIO $ do
 -- | Construct a tape that starts with @n@ variables.
 reifyTypeableTape :: Int -> (forall s. (Reifies s Tape, Typeable s) => Proxy s -> r) -> r
 reifyTypeableTape vs k = unsafePerformIO $ do
-  p <- c_tape_alloc vs (4 * 1024)
+  p <- c_tape_alloc (fromIntegral vs) (4 * 1024)
   h <- newIORef p
   let !r = reifyTypeable (Tape h) k
   c_tape_free p

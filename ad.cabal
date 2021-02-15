@@ -84,7 +84,7 @@ flag herbie
   manual: True
 
 flag ffi
-  default: False
+  default: True
   manual: True
 
 library

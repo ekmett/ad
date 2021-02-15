@@ -26,6 +26,7 @@ extra-source-files:
   CHANGELOG.markdown
   README.markdown
   include/instances.h
+  include/rank1_kahn.h
 description:
     Forward-, reverse- and mixed- mode automatic differentiation combinators with a common API.
     .

@@ -159,6 +159,7 @@ library
     Numeric.AD.Mode.Reverse.Double
     Numeric.AD.Mode.Sparse
     Numeric.AD.Mode.Tower
+    Numeric.AD.Mode.Tower.Double
     Numeric.AD.Newton
     Numeric.AD.Newton.Double
     Numeric.AD.Rank1.Dense

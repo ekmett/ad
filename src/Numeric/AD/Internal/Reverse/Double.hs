@@ -1,5 +1,5 @@
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -11,6 +11,10 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-full-laziness #-}
 {-# OPTIONS_HADDOCK not-home #-}
+
+#ifdef AD_FFI
+{-# LANGUAGE ForeignFunctionInterface #-}
+#endif
 
 module Numeric.AD.Internal.Reverse.Double
   ( ReverseDouble(..)

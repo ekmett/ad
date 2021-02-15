@@ -4,15 +4,24 @@ next [yyyy.mm.dd]
   To achieve this, the `doctests` test suite has been removed in favor of using
   [`cabal-docspec`](https://github.com/phadej/cabal-extras/tree/master/cabal-docspec)
   to run the doctests.
-* Exposed `Dense` mode AD again.
+* Expose `Dense` mode AD again.
 * Add a `Dense.Representable` mode, which is a variant of `Dense` that exploits
   `Representable` functors rather than `Traversable` functors.
 * `Representable` can now also be useful as it can allow us to `unjet` to convert 
   a value of type `Jet f a` safely back into `Cofree f a`.
-* Improved `Reverse.Double` mode performance by increasing strictness and using an FFI-based tape.
-* Reverse mode AD now uses `reifyTypeable` internally. This means the region parameter/infinitesimals
+* Improve `Reverse.Double` mode performance by increasing strictness and using an FFI-based tape.
+* Reverse mode AD uses `reifyTypeable` internally. This means the region parameter/infinitesimals
   that mark each tape are `Typeable`, allowing you to do things like define instances of `Exception`
   that name the region parameter and perform similar shenanigans.
+* Drastically reduce code duplication in `Double`-based modes, enabling more of them.
+* Fixed a number of modes that were handling `(**)` improperly due to the aforementioned code
+  duplication problem.
+* Add a `Tower.Double` mode (internally) that uses lazy lists of strict doubles.
+* Add a `Kahn.Double` mode (internally) that holds strict doubles in the graph.
+* Switch to using pattern synonyms internally for detecting "known" zeros.
+* Drop support for versions of GHC before 8.0
+* In future releases we may require the ability to check for known zeroes for all types you process with AD.
+  This will allow us to improve the quality of the results.
 
 4.4.1 [2020.10.13]
 ------------------

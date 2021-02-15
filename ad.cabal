@@ -168,6 +168,7 @@ library
     Numeric.AD.Rank1.Forward.Double
     Numeric.AD.Rank1.Halley
     Numeric.AD.Rank1.Kahn
+    Numeric.AD.Rank1.Kahn.Double
     Numeric.AD.Rank1.Newton
     Numeric.AD.Rank1.Newton.Double
     Numeric.AD.Rank1.Sparse

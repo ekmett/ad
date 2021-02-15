@@ -155,6 +155,7 @@ library
     Numeric.AD.Mode.Forward
     Numeric.AD.Mode.Forward.Double
     Numeric.AD.Mode.Kahn
+    Numeric.AD.Mode.Kahn.Double
     Numeric.AD.Mode.Reverse
     Numeric.AD.Mode.Reverse.Double
     Numeric.AD.Mode.Sparse

@@ -219,6 +219,9 @@ jobs:
       - name: prepare for constraint sets
         run: |
           rm -f cabal.project.local
+      - name: constraint set ffi
+        run: |
+          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='ad ffi' all
       - name: constraint set no-ffi
         run: |
           $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='ad -ffi' all

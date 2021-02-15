@@ -121,6 +121,7 @@ instance (Reifies s Tape) => Mode (ReverseDouble s) where
   type Scalar (ReverseDouble s) = Double
 
   isKnownZero Zero = True
+  isKnownZero (Lift 0) = True
   isKnownZero _    = False
 
   isKnownConstant ReverseDouble{} = False

@@ -121,18 +121,26 @@ primal Zero = 0
 
 instance Mode SparseDouble where
   type Scalar SparseDouble = Double
+
   auto a = Sparse a IntMap.empty
+
   zero = Zero
+
   isKnownZero Zero = True
+  isKnownZero (Sparse 0 m) = null m
   isKnownZero _ = False
+
   isKnownConstant Zero = True
   isKnownConstant (Sparse _ m) = null m
+
   asKnownConstant Zero = Just 0
   asKnownConstant (Sparse a m) = a <$ guard (null m)
+
   Zero        ^* _ = Zero
   Sparse a as ^* b = Sparse (a * b) $ fmap (^* b) as
   _ *^ Zero        = Zero
   a *^ Sparse b bs = Sparse (a * b) $ fmap (a *^) bs
+
   Zero        ^/ _ = Zero
   Sparse a as ^/ b = Sparse (a / b) $ fmap (^/ b) as
 

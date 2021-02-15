@@ -97,6 +97,7 @@ instance Mode KahnDouble where
   type Scalar KahnDouble = Double
 
   isKnownZero (Kahn Zero) = True
+  isKnownZero (Kahn (Lift 0)) = True
   isKnownZero _    = False
 
   asKnownConstant (Kahn Zero) = Just 0

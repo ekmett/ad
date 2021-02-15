@@ -156,7 +156,7 @@ instance Num a => Jacobian (Kahn a) where
 mul :: Num a => Kahn a -> Kahn a -> Kahn a
 mul = lift2 (*) (\x y -> (y, x))
 
-#define HEAD Kahn a
+#define HEAD (Kahn a)
 #include <instances.h>
 
 derivative :: Num a => Kahn a -> a

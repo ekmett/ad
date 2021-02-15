@@ -190,7 +190,7 @@ mul = lift2 (*) (\x y -> (y, x))
 
 #define BODY1(x) (Reifies s Tape,x) =>
 #define BODY2(x,y) (Reifies s Tape,x,y) =>
-#define HEAD Reverse s a
+#define HEAD (Reverse s a)
 #include "instances.h"
 
 -- | Helper that extracts the derivative of a chain when the chain was constructed with 1 variable.

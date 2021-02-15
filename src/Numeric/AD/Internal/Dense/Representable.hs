@@ -173,5 +173,5 @@ mul = lift2 (*) (\x y -> (y, x))
 
 #define BODY1(x)   (Representable f, x) =>
 #define BODY2(x,y) (Representable f, x, y) =>
-#define HEAD Repr f a
+#define HEAD (Repr f a)
 #include "instances.h"

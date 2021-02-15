@@ -180,7 +180,7 @@ mul = lift2 (*) (\x y -> (y, x))
 
 #define BODY1(x) Reifies s Tape =>
 #define BODY2(x,y) Reifies s Tape =>
-#define HEAD ReverseDouble s
+#define HEAD (ReverseDouble s)
 #define NO_Bounded
 #include "instances.h"
 

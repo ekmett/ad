@@ -179,5 +179,5 @@ mul (Tower (a:as)) (Tower bs) = Tower (convs' [1] [a] as bs)
         next' xs = zipWith (+) xs (tail xs) ++ [1] -- end part of next row in Pascal's triangle
         sumProd3 as bs cs = sum (zipWith3 (\x y z -> x*y*z) as bs cs)
 
-#define HEAD Tower a
+#define HEAD (Tower a)
 #include <instances.h>

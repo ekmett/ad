@@ -6,19 +6,19 @@
 #define BODY2(x,y) (x,y) =>
 #endif
 
-instance BODY2(Num a, Eq a) Eq (HEAD) where
+instance BODY2(Num a, Eq a) Eq HEAD where
   a == b = primal a == primal b
 
-instance BODY2(Num a, Ord a) Ord (HEAD) where
+instance BODY2(Num a, Ord a) Ord HEAD where
   compare a b = compare (primal a) (primal b)
 
 #ifndef NO_Bounded
-instance BODY2(Num a, Bounded a) Bounded (HEAD) where
+instance BODY2(Num a, Bounded a) Bounded HEAD where
   maxBound = auto maxBound
   minBound = auto minBound
 #endif
 
-instance BODY1(Num a) Num (HEAD) where
+instance BODY1(Num a) Num HEAD where
   fromInteger 0  = zero
   fromInteger n = auto (fromInteger n)
   (+)          = (<+>) -- binary (+) 1 1
@@ -28,13 +28,13 @@ instance BODY1(Num a) Num (HEAD) where
   abs          = lift1 abs signum
   signum a     = lift1 signum (const zero) a
 
-instance BODY1(Fractional a) Fractional (HEAD) where
+instance BODY1(Fractional a) Fractional HEAD where
   fromRational 0 = zero
   fromRational r = auto (fromRational r)
   x / y        = x * recip y
   recip        = lift1_ recip (const . negate . join (*))
 
-instance BODY1(Floating a) Floating (HEAD) where
+instance BODY1(Floating a) Floating HEAD where
   pi       = auto pi
   exp      = lift1_ exp const
   log      = lift1 log recip
@@ -59,7 +59,7 @@ instance BODY1(Floating a) Floating (HEAD) where
   acosh    = lift1 acosh $ \x -> recip (sqrt (join (*) x - 1))
   atanh    = lift1 atanh $ \x -> recip (1 - join (*) x)
 
-instance BODY2(Num a, Enum a) Enum (HEAD) where
+instance BODY2(Num a, Enum a) Enum HEAD where
   succ             = lift1 succ (const 1)
   pred             = lift1 pred (const 1)
   toEnum           = auto . toEnum
@@ -69,10 +69,10 @@ instance BODY2(Num a, Enum a) Enum (HEAD) where
   enumFromThen a b = zipWith (fromBy a delta) [0..] $ enumFromThen (primal a) (primal b) where delta = b - a
   enumFromThenTo a b c = zipWith (fromBy a delta) [0..] $ enumFromThenTo (primal a) (primal b) (primal c) where delta = b - a
 
-instance BODY1(Real a) Real (HEAD) where
+instance BODY1(Real a) Real HEAD where
   toRational = toRational . primal
 
-instance BODY1(RealFloat a) RealFloat (HEAD) where
+instance BODY1(RealFloat a) RealFloat HEAD where
   floatRadix     = floatRadix . primal
   floatDigits    = floatDigits . primal
   floatRange    = floatRange . primal
@@ -88,7 +88,7 @@ instance BODY1(RealFloat a) RealFloat (HEAD) where
   significand x =  unary significand (scaleFloat (- floatDigits x) 1) x
   atan2 = lift2 atan2 $ \vx vy -> let r = recip (join (*) vx + join (*) vy) in (vy * r, negate vx * r)
 
-instance BODY1(RealFrac a) RealFrac (HEAD) where
+instance BODY1(RealFrac a) RealFrac HEAD where
   properFraction a = (w, a `withPrimal` pb) where
       pa = primal a
       (w, pb) = properFraction pa
@@ -97,12 +97,12 @@ instance BODY1(RealFrac a) RealFrac (HEAD) where
   ceiling  = ceiling . primal
   floor    = floor . primal
 
-instance BODY1(Erf a) Erf (HEAD) where
+instance BODY1(Erf a) Erf HEAD where
   erf = lift1 erf $ \x -> (2 / sqrt pi) * exp (negate x * x)
   erfc = lift1 erfc $ \x -> ((-2) / sqrt pi) * exp (negate x * x)
   normcdf = lift1 normcdf $ \x -> recip (sqrt (2 * pi)) * exp (- x * x / 2)
 
-instance BODY1(InvErf a) InvErf (HEAD) where
+instance BODY1(InvErf a) InvErf HEAD where
   inverf = lift1_ inverf $ \x _ -> sqrt pi / 2 * exp (x * x)
   inverfc = lift1_ inverfc $ \x _ -> negate (sqrt pi / 2) * exp (x * x)
   invnormcdf = lift1_ invnormcdf $ \x _ -> sqrt (2 * pi) * exp (x * x / 2)

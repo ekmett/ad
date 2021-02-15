@@ -138,6 +138,7 @@ library
     Numeric.AD.Internal.Forward.Double
     Numeric.AD.Internal.Identity
     Numeric.AD.Internal.Kahn
+    Numeric.AD.Internal.Kahn.Double
     Numeric.AD.Internal.On
     Numeric.AD.Internal.Or
     Numeric.AD.Internal.Reverse

@@ -38,7 +38,7 @@ import Numeric.AD.Internal.On
 import Numeric.AD.Internal.Or
 import Numeric.AD.Internal.Type (AD(..))
 import Numeric.AD.Mode
-import Numeric.AD.Rank1.Kahn as Kahn (Kahn, grad)
+import Numeric.AD.Rank1.Kahn.Double as Kahn (KahnDouble, grad)
 import qualified Numeric.AD.Rank1.Newton.Double as Rank1
 import Prelude hiding (all, mapM, sum)
 
@@ -126,7 +126,7 @@ extremumNoEq f = Rank1.extremumNoEq (runAD.f.AD)
 -- True
 conjugateGradientDescent
   :: Traversable f
-  => (forall s. Chosen s => f (Or s (On (Forward ForwardDouble)) (Kahn Double)) -> Or s (On (Forward ForwardDouble)) (Kahn Double))
+  => (forall s. Chosen s => f (Or s (On (Forward ForwardDouble)) KahnDouble) -> Or s (On (Forward ForwardDouble)) KahnDouble)
   -> f Double -> [f Double]
 conjugateGradientDescent f = conjugateGradientAscent (negate . f)
 {-# INLINE conjugateGradientDescent #-}
@@ -140,7 +140,7 @@ rfu f = runR . f . fmap R
 -- | Perform a conjugate gradient ascent using reverse mode automatic differentiation to compute the gradient.
 conjugateGradientAscent
   :: Traversable f
-  => (forall s. Chosen s => f (Or s (On (Forward ForwardDouble)) (Kahn Double)) -> Or s (On (Forward ForwardDouble)) (Kahn Double))
+  => (forall s. Chosen s => f (Or s (On (Forward ForwardDouble)) KahnDouble) -> Or s (On (Forward ForwardDouble)) KahnDouble)
   -> f Double -> [f Double]
 conjugateGradientAscent f x0 = takeWhile (all (\a -> a == a)) (go x0 d0 d0 delta0)
   where

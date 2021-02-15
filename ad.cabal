@@ -130,6 +130,7 @@ library
 
   exposed-modules:
     Numeric.AD
+    Numeric.AD.Double
     Numeric.AD.Halley
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Dense.Representable

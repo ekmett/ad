@@ -22,12 +22,12 @@
 --
 -- Handle with care.
 -----------------------------------------------------------------------------
-module Numeric.AD.Internal.Sparse
+module Numeric.AD.Internal.Sparse.Double
   ( Monomial(..)
   , emptyMonomial
   , addToMonomial
   , indices
-  , Sparse(..)
+  , SparseDouble(..)
   , apply
   , vars
   , d, d', ds
@@ -62,31 +62,31 @@ import Numeric.AD.Mode
 -- which it was found. This should be key for efficiently computing sparse hessians.
 -- there are only @n + k - 1@ choose @k@ distinct nth partial derivatives of a
 -- function with k inputs.
-data Sparse a
-  = Sparse !a (IntMap (Sparse a))
+data SparseDouble
+  = Sparse {-# UNPACK #-} !Double (IntMap SparseDouble)
   | Zero
   deriving (Show, Data, Typeable)
 
-vars :: (Traversable f, Num a) => f a -> f (Sparse a)
+vars :: Traversable f => f Double -> f SparseDouble
 vars = snd . mapAccumL var 0 where
   var !n a = (n + 1, Sparse a $ singleton n $ auto 1)
 {-# INLINE vars #-}
 
-apply :: (Traversable f, Num a) => (f (Sparse a) -> b) -> f a -> b
+apply :: Traversable f => (f SparseDouble -> b) -> f Double -> b
 apply f = f . vars
 {-# INLINE apply #-}
 
-d :: (Traversable f, Num a) => f b -> Sparse a -> f a
+d :: Traversable f => f b -> SparseDouble -> f Double
 d fs Zero = 0 <$ fs
 d fs (Sparse _ da) = snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs
 {-# INLINE d #-}
 
-d' :: (Traversable f, Num a) => f a -> Sparse a -> (a, f a)
+d' :: Traversable f => f Double -> SparseDouble -> (Double, f Double)
 d' fs Zero = (0, 0 <$ fs)
 d' fs (Sparse a da) = (a, snd $ mapAccumL (\ !n _ -> (n + 1, maybe 0 primal $ lookup n da)) 0 fs)
 {-# INLINE d' #-}
 
-ds :: (Traversable f, Num a) => f b -> Sparse a -> Cofree f a
+ds :: Traversable f => f b -> SparseDouble -> Cofree f Double
 ds fs Zero = r where r = 0 :< (r <$ fs)
 ds fs as@(Sparse a _) = a :< (go emptyMonomial <$> fns) where
   fns = skeleton fs
@@ -95,19 +95,19 @@ ds fs as@(Sparse a _) = a :< (go emptyMonomial <$> fns) where
     ix' = addToMonomial i ix
 {-# INLINE ds #-}
 
-partialS :: Num a => [Int] -> Sparse a -> Sparse a
+partialS :: [Int] -> SparseDouble -> SparseDouble
 partialS []     a             = a
 partialS (n:ns) (Sparse _ da) = partialS ns $ findWithDefault Zero n da
 partialS _      Zero          = Zero
 {-# INLINE partialS #-}
 
-partial :: Num a => [Int] -> Sparse a -> a
+partial :: [Int] -> SparseDouble -> Double
 partial []     (Sparse a _)  = a
 partial (n:ns) (Sparse _ da) = partial ns $ findWithDefault (auto 0) n da
 partial _      Zero          = 0
 {-# INLINE partial #-}
 
-spartial :: Num a => [Int] -> Sparse a -> Maybe a
+spartial :: [Int] -> SparseDouble -> Maybe Double
 spartial [] (Sparse a _) = Just a
 spartial (n:ns) (Sparse _ da) = do
   a' <- lookup n da
@@ -115,12 +115,12 @@ spartial (n:ns) (Sparse _ da) = do
 spartial _  Zero         = Nothing
 {-# INLINE spartial #-}
 
-primal :: Num a => Sparse a -> a
+primal :: SparseDouble -> Double
 primal (Sparse a _) = a
 primal Zero = 0
 
-instance Num a => Mode (Sparse a) where
-  type Scalar (Sparse a) = a
+instance Mode SparseDouble where
+  type Scalar SparseDouble = Double
   auto a = Sparse a IntMap.empty
   zero = Zero
   isKnownZero Zero = True
@@ -138,15 +138,15 @@ instance Num a => Mode (Sparse a) where
 
 infixr 6 <+>
 
-(<+>) :: Num a => Sparse a -> Sparse a -> Sparse a
+(<+>) :: SparseDouble -> SparseDouble -> SparseDouble
 Zero <+> a = a
 a <+> Zero = a
 Sparse a as <+> Sparse b bs = Sparse (a + b) $ unionWith (<+>) as bs
 
 -- The instances for Jacobian for Sparse and Tower are almost identical;
 -- could easily be made exactly equal by small changes.
-instance Num a => Jacobian (Sparse a) where
-  type D (Sparse a) = Sparse a
+instance Jacobian SparseDouble where
+  type D SparseDouble = SparseDouble
   unary f _ Zero = auto (f 0)
   unary f dadb (Sparse pb bs) = Sparse (f pb) $ IntMap.map (* dadb) bs
 
@@ -178,58 +178,61 @@ instance Num a => Jacobian (Sparse a) where
     a = Sparse (f pb pc) da
     da = unionWith (<+>) (IntMap.map (dadb *) db) (IntMap.map (dadc *) dc)
 
-#define HEAD Sparse a
+#define HEAD SparseDouble
+#define BODY1(x)
+#define BODY2(x,y)
+#define NO_Bounded
 #include "instances.h"
 
-class Num a => Grad i o o' a | i -> a o o', o -> a i o', o' -> a i o where
-  pack :: i -> [Sparse a] -> Sparse a
-  unpack :: ([a] -> [a]) -> o
-  unpack' :: ([a] -> (a, [a])) -> o'
+class Grad i o o' | i -> o o', o -> i o', o' -> i o where
+  pack :: i -> [SparseDouble] -> SparseDouble
+  unpack :: ([Double] -> [Double]) -> o
+  unpack' :: ([Double] -> (Double, [Double])) -> o'
 
-instance Num a => Grad (Sparse a) [a] (a, [a]) a where
+instance Grad SparseDouble [Double] (Double, [Double]) where
   pack i _ = i
   unpack f = f []
   unpack' f = f []
 
-instance Grad i o o' a => Grad (Sparse a -> i) (a -> o) (a -> o') a where
+instance Grad i o o' => Grad (SparseDouble -> i) (Double -> o) (Double -> o') where
   pack f (a:as) = pack (f a) as
   pack _ [] = error "Grad.pack: logic error"
   unpack f a = unpack (f . (a:))
   unpack' f a = unpack' (f . (a:))
 
-vgrad :: Grad i o o' a => i -> o
+vgrad :: Grad i o o' => i -> o
 vgrad i = unpack (unsafeGrad (pack i)) where
   unsafeGrad f as = d as $ apply f as
 {-# INLINE vgrad #-}
 
-vgrad' :: Grad i o o' a => i -> o'
+vgrad' :: Grad i o o' => i -> o'
 vgrad' i = unpack' (unsafeGrad' (pack i)) where
   unsafeGrad' f as = d' as $ apply f as
 {-# INLINE vgrad' #-}
 
-class Num a => Grads i o a | i -> a o, o -> a i where
-  packs :: i -> [Sparse a] -> Sparse a
-  unpacks :: ([a] -> Cofree [] a) -> o
+class Grads i o | i -> o, o -> i where
+  packs :: i -> [SparseDouble] -> SparseDouble
+  unpacks :: ([Double] -> Cofree [] Double) -> o
 
-instance Num a => Grads (Sparse a) (Cofree [] a) a where
+instance Grads SparseDouble (Cofree [] Double) where
   packs i _ = i
   unpacks f = f []
 
-instance Grads i o a => Grads (Sparse a -> i) (a -> o) a where
+instance Grads i o => Grads (SparseDouble -> i) (Double -> o) where
   packs f (a:as) = packs (f a) as
   packs _ [] = error "Grad.pack: logic error"
   unpacks f a = unpacks (f . (a:))
 
-vgrads :: Grads i o a => i -> o
+vgrads :: Grads i o => i -> o
 vgrads i = unpacks (unsafeGrads (packs i)) where
   unsafeGrads f as = ds as $ apply f as
 {-# INLINE vgrads #-}
 
-isZero :: Sparse a -> Bool
+isZero :: SparseDouble -> Bool
 isZero Zero = True
 isZero _ = False
 
-mul :: Num a => Sparse a -> Sparse a -> Sparse a
+mul :: SparseDouble -> SparseDouble -> SparseDouble
 mul Zero _ = Zero
 mul _ Zero = Zero
 mul f@(Sparse _ am) g@(Sparse _ bm) = Sparse (primal f * primal g) (derivs 0 emptyMonomial) where

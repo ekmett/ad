@@ -21,7 +21,9 @@ next [yyyy.mm.dd]
 * Switch to using pattern synonyms internally for detecting "known" zeros.
 * Drop support for versions of GHC before 8.0
 * In future releases we may require the ability to check for known zeroes for all types you process with AD.
-  This will allow us to improve the quality of the results.
+  This will allow us to improve the quality of the results, but may require you to write an small instance declaration
+  if you are processing some esoteric data type of your own. If there are particularly common types, an `ad-instances`
+  package is probably the right way forward for them to find a home.
 
 4.4.1 [2020.10.13]
 ------------------

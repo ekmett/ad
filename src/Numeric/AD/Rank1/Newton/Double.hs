@@ -15,13 +15,9 @@ module Numeric.AD.Rank1.Newton.Double
   (
   -- * Newton's Method (Forward)
     findZero
-  , findZeroNoEq
   , inverse
-  , inverseNoEq
   , fixedPoint
-  , fixedPointNoEq
   , extremum
-  , extremumNoEq
   ) where
 
 import Prelude hiding (all, mapM)
@@ -48,7 +44,7 @@ findZero f = takeWhileDifferent . findZeroNoEq f
 -- | The 'findZeroNoEq' function behaves the same as 'findZero' except that it
 -- doesn't truncate the list once the results become constant.
 findZeroNoEq :: (ForwardDouble -> ForwardDouble) -> Double -> [Double]
-findZeroNoEq f = iterate go where
+findZeroNoEq f = takeWhileDifferent . iterate go where
   go x = xn where
     (y,y') = diff' f x
     xn = x - y/y'

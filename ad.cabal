@@ -131,7 +131,7 @@ library
   exposed-modules:
     Numeric.AD
     Numeric.AD.Double
-    Numeric.AD.Halley
+    Numeric.AD.Halley.Double
     Numeric.AD.Internal.Dense
     Numeric.AD.Internal.Dense.Representable
     Numeric.AD.Internal.Doctest
@@ -172,6 +172,7 @@ library
     Numeric.AD.Rank1.Forward
     Numeric.AD.Rank1.Forward.Double
     Numeric.AD.Rank1.Halley
+    Numeric.AD.Rank1.Halley.Double
     Numeric.AD.Rank1.Kahn
     Numeric.AD.Rank1.Kahn.Double
     Numeric.AD.Rank1.Newton

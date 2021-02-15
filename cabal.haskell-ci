@@ -7,3 +7,6 @@ docspec:                True
 
 constraint-set no-ffi
   constraints: ad -ffi
+
+constraint-set ffi
+  constraints: ad ffi

@@ -84,7 +84,7 @@ flag herbie
   manual: True
 
 flag ffi
-  default: True
+  default: False
   manual: True
 
 library
@@ -185,9 +185,7 @@ library
   if flag(ffi)
     other-extensions: ForeignFunctionInterface
     c-sources: cbits/tape.c
-    hs-source-dirs: ffi
-  else
-    hs-source-dirs: no-ffi
+    cpp-options: -DAD_FFI
 
   other-modules:
     Numeric.AD.Internal.Combinators

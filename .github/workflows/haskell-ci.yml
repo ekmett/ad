@@ -8,9 +8,9 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.11.20210111
+# version: 0.11.20210214
 #
-# REGENDATA ("0.11.20210111",["github","cabal.project"])
+# REGENDATA ("0.11.20210214",["github","cabal.project"])
 #
 name: Haskell-CI
 on:
@@ -43,7 +43,7 @@ jobs:
           nickname: github-actions
           server: irc.freenode.org
   linux:
-    name: Haskell-CI Linux - GHC ${{ matrix.ghc }}
+    name: Haskell-CI - Linux - GHC ${{ matrix.ghc }}
     runs-on: ubuntu-18.04
     container:
       image: buildpack-deps:bionic
@@ -89,6 +89,7 @@ jobs:
           echo "HCNUMVER=$HCNUMVER" >> $GITHUB_ENV
           echo "ARG_TESTS=--enable-tests" >> $GITHUB_ENV
           echo "ARG_BENCH=--enable-benchmarks" >> $GITHUB_ENV
+          echo "HEADHACKAGE=false" >> $GITHUB_ENV
           echo "ARG_COMPILER=--ghc --with-compiler=/opt/ghc/$GHC_VERSION/bin/ghc" >> $GITHUB_ENV
           echo "GHCJSARITH=0" >> $GITHUB_ENV
         env:
@@ -127,7 +128,7 @@ jobs:
       - name: cache (tools)
         uses: actions/cache@v2
         with:
-          key: ${{ runner.os }}-${{ matrix.ghc }}-tools-c71e24d1
+          key: ${{ runner.os }}-${{ matrix.ghc }}-tools-b057ee3a
           path: ~/.haskell-ci-tools
       - name: install cabal-plan
         run: |
@@ -149,7 +150,7 @@ jobs:
           cabal-docspec --version
       - name: install hlint
         run: |
-          if [ $((HCNUMVER >= 81000)) -ne 0 ] ; then HLINTVER=$(cd /tmp && (${CABAL} v2-install -v $ARG_COMPILER --dry-run hlint  --constraint='hlint ==3.2.*' |  perl -ne 'if (/\bhlint-(\d+(\.\d+)*)\b/) { print "$1"; last; }')); echo "HLint version $HLINTVER" ; fi
+          if [ $((HCNUMVER >= 81000)) -ne 0 ] ; then HLINTVER=$(cd /tmp && (${CABAL} v2-install -v $ARG_COMPILER --dry-run hlint  --constraint='hlint >=3.2 && <3.3' |  perl -ne 'if (/\bhlint-(\d+(\.\d+)*)\b/) { print "$1"; last; }')); echo "HLint version $HLINTVER" ; fi
           if [ $((HCNUMVER >= 81000)) -ne 0 ] ; then if [ ! -e $HOME/.haskell-ci-tools/hlint-$HLINTVER/hlint ]; then echo "Downloading HLint version $HLINTVER"; mkdir -p $HOME/.haskell-ci-tools; curl --write-out 'Status Code: %{http_code} Redirects: %{num_redirects} Total time: %{time_total} Total Dsize: %{size_download}\n' --silent --location --output $HOME/.haskell-ci-tools/hlint-$HLINTVER.tar.gz "https://github.com/ndmitchell/hlint/releases/download/v$HLINTVER/hlint-$HLINTVER-x86_64-linux.tar.gz"; tar -xzv -f $HOME/.haskell-ci-tools/hlint-$HLINTVER.tar.gz -C $HOME/.haskell-ci-tools; fi ; fi
           if [ $((HCNUMVER >= 81000)) -ne 0 ] ; then mkdir -p $CABAL_DIR/bin && ln -sf "$HOME/.haskell-ci-tools/hlint-$HLINTVER/hlint" $CABAL_DIR/bin/hlint ; fi
           if [ $((HCNUMVER >= 81000)) -ne 0 ] ; then hlint --version ; fi
@@ -157,10 +158,14 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: source
+      - name: initial cabal.project for sdist
+        run: |
+          touch cabal.project
+          echo "packages: $GITHUB_WORKSPACE/source/." >> cabal.project
+          cat cabal.project
       - name: sdist
         run: |
           mkdir -p sdist
-          cd source || false
           $CABAL sdist all --output-dir $GITHUB_WORKSPACE/sdist
       - name: unpack
         run: |
@@ -211,3 +216,9 @@ jobs:
       - name: haddock
         run: |
           $CABAL v2-haddock $ARG_COMPILER --with-haddock $HADDOCK $ARG_TESTS $ARG_BENCH all
+      - name: prepare for constraint sets
+        run: |
+          rm -f cabal.project.local
+      - name: constraint set no-ffi
+        run: |
+          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='ad -ffi' all

@@ -141,6 +141,7 @@ library
     Numeric.AD.Internal.Identity
     Numeric.AD.Internal.Kahn
     Numeric.AD.Internal.Kahn.Double
+    Numeric.AD.Internal.Kahn.Float
     Numeric.AD.Internal.On
     Numeric.AD.Internal.Or
     Numeric.AD.Internal.Reverse
@@ -176,6 +177,7 @@ library
     Numeric.AD.Rank1.Halley.Double
     Numeric.AD.Rank1.Kahn
     Numeric.AD.Rank1.Kahn.Double
+    Numeric.AD.Rank1.Kahn.Float
     Numeric.AD.Rank1.Newton
     Numeric.AD.Rank1.Newton.Double
     Numeric.AD.Rank1.Sparse

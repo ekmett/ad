@@ -21,6 +21,10 @@
 --
 -----------------------------------------------------------------------------
 
+#ifndef MIN_VERSION_base
+#define MIN_VERSION_base(x,y,z) 1
+#endif
+
 module Numeric.AD.Internal.Tower.Double
   ( TowerDouble(..)
   , List(..)
@@ -48,6 +52,9 @@ import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 import Text.Read
 import GHC.Exts as Exts (IsList(..))
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Semigroup (Semigroup(..))
+#endif
 
 -- spine lazy, value strict list of doubles
 data List
@@ -56,6 +63,7 @@ data List
   deriving (Eq,Ord,Typeable,Data)
 
 infixr 5 :!
+
 
 instance Semigroup List where
   Nil <> xs = xs

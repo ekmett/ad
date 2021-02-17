@@ -9,5 +9,7 @@
 
 # this doesn't work well with Rank2Types
 - ignore: {name: Eta reduce}
+# Numeric.AD.Rank1.Kahn's use of CPP makes it difficult to avoid redundant parentheses
+- ignore: {name: Redundant bracket, within: [Numeric.AD.Rank1.Kahn]}
 - ignore: {name: Unused LANGUAGE pragma}
 - ignore: {name: Reduce duplication}

@@ -5,8 +5,8 @@ irc-channels:           irc.freenode.org#haskell-lens
 irc-if-in-origin-repo:  True
 docspec:                True
 
-constraint-set no-ffi
-  constraints: ad -ffi
-
 constraint-set ffi
-  constraints: ad ffi
+  constraints: ad +ffi
+  docspec:    True
+  benchmarks: True
+  haddock:    True

@@ -25,7 +25,10 @@ import Numeric.AD.Jacobian
 
 -- | Zip a @'Foldable' f@ with a @'Traversable' g@ assuming @f@ has at least as many entries as @g@.
 zipWithT :: (Foldable f, Traversable g) => (a -> b -> c) -> f a -> g b -> g c
-zipWithT f as = snd . mapAccumL (\(a:as') b -> (as', f a b)) (toList as)
+zipWithT f as = snd . mapAccumL f' (toList as)
+  where
+    f' (a:as') b = (as', f a b)
+    f' []      _ = error "zipWithT: second argument contains less entries than third argument"
 
 -- | Zip a @'Foldable' f@ with a @'Traversable' g@ assuming @f@, using a default value after @f@ is exhausted.
 zipWithDefaultT :: (Foldable f, Traversable g) => a -> (a -> b -> c) -> f a -> g b -> g c

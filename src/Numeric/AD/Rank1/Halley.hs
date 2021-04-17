@@ -61,7 +61,9 @@ findZero f = takeWhileDifferent . findZeroNoEq f
 findZeroNoEq :: Fractional a => (Tower a -> Tower a) -> a -> [a]
 findZeroNoEq f = iterate go where
   go x = xn where
-    (y:y':y'':_) = diffs0 f x
+    (y,y',y'') = case diffs0 f x of
+                   (z:z':z'':_) -> (z,z',z'')
+                   _ -> error "findZeroNoEq: Impossible (diffs0 should produce an infinite list)"
     xn = x - 2*y*y'/(2*y'*y'-y*y'') -- 9.606671960457536 bits error
        -- = x - recip (y'/y - y''/ y') -- "improved error" = 6.640625e-2 bits
        -- = x - y' / (y'/y/y' - y''/2) -- "improved error" = 1.4

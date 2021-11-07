@@ -1,5 +1,5 @@
-next [yyyy.mm.dd]
------------------
+4.5 [2021.11.07]
+----------------
 * The build-type has been changed from `Custom` to `Simple`.
   To achieve this, the `doctests` test suite has been removed in favor of using
   [`cabal-docspec`](https://github.com/phadej/cabal-extras/tree/master/cabal-docspec)

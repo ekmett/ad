@@ -5,7 +5,6 @@ hlint:                  True
 -- irc-channels:           irc.freenode.org#haskell-lens
 irc-if-in-origin-repo:  True
 docspec:                True
-head-hackage:           >=9.2
 
 constraint-set ffi
   constraints: ad +ffi

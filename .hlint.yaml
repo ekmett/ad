@@ -1,4 +1,4 @@
-- arguments: [--cpp-define=HLINT, --cpp-ansi, --cpp-include=include]
+- arguments: [-XCPP, --cpp-define=HLINT, --cpp-ansi, --cpp-include=include]
 
 - fixity: "infixr 8 **!, <**>"
 - fixity: "infixl 7 *!, /!, ^*, *^, ^/"

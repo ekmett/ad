@@ -1,3 +1,7 @@
+next [????.??.??]
+-----------------
+* Allow building with `transformers-0.6.*`.
+
 4.5 [2021.11.07]
 ----------------
 * The build-type has been changed from `Custom` to `Simple`.

@@ -123,7 +123,7 @@ library
     nats             >= 0.1.2   && < 2,
     reflection       >= 1.4     && < 3,
     semigroups       >= 0.16    && < 1,
-    transformers     >= 0.5.2.0 && < 0.6
+    transformers     >= 0.5.2.0 && < 0.7
 
   if impl(ghc < 7.8)
     build-depends: tagged >= 0.7 && < 1

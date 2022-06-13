@@ -104,7 +104,7 @@ void tape_backPropagate(void* p, int start, double* out)
         buffer[j] += v*y;
       }
     }
-    idx += pTape->offset;
+    idx += 1 + pTape->offset;
     pTape = pTape->prev;
   }
   

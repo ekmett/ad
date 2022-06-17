@@ -1,3 +1,9 @@
+next [????.??.??]
+-----------------
+* Fix a bug that would cause `Numeric.AD.Mode.Reverse.diff` and
+  `Numeric.AD.Mode.Reverse.Double.diff` to compute different answers under
+  certain circumstances when `ad` was compiled with the `+ffi` flag.
+
 4.5.1 [2022.05.18]
 ------------------
 * Allow building with `transformers-0.6.*`.

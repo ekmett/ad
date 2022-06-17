@@ -11,4 +11,6 @@ constraint-set ffi
   constraints: ad +ffi
   docspec:    True
   benchmarks: True
+  tests:      True
+  run-tests:  True
   haddock:    True

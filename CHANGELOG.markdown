@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+4.5.2 [2022.06.17]
+------------------
 * Fix a bug that would cause `Numeric.AD.Mode.Reverse.diff` and
   `Numeric.AD.Mode.Reverse.Double.diff` to compute different answers under
   certain circumstances when `ad` was compiled with the `+ffi` flag.

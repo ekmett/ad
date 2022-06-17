@@ -204,6 +204,14 @@ library
   ghc-options: -fspec-constr -fdicts-cheap -O2
   x-docspec-extra-packages: distributive
 
+test-suite regression
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: Regression.hs
+  hs-source-dirs: tests
+  build-depends: ad, base, tasty, tasty-hunit
+  ghc-options: -fspec-constr -fdicts-cheap -O2
+
 benchmark blackscholes
   default-language: Haskell2010
   type: exitcode-stdio-1.0

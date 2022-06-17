@@ -238,6 +238,9 @@ jobs:
       - name: build
         run: |
           $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --write-ghc-environment-files=always
+      - name: tests
+        run: |
+          $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
       - name: docspec
         run: |
           $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all
@@ -257,7 +260,8 @@ jobs:
           rm -f cabal.project.local
       - name: constraint set ffi
         run: |
-          $CABAL v2-build $ARG_COMPILER --disable-tests --enable-benchmarks --constraint='ad +ffi' --dependencies-only -j2 all
-          $CABAL v2-build $ARG_COMPILER --disable-tests --enable-benchmarks --constraint='ad +ffi' all
+          $CABAL v2-build $ARG_COMPILER --enable-tests --enable-benchmarks --constraint='ad +ffi' --dependencies-only -j2 all
+          $CABAL v2-build $ARG_COMPILER --enable-tests --enable-benchmarks --constraint='ad +ffi' all
           cabal-docspec $ARG_COMPILER
-          $CABAL v2-haddock $ARG_COMPILER --with-haddock $HADDOCK --disable-tests --enable-benchmarks --constraint='ad +ffi' all
+          $CABAL v2-test $ARG_COMPILER --enable-tests --enable-benchmarks --constraint='ad +ffi' all
+          $CABAL v2-haddock $ARG_COMPILER --with-haddock $HADDOCK --enable-tests --enable-benchmarks --constraint='ad +ffi' all

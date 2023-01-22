@@ -66,7 +66,7 @@ import qualified Data.Reify.Graph as Reified
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Data (Data)
 import Data.Typeable (Typeable)
-import GHC.Exts as Exts
+import qualified GHC.Exts as Exts
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Jacobian
@@ -255,12 +255,12 @@ partialMap = fromListWith (+) . partials
 -- strict list of scalars
 data List = Nil | Cons !SCALAR_TYPE !List
 
-instance IsList List where
+instance Exts.IsList List where
   type Item List = SCALAR_TYPE
-  fromList (x:xs) = Cons x (fromList xs)
+  fromList (x:xs) = Cons x (Exts.fromList xs)
   fromList [] = Nil
   toList Nil = []
-  toList (Cons x xs) = x : toList xs
+  toList (Cons x xs) = x : Exts.toList xs
 
 class Grad i o o' | i -> o o', o -> i o', o' -> i o where
   pack :: i -> [AD_TYPE] -> AD_TYPE

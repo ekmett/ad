@@ -1,3 +1,7 @@
+next [????.??.??]
+-----------------
+* Support building with GHC 9.6.
+
 4.5.2 [2022.06.17]
 ------------------
 * Fix a bug that would cause `Numeric.AD.Mode.Reverse.diff` and

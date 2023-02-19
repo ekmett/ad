@@ -37,7 +37,7 @@ newtype On t = On { off :: t } deriving
   , InvErf, RealFloat, Typeable
   )
 
-instance (Mode t, Mode (Scalar t)) => Mode (On t) where
+instance (Mode t, Mode (Scalar t), Num (Scalar (Scalar t))) => Mode (On t) where
   type Scalar (On t) = Scalar (Scalar t)
   auto = On . auto . auto
   isKnownZero (On n) = isKnownZero n

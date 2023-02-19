@@ -1,3 +1,13 @@
+4.5.4 [2023.02.19]
+------------------
+* Add a `Num (Scalar (Scalar t))` constraint to `On`'s `Mode` instance, which is
+  required to make it typecheck with GHC 9.6.
+
+  (Note that this constraint was already present implicitly due to superclass
+  expansion, so this is not a breaking change. The only reason that it must be
+  added explicitly with GHC 9.6 or later is due to 9.6 being more conservative
+  with superclass expansion.)
+
 4.5.3 [2023.01.21]
 ------------------
 * Support building with GHC 9.6.

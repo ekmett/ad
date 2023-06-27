@@ -92,17 +92,11 @@ void tape_backPropagate(void* p, int start, double* out)
 
       int i = pTape->lnk[idx*2];
       double x = pTape->val[idx*2];
-      if (x != 0.0)
-      {
-        buffer[i] += v*x;
-      }
+      if (i >= 0) buffer[i] += v*x;
 
       int j = pTape->lnk[idx*2 + 1]; 
       double y = pTape->val[idx*2 + 1];
-      if (y != 0.0)
-      {
-        buffer[j] += v*y;
-      }
+      if (j >= 0) buffer[j] += v*y;
     }
     idx += 1 + pTape->offset;
     pTape = pTape->prev;

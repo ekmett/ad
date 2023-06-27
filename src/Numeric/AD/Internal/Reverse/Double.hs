@@ -115,7 +115,7 @@ reifyTypeableTape vs k = unsafePerformIO $ fmap (\t -> reifyTypeable t k) (newTa
 -- | This is used to create a new entry on the chain given a unary function, its derivative with respect to its input,
 -- the variable ID of its input, and the value of its input. Used by 'unary' and 'binary' internally.
 unarily :: forall s. Reifies s Tape => (Double -> Double) -> Double -> Int -> Double -> ReverseDouble s
-unarily f di i b = ReverseDouble (unsafePerformIO (pushTape (Proxy :: Proxy s) i 0 di 0.0)) $! f b
+unarily f di i b = ReverseDouble (unsafePerformIO (pushTape (Proxy :: Proxy s) i (-1) di 0.0)) $! f b
 {-# INLINE unarily #-}
 
 -- | This is used to create a new entry on the chain given a binary function, its derivatives with respect to its inputs,

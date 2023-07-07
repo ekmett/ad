@@ -20,8 +20,8 @@ main = defaultMain tests
 
 tests :: TestTree
 tests = testGroup "tests" [
-  mode "reverse" R.diff R.grad R.jacobian R.hessian,
-  mode "reverse-double" RD.diff RD.grad RD.jacobian RD.hessian]
+  mode "reverse" (\ f -> R.diff f) (\ f -> R.grad f) (\ f -> R.jacobian f) (\ f -> R.hessian f),
+  mode "reverse-double" (\ f -> RD.diff f) (\ f -> RD.grad f) (\ f -> RD.jacobian f) (\ f -> RD.hessian f)]
 
 mode :: String -> Diff -> Grad -> Jacobian -> Hessian -> TestTree
 mode name diff grad jacobian hessian = testGroup name [basic diff grad jacobian hessian, issue97 diff, issue104 diff grad]

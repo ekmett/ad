@@ -89,6 +89,10 @@ void tape_backPropagate(void* p, int start, double* out)
     {
       double v = buffer[idx + pTape->offset];
 
+      // TODO: if we do not care about handling IEEE floating point special values (NaN, Inf) correctly
+      //       then we can skip the rest of the loop body in case v == 0
+      //       see also https://github.com/ekmett/ad/issues/106
+
       int i = pTape->lnk[idx*2];
       if (i >= 0)
       {

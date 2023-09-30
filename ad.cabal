@@ -118,7 +118,7 @@ library
     array            >= 0.4     && < 0.6,
     base             >= 4.9     && < 5,
     comonad          >= 4       && < 6,
-    containers       >= 0.5     && < 0.7,
+    containers       >= 0.5     && < 0.8,
     data-reify       >= 0.6     && < 0.7,
     erf              >= 2.0     && < 2.1,
     free             >= 4.6.1   && < 6,

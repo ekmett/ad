@@ -45,6 +45,7 @@ import Data.Typeable ()
 import Data.Traversable (mapAccumL)
 import Data.Data ()
 import Data.Number.Erf
+import Numeric
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Jacobian

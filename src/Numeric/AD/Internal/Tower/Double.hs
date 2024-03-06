@@ -46,6 +46,7 @@ import Data.Foldable
 import Data.Data (Data)
 import Data.Number.Erf
 import Data.Typeable (Typeable)
+import Numeric
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Jacobian
 import Numeric.AD.Mode

@@ -67,6 +67,7 @@ import System.IO.Unsafe (unsafePerformIO)
 import Data.Data (Data)
 import Data.Typeable (Typeable)
 import qualified GHC.Exts as Exts
+import Numeric
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Jacobian

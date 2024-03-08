@@ -45,13 +45,13 @@ basic diff grad jacobian hessian = testGroup "basic" [tdiff, tgrad, tjacobian, t
     expect (list $ list eq) [[0, 0], [0, 0]] $ hessian sum [1, 2]
     expect (list $ list eq) [[0, 1], [1, 0]] $ hessian product [1, 2]
     expect (list $ list eq) [[2, 1], [1, 0]] $ hessian power [1, 2]
-  sum = \ [x, y] -> x + y
-  product = \ [x, y] -> x * y
-  power = \ [x, y] -> x ** y
-  f = \ [x, y, z] -> x * y + z
-  g = \ [x, y] -> [y, x, x * y]
-  h = \ [x, y] -> sqrt $ x * y
-  p = \ x -> 12 + 7 * x + 5 * x ^ 2 + 2 * x ^ 3
+  sum [x, y] = x + y
+  product [x, y] = x * y
+  power [x, y] = x ** y
+  f [x, y, z] = x * y + z
+  g [x, y] = [y, x, x * y]
+  h [x, y] = sqrt $ x * y
+  p x = 12 + 7 * x + 5 * x ^ 2 + 2 * x ^ 3
 
 -- Reverse.Double +ffi initializes the tape with a block of size 4096
 -- The large term in this function forces the allocation of an additional block
@@ -84,7 +84,7 @@ issue104 diff grad = testGroup "issue-104" [inside, outside] where
       expect (list eq) [inf, 0.0] $ grad (binary f) [0, 1]
       expect (list eq) [0.5, 0.5] $ grad (binary f) [1, 1]
     f x y = sqrt x * sqrt y -- grad f [x, y] = [sqrt y / 2 sqrt x, sqrt x / 2 sqrt y]
-  binary f = \ [x, y] -> f x y
+  binary f [x, y] = f x y
 
 eq :: Double -> Double -> Bool
 eq a b = isNaN a && isNaN b || a == b

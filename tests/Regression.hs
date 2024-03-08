@@ -87,9 +87,7 @@ issue104 diff grad = testGroup "issue-104" [inside, outside] where
   binary f = \ [x, y] -> f x y
 
 near :: Double -> Double -> Bool
-near a b = bothNaN || bothInfinite || abs (a - b) <= 1e-12 where
-  bothNaN = isNaN a && isNaN b
-  bothInfinite = signum a == signum b && isInfinite a && isInfinite b
+near a b = isNaN a && isNaN b || a == b
 
 nearList :: [Double] -> [Double] -> Bool
 nearList as bs = length as == length bs && and (zipWith near as bs)

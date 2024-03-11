@@ -20,6 +20,8 @@ type Hessian = (forall a. Floating a => [a] -> a) -> [Double] -> [[Double]]
 main :: IO ()
 main = defaultMain tests
 
+-- TODO: the forward-double tests are currently failing due to discrepancies between the modes
+--       see also https://github.com/ekmett/ad/issues/109 and https://github.com/ekmett/ad/pull/110
 tests :: TestTree
 tests = testGroup "tests" [
   mode "forward" (\ f -> F.diff' f) (\ f -> F.grad f) (\ f -> F.jacobian f) (\ f -> F.jacobian $ F.grad f),
@@ -90,6 +92,9 @@ issue104 diff grad = testGroup "issue-104" [inside, outside] where
     f x y = sqrt x * sqrt y -- grad f [x, y] = [sqrt y / 2 sqrt x, sqrt x / 2 sqrt y]
   binary f [x, y] = f x y
 
+-- TODO: ideally, we would consider `0` and `-0` to be different
+--       however, zero signedness is currently not reliably propagated through some modes
+--       see also https://github.com/ekmett/ad/issues/109 and https://github.com/ekmett/ad/pull/110
 eq :: Double -> Double -> Bool
 eq a b = isNaN a && isNaN b || a == b
 

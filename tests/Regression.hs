@@ -3,6 +3,8 @@
 
 module Main (main) where
 
+import qualified Numeric.AD.Mode.Forward as F
+import qualified Numeric.AD.Mode.Forward.Double as FD
 import qualified Numeric.AD.Mode.Reverse as R
 import qualified Numeric.AD.Mode.Reverse.Double as RD
 
@@ -20,6 +22,8 @@ main = defaultMain tests
 
 tests :: TestTree
 tests = testGroup "tests" [
+  mode "forward" (\ f -> F.diff' f) (\ f -> F.grad f) (\ f -> F.jacobian f) (\ f -> F.jacobian $ F.grad f),
+  --mode "forward-double" (\ f -> FD.diff' f) (\ f -> FD.grad f) (\ f -> FD.jacobian f) (\ f -> FD.jacobian $ F.grad f),
   mode "reverse" (\ f -> R.diff' f) (\ f -> R.grad f) (\ f -> R.jacobian f) (\ f -> R.hessian f),
   mode "reverse-double" (\ f -> RD.diff' f) (\ f -> RD.grad f) (\ f -> RD.jacobian f) (\ f -> RD.hessian f)]
 

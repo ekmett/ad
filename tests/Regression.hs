@@ -92,7 +92,7 @@ eq a b = isNaN a && isNaN b || a == b
 list :: (a -> a -> Bool) -> [a] -> [a] -> Bool
 list eq as bs = length as == length bs && and (zipWith eq as bs)
 
-expect :: Show a => (a -> a -> Bool) -> a -> a -> Assertion
+expect :: HasCallStack => Show a => (a -> a -> Bool) -> a -> a -> Assertion
 expect eq a b = eq a b @? printf "expected %s but got %s" (show a) (show b)
 
 nan :: Double

@@ -12,7 +12,7 @@ import Text.Printf
 import Test.Tasty
 import Test.Tasty.HUnit
 
-type Diff = (forall a. Floating a => a -> a) -> Double -> (Double, Double)
+type Diff' = (forall a. Floating a => a -> a) -> Double -> (Double, Double)
 type Grad = (forall a. Floating a => [a] -> a) -> [Double] -> [Double]
 type Jacobian = (forall a. Floating a => [a] -> [a]) -> [Double] -> [[Double]]
 type Hessian = (forall a. Floating a => [a] -> a) -> [Double] -> [[Double]]
@@ -29,10 +29,10 @@ tests = testGroup "tests" [
   mode "reverse" (\ f -> R.diff' f) (\ f -> R.grad f) (\ f -> R.jacobian f) (\ f -> R.hessian f),
   mode "reverse-double" (\ f -> RD.diff' f) (\ f -> RD.grad f) (\ f -> RD.jacobian f) (\ f -> RD.hessian f)]
 
-mode :: String -> Diff -> Grad -> Jacobian -> Hessian -> TestTree
+mode :: String -> Diff' -> Grad -> Jacobian -> Hessian -> TestTree
 mode name diff grad jacobian hessian = testGroup name [basic diff grad jacobian hessian, issue97 diff, issue104 diff grad]
 
-basic :: Diff -> Grad -> Jacobian -> Hessian -> TestTree
+basic :: Diff' -> Grad -> Jacobian -> Hessian -> TestTree
 basic diff grad jacobian hessian = testGroup "basic" [tdiff, tgrad, tjacobian, thessian] where
   tdiff = testCase "diff" $ do
     expect (list eq) [11, 5.5, 3, 3.5, 7, 13.5, 23, 35.5, 51] $ snd . diff p <$> [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
@@ -61,10 +61,10 @@ basic diff grad jacobian hessian = testGroup "basic" [tdiff, tgrad, tjacobian, t
 
 -- Reverse.Double +ffi initializes the tape with a block of size 4096
 -- The large term in this function forces the allocation of an additional block
-issue97 :: Diff -> TestTree
+issue97 :: Diff' -> TestTree
 issue97 diff = testCase "issue-97" $ expect eq 5000 $ snd $ diff f 0 where f = sum . replicate 5000
 
-issue104 :: Diff -> Grad -> TestTree
+issue104 :: Diff' -> Grad -> TestTree
 issue104 diff grad = testGroup "issue-104" [inside, outside] where
   inside = testGroup "inside" [tdiff, tgrad] where
     tdiff = testCase "diff" $ do

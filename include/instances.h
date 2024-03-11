@@ -59,6 +59,11 @@ instance BODY1(Floating a) Floating HEAD where
   acosh    = lift1 acosh $ \x -> recip (sqrt (join (*) x - 1))
   atanh    = lift1 atanh $ \x -> recip (1 - join (*) x)
 
+  log1p    = lift1 log1p $ recip . (+) 1
+  expm1    = lift1 expm1 exp
+  log1pexp = lift1 log1pexp $ recip . (+) 1 . exp . negate
+  log1mexp = lift1 log1mexp $ recip . negate . expm1 . negate
+
 instance BODY2(Num a, Enum a) Enum HEAD where
   succ             = lift1 succ (const 1)
   pred             = lift1 pred (const 1)

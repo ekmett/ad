@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE RankNTypes #-}
 
@@ -125,7 +126,11 @@ issue108 diff = testGroup "issue-108" [tlog1p, texpm1, tlog1pexp, tlog1mexp] whe
     equal (1000, 1) $ diff log1pexp 1000
   tlog1mexp = testCase "log1mexp" $ do
     equal (-0, -0) $ diff log1mexp (-1000)
+-- old versions of base have a faulty implementation of log1mexp, causing this case to fail
+-- see also https://gitlab.haskell.org/ghc/ghc/-/issues/17125
+#if MIN_VERSION_base(4, 13, 0)
     equal (-3.720075976020836e-44, -3.7200759760208356e-44) $ diff log1mexp (-100)
+#endif
     equal (-0.45867514538708193, -0.5819767068693265) $ diff log1mexp (-1)
     equal (-0.9327521295671886, -1.5414940825367982) $ diff log1mexp (-0.5)
     equal (-2.3521684610440907, -9.50833194477505) $ diff log1mexp (-0.1)

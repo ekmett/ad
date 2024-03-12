@@ -131,6 +131,7 @@ issue108 diff = testGroup "issue-108" [tlog1p, texpm1, tlog1pexp, tlog1mexp] whe
     equal (-2.3521684610440907, -9.50833194477505) $ diff log1mexp (-0.1)
     equal (-34.538776394910684, -9.999999999999994e14) $ diff log1mexp (-1e-15)
     equal (-46.051701859880914, -1e20) $ diff log1mexp (-1e-20)
+    equal (-inf, -inf) $ diff log1mexp (-0)
   equal = expect $ \ (a, b) (c, d) -> eq a c && eq b d
 
 -- TODO: ideally, we would consider `0` and `-0` to be different

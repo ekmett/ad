@@ -60,6 +60,7 @@ import Data.Proxy
 import Data.Reflection
 import Data.Traversable (mapM)
 import Data.Typeable
+import Numeric
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity
 import Numeric.AD.Jacobian

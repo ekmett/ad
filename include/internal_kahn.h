@@ -53,7 +53,7 @@ MODULE
 import Control.Monad.ST
 import Control.Monad hiding (mapM)
 import Control.Monad.Trans.State
-import Data.List (foldl')
+import qualified Data.List as List (foldl')
 import Data.Array.ST
 import Data.Array.IArray
 import qualified Data.Array as A
@@ -235,7 +235,7 @@ partials tape = [ let v = sensitivities ! ix in seq v (ident, v) | (ix, Var _ id
       backPropagate vmap ss
     return ss
 
-  sbounds ((a,_):as) = foldl' (\(lo,hi) (b,_) -> let lo' = min lo b; hi' = max hi b in lo' `seq` hi' `seq` (lo', hi')) (a,a) as
+  sbounds ((a,_):as) = List.foldl' (\(lo,hi) (b,_) -> let lo' = min lo b; hi' = max hi b in lo' `seq` hi' `seq` (lo', hi')) (a,a) as
   sbounds _ = undefined -- the graph can't be empty, it contains the output node!
 
   successors :: Tape Int -> [Int]

@@ -1,3 +1,8 @@
+next [????.??.??]
+-----------------
+* Add specialized implementations of `log1p`, `expm1`, `log1pexp`, and
+  `log1mexp` in `Floating` instances.
+
 4.5.5 [2024.01.28]
 ------------------
 * `Numeric.AD.Mode.Reverse.Double` now handles IEEE floating-point special

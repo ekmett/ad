@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+4.5.6 [2024.05.01]
+------------------
 * Add specialized implementations of `log1p`, `expm1`, `log1pexp`, and
   `log1mexp` in `Floating` instances.
 

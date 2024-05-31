@@ -142,16 +142,16 @@ issue108 diff = testGroup "issue-108" [tlog1p, texpm1, tlog1pexp, tlog1mexp] whe
 --       however, zero signedness is currently not reliably propagated through some modes
 --       see also https://github.com/ekmett/ad/issues/109 and https://github.com/ekmett/ad/pull/110
 eq :: Double -> Double -> Bool
-eq a b = isNaN a && isNaN b || a == b
+eq expected actual = isNaN expected && isNaN actual || expected == actual
 
 pair :: (a -> a -> Bool) -> (a, a) -> (a, a) -> Bool
-pair eq (a, b) (c, d) = eq a c && eq b d
+pair eq (expected1, expected2) (actual1, actual2) = eq expected1 actual1 && eq expected2 actual2
 
 list :: (a -> a -> Bool) -> [a] -> [a] -> Bool
-list eq as bs = length as == length bs && and (zipWith eq as bs)
+list eq expected actual = length expected == length actual && and (zipWith eq expected actual)
 
 expect :: HasCallStack => Show a => (a -> a -> Bool) -> a -> a -> Assertion
-expect eq a b = eq a b @? printf "expected %s but got %s" (show a) (show b)
+expect eq expected actual = eq expected actual @? printf "expected %s but got %s" (show expected) (show actual)
 
 nan :: Double
 nan = 0 / 0

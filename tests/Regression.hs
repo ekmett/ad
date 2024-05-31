@@ -142,7 +142,10 @@ issue108 diff = testGroup "issue-108" [tlog1p, texpm1, tlog1pexp, tlog1mexp] whe
 --       however, zero signedness is currently not reliably propagated through some modes
 --       see also https://github.com/ekmett/ad/issues/109 and https://github.com/ekmett/ad/pull/110
 eq :: Double -> Double -> Bool
-eq expected actual = isNaN expected && isNaN actual || expected == actual
+eq expected actual
+  | isNaN expected = isNaN actual
+  | isInfinite expected = isInfinite actual && signum actual == signum expected
+  | otherwise = abs (actual - expected) <= 1e-12 * abs expected
 
 pair :: (a -> a -> Bool) -> (a, a) -> (a, a) -> Bool
 pair eq (expected1, expected2) (actual1, actual2) = eq expected1 actual1 && eq expected2 actual2

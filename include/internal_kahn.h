@@ -65,7 +65,6 @@ import Data.Reify (reifyGraph, MuRef(..))
 import qualified Data.Reify.Graph as Reified
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Data (Data)
-import Data.Typeable (Typeable)
 import qualified GHC.Exts as Exts
 import Numeric
 import Numeric.AD.Internal.Combinators
@@ -81,10 +80,10 @@ data Tape t
   | Var {-# UNPACK #-} !SCALAR_TYPE {-# UNPACK #-} !Int
   | Binary {-# UNPACK #-} !SCALAR_TYPE {-# UNPACK #-} !SCALAR_TYPE {-# UNPACK #-} !SCALAR_TYPE t t
   | Unary {-# UNPACK #-} !SCALAR_TYPE {-# UNPACK #-} !SCALAR_TYPE t
-  deriving (Show, Data, Typeable)
+  deriving (Show, Data)
 
 -- | @Kahn@ is a 'Mode' using reverse-mode automatic differentiation that provides fast 'diffFU', 'diff2FU', 'grad', 'grad2' and a fast 'jacobian' when you have a significantly smaller number of outputs than inputs.
-newtype AD_TYPE = Kahn (Tape AD_TYPE) deriving (Show, Typeable)
+newtype AD_TYPE = Kahn (Tape AD_TYPE) deriving Show
 
 instance MuRef AD_TYPE where
   type DeRef AD_TYPE = Tape

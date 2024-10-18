@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
@@ -123,7 +122,7 @@ data Reverse s a where
   Zero :: Reverse s a
   Lift :: a -> Reverse s a
   Reverse :: {-# UNPACK #-} !Int -> a -> Reverse s a
-  deriving (Show, Typeable)
+  deriving Show
 
 instance (Reifies s Tape, Num a) => Mode (Reverse s a) where
   type Scalar (Reverse s a) = a

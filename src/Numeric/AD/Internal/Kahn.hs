@@ -61,7 +61,6 @@ import Data.Reify (reifyGraph, MuRef(..))
 import qualified Data.Reify.Graph as Reified
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Data (Data)
-import Data.Typeable (Typeable)
 import Numeric
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Identity
@@ -75,10 +74,10 @@ data Tape a t
   | Var !a {-# UNPACK #-} !Int
   | Binary !a a a t t
   | Unary !a a t
-  deriving (Show, Data, Typeable)
+  deriving (Show, Data)
 
 -- | @Kahn@ is a 'Mode' using reverse-mode automatic differentiation that provides fast 'diffFU', 'diff2FU', 'grad', 'grad2' and a fast 'jacobian' when you have a significantly smaller number of outputs than inputs.
-newtype Kahn a = Kahn (Tape a (Kahn a)) deriving (Show, Typeable)
+newtype Kahn a = Kahn (Tape a (Kahn a)) deriving Show
 
 instance MuRef (Kahn a) where
   type DeRef (Kahn a) = Tape a

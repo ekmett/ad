@@ -39,14 +39,13 @@ import Control.Monad (join)
 import Data.Foldable
 import Data.Data (Data)
 import Data.Number.Erf
-import Data.Typeable (Typeable)
 import Numeric
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Jacobian
 import Numeric.AD.Mode
 
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'
-newtype Tower a = Tower { getTower :: [a] } deriving (Data, Typeable)
+newtype Tower a = Tower { getTower :: [a] } deriving Data
 
 instance Show a => Show (Tower a) where
   showsPrec n (Tower as) = showParen (n > 10) $ showString "Tower " . showList as

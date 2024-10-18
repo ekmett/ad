@@ -45,7 +45,6 @@ import Control.Monad (join)
 import Data.Foldable
 import Data.Data (Data)
 import Data.Number.Erf
-import Data.Typeable (Typeable)
 import Numeric
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Jacobian
@@ -60,7 +59,7 @@ import Data.Semigroup (Semigroup(..))
 data List
   = Nil
   | {-# UNPACK #-} !Double :! List
-  deriving (Eq,Ord,Typeable,Data)
+  deriving (Eq,Ord,Data)
 
 infixr 5 :!
 
@@ -93,7 +92,7 @@ lmap _ Nil = Nil
 
 -- | @Tower@ is an AD 'Mode' that calculates a tangent tower by forward AD, and provides fast 'diffsUU', 'diffsUF'
 newtype TowerDouble = Tower { getTower :: List }
-  deriving (Data, Typeable)
+  deriving Data
 
 instance Show TowerDouble where
   showsPrec n (Tower as) = showParen (n > 10) $ showString "Tower " . showsPrec 11 as

@@ -52,7 +52,7 @@ data Forward a
   = Forward !a a
   | Lift !a
   | Zero
-  deriving (Show, Data, Typeable)
+  deriving (Show, Data)
 
 -- | Calculate the 'tangent' using forward mode AD.
 tangent :: Num a => Forward a -> a

@@ -4,7 +4,6 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_HADDOCK not-home #-}
 
 -----------------------------------------------------------------------------
@@ -28,7 +27,6 @@ module Numeric.AD.Internal.Or
   ) where
 
 import Data.Number.Erf
-import Data.Typeable
 import Numeric.AD.Mode
 
 runL :: Or F a b -> a
@@ -70,7 +68,6 @@ instance Chosen T where
 data Or s a b where
   L :: a -> Or F a b
   R :: b -> Or T a b
-  deriving Typeable
 #endif
 
 instance (Eq a, Eq b) => Eq (Or s a b) where

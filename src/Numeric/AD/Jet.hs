@@ -1,7 +1,6 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- |
 -- Copyright   :  (c) Edward Kmett 2010-2021
@@ -20,7 +19,6 @@ module Numeric.AD.Jet
   ) where
 
 import Data.Functor.Rep
-import Data.Typeable
 import Control.Comonad.Cofree
 
 infixr 3 :-
@@ -31,7 +29,6 @@ infixr 3 :-
 --
 -- > a :- f a :- f (f a) :- f (f (f a)) :- ...
 data Jet f a = a :- Jet f (f a)
-  deriving Typeable
 
 -- | Used to sidestep the need for UndecidableInstances.
 newtype Showable = Showable (Int -> String -> String)

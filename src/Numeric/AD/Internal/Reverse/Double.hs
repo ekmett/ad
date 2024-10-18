@@ -1,6 +1,5 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
@@ -80,7 +79,7 @@ foreign import ccall unsafe "&tape_free" c_ref_tape_free :: FinalizerPtr Tape
 
 pushTape :: Reifies s Tape => p s -> Int -> Int -> Double -> Double -> IO Int
 pushTape p i1 i2 d1 d2 = do
-  withForeignPtr (getTape (reflect p)) $ \tape -> 
+  withForeignPtr (getTape (reflect p)) $ \tape ->
     c_tape_push tape (fromIntegral i1) (fromIntegral i2) d1 d2
 {-# INLINE pushTape #-}
 
@@ -220,7 +219,7 @@ data ReverseDouble s where
   Zero :: ReverseDouble s
   Lift :: {-# UNPACK #-} !Double -> ReverseDouble s
   ReverseDouble :: {-# UNPACK #-} !Int -> {-# UNPACK #-} !Double -> ReverseDouble s
-  deriving (Show, Typeable)
+  deriving Show
 
 instance Reifies s Tape => Mode (ReverseDouble s) where
   type Scalar (ReverseDouble s) = Double

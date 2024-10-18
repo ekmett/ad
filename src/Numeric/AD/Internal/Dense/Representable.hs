@@ -1,6 +1,5 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -34,7 +33,6 @@ module Numeric.AD.Internal.Dense.Representable
 
 import Control.Monad (join)
 import Data.Functor.Rep
-import Data.Typeable ()
 import Data.Data ()
 import Data.Number.Erf
 import Numeric

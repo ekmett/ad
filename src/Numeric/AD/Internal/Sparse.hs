@@ -51,7 +51,6 @@ import Data.IntMap (IntMap, unionWith, findWithDefault, singleton, lookup)
 import qualified Data.IntMap as IntMap
 import Data.Number.Erf
 import Data.Traversable
-import Data.Typeable ()
 import Numeric
 import Numeric.AD.Internal.Combinators
 import Numeric.AD.Internal.Sparse.Common
@@ -66,7 +65,7 @@ import Numeric.AD.Mode
 data Sparse a
   = Sparse !a (IntMap (Sparse a))
   | Zero
-  deriving (Show, Data, Typeable)
+  deriving (Show, Data)
 
 vars :: (Traversable f, Num a) => f a -> f (Sparse a)
 vars = snd . mapAccumL var 0 where

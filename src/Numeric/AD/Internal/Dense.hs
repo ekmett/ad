@@ -1,6 +1,5 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -41,7 +40,6 @@ module Numeric.AD.Internal.Dense
   ) where
 
 import Control.Monad (join)
-import Data.Typeable ()
 import Data.Traversable (mapAccumL)
 import Data.Data ()
 import Data.Number.Erf

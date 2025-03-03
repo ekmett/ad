@@ -85,7 +85,7 @@ description:
 
 source-repository head
   type: git
-  location: git://github.com/ekmett/ad.git
+  location: https://github.com/ekmett/ad.git
 
 flag herbie
   default: False

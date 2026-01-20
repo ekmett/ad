@@ -3,7 +3,7 @@
 {-# OPTIONS_HADDOCK not-home #-}
 -----------------------------------------------------------------------------
 -- |
--- Copyright   :  (c) Edward Kmett 2010-2021
+-- Copyright   :  (c) Edward Kmett 2010-2026
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental

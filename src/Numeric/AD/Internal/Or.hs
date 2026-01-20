@@ -8,7 +8,7 @@
 
 -----------------------------------------------------------------------------
 -- |
--- Copyright   :  (c) Edward Kmett 2021
+-- Copyright   :  (c) Edward Kmett 2021-2026
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental

@@ -14,6 +14,8 @@ import Text.Printf
 import Test.Tasty
 import Test.Tasty.HUnit
 
+import qualified AdditionalTests
+
 type Diff' = (forall a. Floating a => a -> a) -> Double -> (Double, Double)
 type Grad = (forall a. Floating a => [a] -> a) -> [Double] -> [Double]
 type Jacobian = (forall a. Floating a => [a] -> [a]) -> [Double] -> [[Double]]
@@ -29,7 +31,8 @@ tests = testGroup "tests" [
   mode "forward" (\ f -> F.diff' f) (\ f -> F.grad f) (\ f -> F.jacobian f) (\ f -> F.jacobian $ F.grad f),
   --mode "forward-double" (\ f -> FD.diff' f) (\ f -> FD.grad f) (\ f -> FD.jacobian f) (\ f -> FD.jacobian $ F.grad f),
   mode "reverse" (\ f -> R.diff' f) (\ f -> R.grad f) (\ f -> R.jacobian f) (\ f -> R.hessian f),
-  mode "reverse-double" (\ f -> RD.diff' f) (\ f -> RD.grad f) (\ f -> RD.jacobian f) (\ f -> RD.hessian f)]
+  mode "reverse-double" (\ f -> RD.diff' f) (\ f -> RD.grad f) (\ f -> RD.jacobian f) (\ f -> RD.hessian f),
+  AdditionalTests.additionalTests]
 
 mode :: String -> Diff' -> Grad -> Jacobian -> Hessian -> TestTree
 mode name diff grad jacobian hessian = testGroup name [

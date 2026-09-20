@@ -4,7 +4,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_HADDOCK not-home #-}
 
 -----------------------------------------------------------------------------
@@ -22,7 +21,6 @@ module Numeric.AD.Internal.On
   ) where
 
 import Data.Number.Erf
-import Data.Data
 import Numeric.AD.Mode
 
 ------------------------------------------------------------------------------
@@ -34,7 +32,7 @@ newtype On t = On { off :: t } deriving
   ( Eq, Enum, Ord, Bounded
   , Num, Real, Fractional
   , RealFrac, Floating, Erf
-  , InvErf, RealFloat, Typeable
+  , InvErf, RealFloat
   )
 
 instance (Mode t, Mode (Scalar t), Num (Scalar (Scalar t))) => Mode (On t) where
